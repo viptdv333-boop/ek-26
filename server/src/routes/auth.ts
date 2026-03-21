@@ -198,7 +198,7 @@ export async function authRoutes(app: FastifyInstance) {
         return reply.code(401).send({ error: 'User not found' });
       }
 
-      const newAccessToken = await signAccessToken(userId, user.phone);
+      const newAccessToken = await signAccessToken(userId, user.phone || '');
       const newRefreshToken = await signRefreshToken(userId);
 
       // Rotate refresh token

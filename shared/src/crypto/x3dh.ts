@@ -70,7 +70,7 @@ export function x3dhInitiate(
   }
 
   // Generate ephemeral key pair
-  const { randomBytes } = require('./random');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { generateKeyPair } = require('./keys');
   const ephemeralKey: KeyPair = generateKeyPair();
 

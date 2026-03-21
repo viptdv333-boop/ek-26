@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server/node_modules/tsx/dist/cli.mjs", "watch", "server/src/app.ts"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "mobile",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@ek-26/mobile", "start"],
+      "port": 8081
+    }
+  ]
+}

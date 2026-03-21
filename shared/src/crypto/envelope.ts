@@ -5,7 +5,7 @@
  * This format is transport-agnostic — used over WebSocket, Push, RSS, and Mesh.
  */
 import { keyToBase64, base64ToKey } from './keys';
-import { MessageHeader, EncryptedMessage } from './doubleRatchet';
+import { EncryptedMessage } from './doubleRatchet';
 
 /** Protocol version */
 export const ENVELOPE_VERSION = 1;

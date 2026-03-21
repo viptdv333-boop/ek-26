@@ -13,7 +13,7 @@ const smsCodeSchema = new Schema<ISmsCode>({
   codeHash: { type: String, required: true },
   attempts: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
-  expiresAt: { type: Date, required: true, index: true },
+  expiresAt: { type: Date, required: true },
 });
 
 // TTL index: MongoDB automatically deletes expired documents

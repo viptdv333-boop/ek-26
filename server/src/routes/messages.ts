@@ -111,7 +111,11 @@ export async function messageRoutes(app: FastifyInstance) {
       createdAt: message.createdAt.toISOString(),
     };
 
-    app.broadcastToConversation(id, 'message:new', messageData, request.userId);
+    try {
+      app.broadcastToConversation(id, 'message:new', messageData, request.userId);
+    } catch {
+      // No WebSocket clients connected — message saved via HTTP
+    }
 
     return messageData;
   });

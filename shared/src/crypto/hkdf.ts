@@ -31,7 +31,7 @@ export function hkdfExpand(prk: Uint8Array, info: Uint8Array, length: number): U
     input.set(prev, 0);
     input.set(info, prev.length);
     input[prev.length + info.length] = i;
-    prev = hmac(sha256, prk, input);
+    prev = hmac(sha256, prk, input) as Uint8Array<ArrayBuffer>;
     okm.set(prev, (i - 1) * HASH_LEN);
   }
 

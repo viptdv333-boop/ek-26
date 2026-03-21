@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
+
+const TELEGRAM_BOT_NAME = 'chat_fomo_bot';
 
 type Step = 'phone' | 'code' | 'profile';
 
@@ -13,7 +15,51 @@ export function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const tgContainerRef = useRef<HTMLDivElement | null>(null);
   const login = useAuthStore((s) => s.login);
+
+  const handleTelegramAuth = useCallback(async (tgUser: Record<string, string | number>) => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await authApi.telegramLogin(tgUser);
+      if (res.isNewUser) {
+        setStep('profile');
+        // Store tokens temporarily for profile setup
+        useAuthStore.getState().setTokens(res.accessToken, res.refreshToken);
+      } else {
+        login(res.accessToken, res.refreshToken, res.user);
+      }
+    } catch (e: any) {
+      setError(e.message || 'Ошибка авторизации через Telegram');
+    } finally {
+      setLoading(false);
+    }
+  }, [login]);
+
+  // Mount Telegram Login Widget
+  useEffect(() => {
+    if (step !== 'phone' || !tgContainerRef.current) return;
+
+    // Set global callback
+    (window as any).onTelegramAuth = handleTelegramAuth;
+
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.async = true;
+    script.setAttribute('data-telegram-login', TELEGRAM_BOT_NAME);
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-radius', '12');
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    script.setAttribute('data-request-access', 'write');
+
+    tgContainerRef.current.innerHTML = '';
+    tgContainerRef.current.appendChild(script);
+
+    return () => {
+      delete (window as any).onTelegramAuth;
+    };
+  }, [step, handleTelegramAuth]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -128,6 +174,16 @@ export function AuthPage() {
             >
               {loading ? 'Отправка...' : 'Получить код'}
             </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-dark-500" />
+              <span className="text-gray-500 text-sm">или</span>
+              <div className="flex-1 h-px bg-dark-500" />
+            </div>
+
+            {/* Telegram Login */}
+            <div ref={tgContainerRef} className="flex justify-center" />
           </div>
         )}
 

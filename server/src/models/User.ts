@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUser extends Document {
-  phone: string;
+  phone: string | null;
+  telegramId: number | null;
+  telegramUsername: string | null;
   displayName: string;
   avatarUrl: string | null;
   status: string;
@@ -27,7 +29,9 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    phone: { type: String, required: true, unique: true, index: true },
+    phone: { type: String, unique: true, sparse: true, index: true, default: null },
+    telegramId: { type: Number, unique: true, sparse: true, index: true, default: null },
+    telegramUsername: { type: String, default: null },
     displayName: { type: String, required: true, default: '' },
     avatarUrl: { type: String, default: null },
     status: { type: String, default: '' },

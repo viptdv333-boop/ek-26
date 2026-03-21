@@ -102,6 +102,78 @@ export async function authRoutes(app: FastifyInstance) {
     };
   });
 
+  // Telegram Login Widget auth
+  app.post('/api/auth/telegram', async (request, reply) => {
+    const { config } = await import('../config');
+    if (!config.TELEGRAM_BOT_TOKEN) {
+      return reply.code(500).send({ error: 'Telegram auth not configured' });
+    }
+
+    const data = request.body as Record<string, string | number>;
+    const { hash, ...rest } = data;
+    if (!hash) {
+      return reply.code(400).send({ error: 'Missing hash' });
+    }
+
+    // Verify auth_date is not too old (allow 5 minutes)
+    const authDate = Number(rest.auth_date);
+    if (Date.now() / 1000 - authDate > 300) {
+      return reply.code(400).send({ error: 'Auth data expired' });
+    }
+
+    // Verify HMAC-SHA256 signature
+    const secretKey = crypto.createHash('sha256').update(config.TELEGRAM_BOT_TOKEN).digest();
+    const checkString = Object.keys(rest)
+      .sort()
+      .map((k) => `${k}=${rest[k]}`)
+      .join('\n');
+    const hmac = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
+
+    if (hmac !== hash) {
+      return reply.code(401).send({ error: 'Invalid Telegram signature' });
+    }
+
+    // Find or create user by telegramId
+    const telegramId = Number(rest.id);
+    let isNewUser = false;
+    let user = await User.findOne({ telegramId });
+    if (!user) {
+      isNewUser = true;
+      const displayName = [rest.first_name, rest.last_name].filter(Boolean).join(' ') || `tg_${telegramId}`;
+      user = await User.create({
+        telegramId,
+        telegramUsername: rest.username || null,
+        displayName,
+        avatarUrl: rest.photo_url || null,
+        rssFeedId: crypto.randomUUID(),
+      });
+    }
+
+    // Create tokens
+    const userId = user._id.toString();
+    const accessToken = await signAccessToken(userId, user.phone || `tg:${telegramId}`);
+    const refreshToken = await signRefreshToken(userId);
+
+    await Session.create({
+      userId: user._id,
+      deviceId: crypto.randomUUID(),
+      refreshTokenHash: hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: userId,
+        phone: user.phone,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        isNewUser,
+      },
+    };
+  });
+
   // Refresh access token
   app.post('/api/auth/refresh', async (request, reply) => {
     const { refreshToken } = request.body as { refreshToken?: string };

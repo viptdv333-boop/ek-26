@@ -8,6 +8,7 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('30d'),
   SMSRU_API_ID: z.string().default(''),
+  TELEGRAM_BOT_TOKEN: z.string().default(''),
   SMS_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
   CORS_ORIGIN: z.string().default('*'),
 });

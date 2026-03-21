@@ -5,6 +5,8 @@ export const authApi = {
   requestCode: (phone: string) => api.post<{ message: string }>('/auth/request-code', { phone }),
   verifyCode: (phone: string, code: string) =>
     api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean }>('/auth/verify-code', { phone, code }),
+  telegramLogin: (data: Record<string, string | number>) =>
+    api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean }>('/auth/telegram', data),
 };
 
 // Users

@@ -77,3 +77,27 @@ export const messagesApi = {
       body: { type: 'text', text, replyToId },
     }),
 };
+
+// Keys (E2EE)
+export const keysApi = {
+  uploadBundle: (bundle: {
+    identityKey: string;
+    signingKey: string;
+    signedPreKey: { keyId: number; publicKey: string; signature: string };
+    oneTimePreKeys: Array<{ keyId: number; publicKey: string }>;
+  }) => apiCall('/api/keys/bundle', { method: 'POST', body: bundle }),
+
+  fetchBundle: (userId: string) =>
+    apiCall<{
+      identityKey: string;
+      signingKey: string;
+      signedPreKey: { keyId: number; publicKey: string; signature: string };
+      oneTimePreKey: { keyId: number; publicKey: string } | null;
+    }>(`/api/keys/bundle/${userId}`),
+
+  replenish: (oneTimePreKeys: Array<{ keyId: number; publicKey: string }>) =>
+    apiCall('/api/keys/replenish', { method: 'POST', body: { oneTimePreKeys } }),
+
+  getCount: () =>
+    apiCall<{ oneTimePreKeyCount: number; hasSignedPreKey: boolean }>('/api/keys/count'),
+};

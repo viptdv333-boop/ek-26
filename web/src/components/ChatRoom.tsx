@@ -18,10 +18,38 @@ export function ChatRoom({ conversationId }: Props) {
   const addMessage = useChatStore((s) => s.addMessage);
   const conversations = useChatStore((s) => s.conversations);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId] || []);
+  const onlineUsers = useChatStore((s) => s.onlineUsers);
   const userId = useAuthStore((s) => s.user?.id);
 
   const conv = conversations.find((c) => c.id === conversationId);
-  const title = conv?.groupMeta?.name || 'Чат';
+
+  const getTitle = () => {
+    if (conv?.groupMeta?.name) return conv.groupMeta.name;
+    if (!conv) return 'Чат';
+    const other = conv.participants.find((p) => {
+      const id = typeof p === 'string' ? p : p.id;
+      return id !== userId;
+    });
+    if (!other) return 'Чат';
+    return typeof other === 'string' ? 'Пользователь' : other.displayName || 'Пользователь';
+  };
+
+  const getSubtitle = () => {
+    if (typingUsers.length > 0) return 'печатает...';
+    if (conv?.type === 'group') {
+      return `${conv.participants.length} участников`;
+    }
+    const other = conv?.participants.find((p) => {
+      const id = typeof p === 'string' ? p : p.id;
+      return id !== userId;
+    });
+    const otherId = other ? (typeof other === 'string' ? other : other.id) : null;
+    if (otherId && onlineUsers.has(otherId)) return 'в сети';
+    return null;
+  };
+
+  const title = getTitle();
+  const subtitle = getSubtitle();
 
   useEffect(() => {
     setLoading(true);
@@ -39,7 +67,6 @@ export function ChatRoom({ conversationId }: Props) {
     if (!trimmed) return;
     setText('');
 
-    // Try WS first, fallback to HTTP
     if (wsTransport.connected) {
       wsTransport.send('message:send', {
         conversationId,
@@ -51,7 +78,6 @@ export function ChatRoom({ conversationId }: Props) {
         const msg = await messagesApi.send(conversationId, { type: 'text', text: trimmed });
         addMessage(conversationId, msg);
       } catch {
-        // restore text on error
         setText(trimmed);
       }
     }
@@ -73,12 +99,16 @@ export function ChatRoom({ conversationId }: Props) {
       {/* Header */}
       <div className="h-14 px-6 flex items-center border-b border-dark-600 bg-dark-800">
         <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
-          <span className="text-accent text-sm font-medium">{title[0]?.toUpperCase()}</span>
+          <span className="text-accent text-sm font-medium">
+            {conv?.type === 'group' ? '#' : title[0]?.toUpperCase()}
+          </span>
         </div>
-        <div>
+        <div className="flex-1">
           <h2 className="text-sm font-medium text-white">{title}</h2>
-          {typingUsers.length > 0 && (
-            <span className="text-xs text-accent">печатает...</span>
+          {subtitle && (
+            <span className={`text-xs ${typingUsers.length > 0 ? 'text-accent' : 'text-gray-400'}`}>
+              {subtitle}
+            </span>
           )}
         </div>
       </div>
@@ -88,8 +118,18 @@ export function ChatRoom({ conversationId }: Props) {
         {loading && (
           <div className="text-center text-gray-500 text-sm py-4">Загрузка...</div>
         )}
+        {!loading && messages.length === 0 && (
+          <div className="text-center text-gray-500 text-sm py-8">
+            Нет сообщений. Напишите первое!
+          </div>
+        )}
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} isMine={msg.senderId === userId} />
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            isMine={msg.senderId === userId}
+            showSender={conv?.type === 'group'}
+          />
         ))}
         <div ref={messagesEndRef} />
       </div>

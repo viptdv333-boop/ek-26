@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useChatStore } from '../stores/chatStore';
+import { useChatStore, Conversation } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 import { NewChatDialog } from './NewChatDialog';
 
@@ -7,9 +7,33 @@ export function Sidebar() {
   const conversations = useChatStore((s) => s.conversations);
   const activeId = useChatStore((s) => s.activeConversationId);
   const setActive = useChatStore((s) => s.setActiveConversation);
+  const onlineUsers = useChatStore((s) => s.onlineUsers);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const getConversationName = (conv: Conversation): string => {
+    if (conv.groupMeta?.name) return conv.groupMeta.name;
+    // Direct chat — find the other participant
+    const other = conv.participants.find((p) => {
+      const id = typeof p === 'string' ? p : p.id;
+      return id !== user?.id;
+    });
+    if (!other) return 'Чат';
+    if (typeof other === 'string') return 'Пользователь';
+    return other.displayName || 'Пользователь';
+  };
+
+  const getOtherUserId = (conv: Conversation): string | null => {
+    if (conv.type !== 'direct') return null;
+    const other = conv.participants.find((p) => {
+      const id = typeof p === 'string' ? p : p.id;
+      return id !== user?.id;
+    });
+    if (!other) return null;
+    return typeof other === 'string' ? other : other.id;
+  };
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -20,11 +44,15 @@ export function Sidebar() {
     return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
   };
 
+  const filtered = search
+    ? conversations.filter((c) => getConversationName(c).toLowerCase().includes(search.toLowerCase()))
+    : conversations;
+
   return (
     <div className="w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
-        <h1 className="text-lg font-semibold text-white">ЭК-26</h1>
+        <h1 className="text-lg font-semibold text-white">FOMO Chat</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowNewChat(true)}
@@ -51,6 +79,8 @@ export function Sidebar() {
       <div className="p-3">
         <input
           type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="Поиск..."
           className="w-full px-3 py-2 bg-dark-700 border border-dark-500 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
         />
@@ -58,14 +88,18 @@ export function Sidebar() {
 
       {/* Conversation list */}
       <div className="flex-1 overflow-y-auto">
-        {conversations.length === 0 && (
+        {filtered.length === 0 && (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
-            Нет чатов. Начните новый разговор.
+            {search ? 'Ничего не найдено' : 'Нет чатов. Начните новый разговор.'}
           </div>
         )}
-        {conversations.map((conv) => {
+        {filtered.map((conv) => {
           const isActive = conv.id === activeId;
-          const name = conv.groupMeta?.name || conv.participants.find((p) => p !== user?.id) || 'Чат';
+          const name = getConversationName(conv);
+          const otherUserId = getOtherUserId(conv);
+          const isOnline = otherUserId ? onlineUsers.has(otherUserId) : false;
+          const isGroup = conv.type === 'group';
+
           return (
             <button
               key={conv.id}
@@ -75,10 +109,13 @@ export function Sidebar() {
               }`}
             >
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex-shrink-0 flex items-center justify-center">
+              <div className="relative w-10 h-10 rounded-full bg-accent/20 flex-shrink-0 flex items-center justify-center">
                 <span className="text-accent text-sm font-medium">
-                  {(typeof name === 'string' ? name : '?')[0]?.toUpperCase()}
+                  {isGroup ? '#' : name[0]?.toUpperCase() || '?'}
                 </span>
+                {!isGroup && isOnline && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-800" />
+                )}
               </div>
               {/* Content */}
               <div className="flex-1 min-w-0">
@@ -94,6 +131,12 @@ export function Sidebar() {
                   <p className="text-xs text-gray-400 truncate mt-0.5">{conv.lastMessage.text}</p>
                 )}
               </div>
+              {/* Unread badge */}
+              {conv.unreadCount > 0 && (
+                <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <span className="text-[10px] text-white font-medium">{conv.unreadCount}</span>
+                </div>
+              )}
             </button>
           );
         })}

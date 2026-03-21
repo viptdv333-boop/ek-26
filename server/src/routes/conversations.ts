@@ -27,7 +27,6 @@ export async function conversationRoutes(app: FastifyInstance) {
         id: p._id.toString(),
         displayName: p.displayName,
         avatarUrl: p.avatarUrl,
-        phone: p.phone,
       })),
       groupMeta: c.groupMeta
         ? {
@@ -38,6 +37,7 @@ export async function conversationRoutes(app: FastifyInstance) {
           }
         : null,
       lastMessage: c.lastMessage,
+      unreadCount: 0,
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
     }));
@@ -50,26 +50,42 @@ export async function conversationRoutes(app: FastifyInstance) {
     const otherId = new mongoose.Types.ObjectId(participantId);
 
     // Check if direct conversation already exists
-    const existing = await Conversation.findOne({
+    let conversation = await Conversation.findOne({
       type: 'direct',
       participants: { $all: [userId, otherId], $size: 2 },
     });
-    if (existing) {
-      return { id: existing._id.toString(), existing: true };
+
+    if (!conversation) {
+      // Verify other user exists
+      const otherUser = await User.findById(otherId);
+      if (!otherUser) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+      conversation = await Conversation.create({
+        type: 'direct',
+        participants: [userId, otherId],
+      });
     }
 
-    // Verify other user exists
-    const otherUser = await User.findById(otherId);
-    if (!otherUser) {
-      return reply.code(404).send({ error: 'User not found' });
-    }
+    // Return populated conversation
+    const populated = await Conversation.findById(conversation._id)
+      .populate('participants', 'displayName avatarUrl phone')
+      .lean();
 
-    const conversation = await Conversation.create({
-      type: 'direct',
-      participants: [userId, otherId],
-    });
-
-    return { id: conversation._id.toString(), existing: false };
+    return {
+      id: populated!._id.toString(),
+      type: populated!.type,
+      participants: (populated!.participants as any[]).map((p: any) => ({
+        id: p._id.toString(),
+        displayName: p.displayName,
+        avatarUrl: p.avatarUrl,
+      })),
+      groupMeta: null,
+      lastMessage: null,
+      unreadCount: 0,
+      createdAt: populated!.createdAt.toISOString(),
+      updatedAt: populated!.updatedAt.toISOString(),
+    };
   });
 
   // Create group conversation

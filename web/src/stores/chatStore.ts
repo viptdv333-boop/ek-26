@@ -1,19 +1,20 @@
 import { create } from 'zustand';
 
-interface Message {
+export interface Message {
   id: string;
   conversationId: string;
   senderId: string;
+  senderName?: string;
   type: string;
   text?: string;
   status: string;
   createdAt: string;
 }
 
-interface Conversation {
+export interface Conversation {
   id: string;
   type: 'direct' | 'group';
-  participants: string[];
+  participants: Array<{ id: string; displayName: string; avatarUrl?: string | null }> | string[];
   groupMeta: { name: string; avatarUrl: string | null; admins: string[]; createdBy: string } | null;
   lastMessage: { text: string; senderId: string; createdAt: string } | null;
   unreadCount: number;
@@ -26,6 +27,7 @@ interface ChatState {
   messages: Record<string, Message[]>;
   activeConversationId: string | null;
   typingUsers: Record<string, string[]>;
+  onlineUsers: Set<string>;
 
   setConversations: (conversations: Conversation[]) => void;
   addConversation: (conversation: Conversation) => void;
@@ -34,13 +36,18 @@ interface ChatState {
   setActiveConversation: (id: string | null) => void;
   setTyping: (conversationId: string, userIds: string[]) => void;
   updateLastMessage: (conversationId: string, message: { text: string; senderId: string; createdAt: string }) => void;
+  updateMessageStatus: (messageId: string, status: string) => void;
+  sortConversations: () => void;
+  setUserOnline: (userId: string, online: boolean) => void;
+  isUserOnline: (userId: string) => boolean;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   messages: {},
   activeConversationId: null,
   typingUsers: {},
+  onlineUsers: new Set(),
 
   setConversations: (conversations) => set({ conversations }),
 
@@ -76,4 +83,31 @@ export const useChatStore = create<ChatState>((set) => ({
         c.id === conversationId ? { ...c, lastMessage: message, updatedAt: message.createdAt } : c
       ),
     })),
+
+  updateMessageStatus: (messageId, status) =>
+    set((state) => {
+      const newMessages = { ...state.messages };
+      for (const convId of Object.keys(newMessages)) {
+        newMessages[convId] = newMessages[convId].map((m) =>
+          m.id === messageId ? { ...m, status } : m
+        );
+      }
+      return { messages: newMessages };
+    }),
+
+  sortConversations: () =>
+    set((state) => ({
+      conversations: [...state.conversations].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      ),
+    })),
+
+  setUserOnline: (userId, online) =>
+    set((state) => {
+      const next = new Set(state.onlineUsers);
+      if (online) next.add(userId); else next.delete(userId);
+      return { onlineUsers: next };
+    }),
+
+  isUserOnline: (userId) => get().onlineUsers.has(userId),
 }));

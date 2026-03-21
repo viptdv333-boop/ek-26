@@ -89,25 +89,84 @@ class WebSocketTransport {
   private handleBuiltinEvent(event: string, data: any) {
     const store = useChatStore.getState();
     switch (event) {
-      case 'message:new':
-        store.addMessage(data.conversationId, data);
+      case 'message:new': {
+        // From other users — data has sender object
+        const msg = {
+          id: data.id,
+          conversationId: data.conversationId,
+          senderId: data.sender?.id || data.senderId,
+          senderName: data.sender?.displayName,
+          type: data.type,
+          text: data.text,
+          status: data.status || 'sent',
+          createdAt: data.createdAt,
+        };
+        store.addMessage(data.conversationId, msg);
         store.updateLastMessage(data.conversationId, {
           text: data.text || '',
-          senderId: data.senderId,
+          senderId: msg.senderId,
           createdAt: data.createdAt,
         });
+        // Sort conversations by last activity
+        store.sortConversations();
         break;
+      }
+
+      case 'message:sent': {
+        // Echo of our own sent message
+        const msg = {
+          id: data.id,
+          conversationId: data.conversationId,
+          senderId: data.sender?.id || data.senderId,
+          senderName: data.sender?.displayName,
+          type: data.type,
+          text: data.text,
+          status: 'sent',
+          createdAt: data.createdAt,
+        };
+        store.addMessage(data.conversationId, msg);
+        store.updateLastMessage(data.conversationId, {
+          text: data.text || '',
+          senderId: msg.senderId,
+          createdAt: data.createdAt,
+        });
+        store.sortConversations();
+        break;
+      }
+
+      case 'message:status': {
+        store.updateMessageStatus(data.messageId, data.status);
+        break;
+      }
+
       case 'typing:start':
         store.setTyping(data.conversationId, [
-          ...(store.typingUsers[data.conversationId] || []).filter((id) => id !== data.userId),
+          ...(store.typingUsers[data.conversationId] || []).filter((id: string) => id !== data.userId),
           data.userId,
         ]);
+        // Auto-clear typing after 3s
+        setTimeout(() => {
+          const s = useChatStore.getState();
+          s.setTyping(
+            data.conversationId,
+            (s.typingUsers[data.conversationId] || []).filter((id: string) => id !== data.userId)
+          );
+        }, 3000);
         break;
+
       case 'typing:stop':
         store.setTyping(
           data.conversationId,
-          (store.typingUsers[data.conversationId] || []).filter((id) => id !== data.userId)
+          (store.typingUsers[data.conversationId] || []).filter((id: string) => id !== data.userId)
         );
+        break;
+
+      case 'user:online':
+        store.setUserOnline(data.userId, true);
+        break;
+
+      case 'user:offline':
+        store.setUserOnline(data.userId, false);
         break;
     }
   }

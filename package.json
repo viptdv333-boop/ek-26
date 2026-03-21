@@ -6,6 +6,7 @@
   "scripts": {
     "dev:server": "turbo run dev --filter=@ek-26/server",
     "dev:shared": "turbo run dev --filter=@ek-26/shared",
+    "dev:web": "turbo run dev --filter=@ek-26/web",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test"

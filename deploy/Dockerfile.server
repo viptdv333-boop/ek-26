@@ -1,0 +1,42 @@
+# Stage 1: dependencies
+FROM node:20-alpine AS deps
+RUN corepack enable && corepack prepare pnpm@10 --activate
+WORKDIR /app
+
+RUN echo "shamefully-hoist=true" > .npmrc
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY shared/package.json shared/
+COPY server/package.json server/
+COPY mobile/package.json mobile/
+COPY web/package.json web/
+
+RUN pnpm install --no-frozen-lockfile
+
+# Stage 2: build shared + server
+FROM deps AS build
+COPY shared/ shared/
+COPY server/ server/
+RUN cd shared && /app/node_modules/.bin/tsc
+RUN cd server && /app/node_modules/.bin/tsc -p tsconfig.build.json
+
+# Stage 3: production runtime
+FROM node:20-alpine
+RUN corepack enable && corepack prepare pnpm@10 --activate
+WORKDIR /app
+
+RUN echo "shamefully-hoist=true" > .npmrc
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --from=build /app/shared/package.json shared/package.json
+COPY --from=build /app/shared/dist/ shared/dist/
+COPY --from=build /app/server/package.json server/package.json
+COPY --from=build /app/server/dist/ server/dist/
+
+COPY mobile/package.json mobile/
+COPY web/package.json web/
+
+RUN pnpm install --no-frozen-lockfile --prod
+
+EXPOSE 3000
+CMD ["node", "server/dist/app.js"]

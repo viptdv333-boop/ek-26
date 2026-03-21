@@ -1,0 +1,39 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: ek26-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.server
+    container_name: ek26-server
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3000"
+    env_file:
+      - .env.production
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/ek26
+    depends_on:
+      - mongo
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    container_name: ek26-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3180:80"
+
+volumes:
+  mongo_data:

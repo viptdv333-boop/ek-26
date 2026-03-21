@@ -39,7 +39,7 @@ async function main() {
   app.decorate('broadcastToConversation', broadcastToConversation);
 
   // Error handler for Zod validation
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler((error: Error, request, reply) => {
     if (error.name === 'ZodError') {
       return reply.code(400).send({
         error: 'Validation error',
@@ -67,8 +67,8 @@ async function main() {
   try {
     await mongoose.connect(config.MONGODB_URI);
     app.log.info(`Connected to MongoDB: ${config.MONGODB_URI}`);
-  } catch (err) {
-    app.log.error('Failed to connect to MongoDB:', err);
+  } catch (err: unknown) {
+    app.log.error('Failed to connect to MongoDB: %s', String(err));
     process.exit(1);
   }
 

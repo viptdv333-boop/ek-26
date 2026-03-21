@@ -6,7 +6,13 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["server/node_modules/tsx/dist/cli.mjs", "watch", "server/src/app.ts"],
       "port": 3000,
-      "autoPort": true
+      "autoPort": false
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["web/dev.mjs"],
+      "port": 5173
     },
     {
       "name": "mobile",

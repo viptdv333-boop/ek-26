@@ -78,7 +78,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     // Create tokens
     const userId = user._id.toString();
-    const accessToken = await signAccessToken(userId, user.phone);
+    const accessToken = await signAccessToken(userId, user.phone || '');
     const refreshToken = await signRefreshToken(userId);
 
     // Save session

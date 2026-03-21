@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.turbo/
+.DS_Store
+Thumbs.db
+
+# Mobile
+mobile/ios/Pods/
+mobile/android/.gradle/
+mobile/android/app/build/
+*.apk
+*.ipa
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

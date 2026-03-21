@@ -1,0 +1,83 @@
+import { FastifyInstance } from 'fastify';
+import { User } from '../models/User';
+
+export async function userRoutes(app: FastifyInstance) {
+  // Get current user profile
+  app.get('/api/users/me', { preHandler: [app.authenticate] }, async (request) => {
+    const user = await User.findById(request.userId).select('-identityKeyPublic -signedPreKey -oneTimePreKeys -fcmTokens -apnsTokens');
+    if (!user) {
+      return { error: 'User not found' };
+    }
+    return {
+      id: user._id.toString(),
+      phone: user.phone,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      status: user.status,
+      lastSeen: user.lastSeen,
+      createdAt: user.createdAt,
+    };
+  });
+
+  // Update profile
+  app.patch('/api/users/me', { preHandler: [app.authenticate] }, async (request) => {
+    const { displayName, avatarUrl, status } = request.body as {
+      displayName?: string;
+      avatarUrl?: string | null;
+      status?: string;
+    };
+
+    const update: Record<string, unknown> = {};
+    if (displayName !== undefined) update.displayName = displayName;
+    if (avatarUrl !== undefined) update.avatarUrl = avatarUrl;
+    if (status !== undefined) update.status = status;
+
+    const user = await User.findByIdAndUpdate(request.userId, update, { new: true })
+      .select('-identityKeyPublic -signedPreKey -oneTimePreKeys -fcmTokens -apnsTokens');
+    return {
+      id: user!._id.toString(),
+      phone: user!.phone,
+      displayName: user!.displayName,
+      avatarUrl: user!.avatarUrl,
+      status: user!.status,
+    };
+  });
+
+  // Get another user's profile
+  app.get('/api/users/:id/profile', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const user = await User.findById(id).select('displayName avatarUrl status lastSeen');
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    return {
+      id: user._id.toString(),
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      status: user.status,
+      lastSeen: user.lastSeen,
+    };
+  });
+
+  // Lookup users by phone numbers (contact discovery)
+  app.post('/api/users/lookup', { preHandler: [app.authenticate] }, async (request) => {
+    const { phones } = request.body as { phones: string[] };
+    const users = await User.find({ phone: { $in: phones } })
+      .select('phone displayName avatarUrl status');
+    return users.map((u) => ({
+      id: u._id.toString(),
+      phone: u.phone,
+      displayName: u.displayName,
+      avatarUrl: u.avatarUrl,
+      status: u.status,
+    }));
+  });
+
+  // Register push token
+  app.post('/api/users/me/push-token', { preHandler: [app.authenticate] }, async (request) => {
+    const { token, platform } = request.body as { token: string; platform: 'fcm' | 'apns' };
+    const field = platform === 'fcm' ? 'fcmTokens' : 'apnsTokens';
+    await User.findByIdAndUpdate(request.userId, { $addToSet: { [field]: token } });
+    return { success: true };
+  });
+}

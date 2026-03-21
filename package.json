@@ -1,0 +1,17 @@
+{
+  "name": "ek-26",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ЭК-26 — Защищённый мессенджер с мульти-транспортом",
+  "scripts": {
+    "dev:server": "turbo run dev --filter=@ek-26/server",
+    "dev:shared": "turbo run dev --filter=@ek-26/shared",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0"
+  }
+}

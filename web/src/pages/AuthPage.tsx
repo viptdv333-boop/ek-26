@@ -103,11 +103,7 @@ export function AuthPage() {
       <div className="w-full max-w-sm px-6">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">ЭК</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white">ЭК-26</h1>
-          <p className="text-sm text-gray-400 mt-1">Защищённый мессенджер</p>
+          <img src="/logo-fomo.png" alt="FOMO" className="h-20 mx-auto mb-4" />
         </div>
 
         {/* Phone step */}

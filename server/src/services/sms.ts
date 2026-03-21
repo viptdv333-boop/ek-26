@@ -26,7 +26,7 @@ export async function sendSms(phone: string, code: string): Promise<void> {
   url.searchParams.set('json', '1');
 
   const res = await fetch(url.toString());
-  const data = await res.json();
+  const data = (await res.json()) as { status: string; status_text?: string };
 
   if (data.status !== 'OK') {
     console.error('[SMS.ru] Send failed:', data);

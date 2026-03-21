@@ -7,9 +7,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32).default('dev-secret-change-me-in-production-32chars!!'),
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('30d'),
-  TWILIO_ACCOUNT_SID: z.string().default(''),
-  TWILIO_AUTH_TOKEN: z.string().default(''),
-  TWILIO_PHONE_NUMBER: z.string().default(''),
+  SMSRU_API_ID: z.string().default(''),
   SMS_DEV_MODE: z.coerce.boolean().default(true), // In dev mode, OTP is always 123456
   CORS_ORIGIN: z.string().default('*'),
 });

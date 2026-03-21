@@ -18,12 +18,18 @@ export async function sendSms(phone: string, code: string): Promise<void> {
     return;
   }
 
-  // Production: Twilio
-  const twilio = await import('twilio');
-  const client = twilio.default(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
-  await client.messages.create({
-    body: `ЭК-26: Ваш код подтверждения: ${code}`,
-    from: config.TWILIO_PHONE_NUMBER,
-    to: phone,
-  });
+  // Production: SMS.ru
+  const url = new URL('https://sms.ru/sms/send');
+  url.searchParams.set('api_id', config.SMSRU_API_ID);
+  url.searchParams.set('to', phone);
+  url.searchParams.set('msg', `ЭК-26: Ваш код: ${code}`);
+  url.searchParams.set('json', '1');
+
+  const res = await fetch(url.toString());
+  const data = await res.json();
+
+  if (data.status !== 'OK') {
+    console.error('[SMS.ru] Send failed:', data);
+    throw new Error(`SMS.ru error: ${data.status_text || 'unknown'}`);
+  }
 }

@@ -5,8 +5,8 @@ export function generateOtp(): string {
   if (config.OTP_DEV_MODE) {
     return '1234';
   }
-  // 4-digit code for uCaller (0001–9999)
-  return crypto.randomInt(1, 10000).toString().padStart(4, '0');
+  // 4-digit code for uCaller (1000–9999, no leading zeros)
+  return crypto.randomInt(1000, 10000).toString();
 }
 
 export function hashOtp(code: string): string {

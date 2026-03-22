@@ -59,7 +59,7 @@ const userSchema = new Schema<IUser>(
   { timestamps: true, autoIndex: false }
 );
 
-userSchema.index({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $exists: true, $ne: null } } });
-userSchema.index({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $exists: true, $ne: null } } });
+userSchema.index({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $type: 'string' } } });
+userSchema.index({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $type: 'number' } } });
 
 export const User = mongoose.model<IUser>('User', userSchema);

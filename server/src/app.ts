@@ -76,8 +76,8 @@ async function main() {
     // Remove null telegramId/phone values so partial index works
     await usersCol.updateMany({ telegramId: null }, { $unset: { telegramId: '' } });
     await usersCol.updateMany({ phone: null }, { $unset: { phone: '' } });
-    await usersCol.createIndex({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $exists: true, $ne: null } } });
-    await usersCol.createIndex({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $exists: true, $ne: null } } });
+    await usersCol.createIndex({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $type: 'string' } } });
+    await usersCol.createIndex({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $type: 'number' } } });
     app.log.info('Database indexes synced');
   } catch (err: unknown) {
     app.log.error('Failed to connect to MongoDB: %s', String(err));

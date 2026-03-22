@@ -18,7 +18,7 @@ export function ChatRoom({ conversationId }: Props) {
   const addMessage = useChatStore((s) => s.addMessage);
   const conversations = useChatStore((s) => s.conversations);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId] || []);
-  const onlineUsers = useChatStore((s) => s.onlineUsers);
+  const isUserOnline = useChatStore((s) => s.isUserOnline);
   const userId = useAuthStore((s) => s.user?.id);
 
   const conv = conversations.find((c) => c.id === conversationId);
@@ -44,7 +44,7 @@ export function ChatRoom({ conversationId }: Props) {
       return id !== userId;
     });
     const otherId = other ? (typeof other === 'string' ? other : other.id) : null;
-    if (otherId && onlineUsers.has(otherId)) return 'в сети';
+    if (otherId && isUserOnline(otherId)) return 'в сети';
     return null;
   };
 

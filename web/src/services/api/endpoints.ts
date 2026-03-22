@@ -14,6 +14,7 @@ export const usersApi = {
   getProfile: () => api.get<any>('/users/me'),
   updateProfile: (data: { displayName?: string }) => api.patch<any>('/users/me', data),
   lookupByPhone: (phone: string) => api.get<any>(`/users/lookup/${encodeURIComponent(phone)}`),
+  search: (query: string) => api.get<any[]>(`/users/search?q=${encodeURIComponent(query)}`),
 };
 
 // Conversations

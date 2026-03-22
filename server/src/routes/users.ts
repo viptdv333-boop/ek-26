@@ -73,6 +73,53 @@ export async function userRoutes(app: FastifyInstance) {
     }));
   });
 
+  // Search users by query (phone, username, or displayName)
+  app.get('/api/users/search', { preHandler: [app.authenticate] }, async (request) => {
+    const { q } = request.query as { q?: string };
+    if (!q || q.length < 2) {
+      return [];
+    }
+
+    const isPhone = /^\+?\d/.test(q);
+    const filter: Record<string, unknown> = { _id: { $ne: request.userId } };
+
+    if (isPhone) {
+      filter.phone = { $regex: q.replace(/[^+\d]/g, ''), $options: 'i' };
+    } else {
+      filter.$or = [
+        { displayName: { $regex: q, $options: 'i' } },
+        { telegramUsername: { $regex: q, $options: 'i' } },
+      ];
+    }
+
+    const users = await User.find(filter)
+      .select('phone displayName avatarUrl status telegramUsername')
+      .limit(20);
+
+    return users.map((u) => ({
+      id: u._id.toString(),
+      phone: u.phone,
+      displayName: u.displayName,
+      avatarUrl: u.avatarUrl,
+      telegramUsername: u.telegramUsername,
+    }));
+  });
+
+  // Lookup single user by phone
+  app.get('/api/users/lookup/:phone', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { phone } = request.params as { phone: string };
+    const user = await User.findOne({ phone }).select('phone displayName avatarUrl status');
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    return {
+      id: user._id.toString(),
+      phone: user.phone,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+    };
+  });
+
   // Register push token
   app.post('/api/users/me/push-token', { preHandler: [app.authenticate] }, async (request) => {
     const { token, platform } = request.body as { token: string; platform: 'fcm' | 'apns' };

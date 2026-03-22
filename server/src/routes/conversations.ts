@@ -36,7 +36,13 @@ export async function conversationRoutes(app: FastifyInstance) {
             createdBy: c.groupMeta.createdBy.toString(),
           }
         : null,
-      lastMessage: c.lastMessage,
+      lastMessage: c.lastMessage
+        ? {
+            text: c.lastMessage.text,
+            senderId: c.lastMessage.senderName || '',
+            createdAt: c.lastMessage.timestamp?.toISOString() || c.updatedAt.toISOString(),
+          }
+        : null,
       unreadCount: 0,
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),

@@ -56,7 +56,8 @@ export function ChatRoom({ conversationId }: Props) {
   useEffect(() => {
     setLoading(true);
     messagesApi.list(conversationId).then((res) => {
-      setMessages(conversationId, res.messages.reverse());
+      const list = Array.isArray(res) ? res : res.messages ?? [];
+      setMessages(conversationId, list.reverse());
     }).catch(() => {}).finally(() => setLoading(false));
   }, [conversationId, setMessages]);
 

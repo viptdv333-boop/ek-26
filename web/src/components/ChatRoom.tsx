@@ -73,7 +73,7 @@ export function ChatRoom({ conversationId }: Props) {
               await messageCache.put(m.id, text);
             }
           } catch {
-            text = '\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0437\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043e';
+            text = null; // Skip undecryptable messages
           }
         }
         return {
@@ -88,7 +88,9 @@ export function ChatRoom({ conversationId }: Props) {
           createdAt: m.createdAt,
         };
       }));
-      setMessages(conversationId, normalized.reverse());
+      // Filter out undecryptable messages (text === null for encrypted)
+      const decrypted = normalized.filter(m => m.text !== null);
+      setMessages(conversationId, decrypted.reverse());
     }).catch(() => {}).finally(() => setLoading(false));
   }, [conversationId, setMessages]);
 

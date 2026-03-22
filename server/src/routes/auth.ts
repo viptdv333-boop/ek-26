@@ -31,7 +31,12 @@ export async function authRoutes(app: FastifyInstance) {
       expiresAt: new Date(Date.now() + 5 * 60_000), // 5 minutes
     });
 
-    await sendSms(body.phone, code);
+    try {
+      await sendSms(body.phone, code);
+    } catch (err: any) {
+      app.log.error({ err, msg: 'SMS send failed' });
+      return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });
+    }
 
     return { success: true };
   });
@@ -208,7 +213,12 @@ export async function authRoutes(app: FastifyInstance) {
       { upsert: true }
     );
 
-    await sendSms(phone, code);
+    try {
+      await sendSms(phone, code);
+    } catch (err: any) {
+      app.log.error({ err, msg: 'SMS send failed (link-phone)' });
+      return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });
+    }
     return { message: 'Code sent' };
   });
 

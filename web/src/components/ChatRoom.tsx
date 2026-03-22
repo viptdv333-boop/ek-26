@@ -101,38 +101,45 @@ export function ChatRoom({ conversationId }: Props) {
     if (!trimmed) return;
     setText('');
 
-    try {
-      if (conv?.type === 'direct') {
-        // E2EE for direct chats
-        const other = conv.participants.find((p) => {
-          const id = typeof p === 'string' ? p : p.id;
-          return id !== userId;
-        });
-        const recipientId = other ? (typeof other === 'string' ? other : other.id) : null;
+    // Try E2EE for direct chats, fallback to plaintext on any error
+    let sent = false;
 
-        if (recipientId) {
+    if (conv?.type === 'direct') {
+      const other = conv.participants.find((p) => {
+        const id = typeof p === 'string' ? p : p.id;
+        return id !== userId;
+      });
+      const recipientId = other ? (typeof other === 'string' ? other : other.id) : null;
+
+      if (recipientId) {
+        try {
           const envelope = await sessionManager.encryptMessage(recipientId, trimmed);
-          // Store pending plaintext so the sent-echo can display it
           wsTransport.setPendingText(conversationId, trimmed);
           if (wsTransport.connected) {
             wsTransport.send('message:send', { conversationId, type: 'text', encrypted: true, envelope });
           } else {
             await messagesApi.send(conversationId, { type: 'text', encrypted: true, envelope } as any);
           }
-          return;
+          sent = true;
+        } catch (err) {
+          console.warn('E2EE failed, sending plaintext:', err);
         }
       }
+    }
 
-      // Fallback: plaintext (group chats or no recipient found)
+    if (!sent) {
+      // Plaintext fallback (groups, no keys, or encryption error)
       if (wsTransport.connected) {
         wsTransport.send('message:send', { conversationId, type: 'text', text: trimmed });
       } else {
-        const msg = await messagesApi.send(conversationId, { type: 'text', text: trimmed });
-        addMessage(conversationId, msg);
+        try {
+          const msg = await messagesApi.send(conversationId, { type: 'text', text: trimmed });
+          addMessage(conversationId, msg);
+        } catch (err) {
+          console.error('Send error:', err);
+          setText(trimmed);
+        }
       }
-    } catch (err) {
-      console.error('Send error:', err);
-      setText(trimmed); // Restore text on error
     }
   };
 

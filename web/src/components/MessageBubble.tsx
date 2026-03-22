@@ -2,6 +2,7 @@ interface Message {
   id: string;
   text?: string;
   senderName?: string;
+  encrypted?: boolean;
   createdAt: string;
   status: string;
 }
@@ -41,6 +42,9 @@ export function MessageBubble({ message, isMine, showSender }: Props) {
         )}
         {message.text && <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>}
         <div className={`flex items-center justify-end gap-1 mt-0.5 ${isMine ? 'text-white/50' : 'text-gray-500'}`}>
+          {message.encrypted && (
+            <span className="text-green-400 text-[10px]" title="\u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043e">&#x1f512;</span>
+          )}
           <span className="text-[10px]">{time}</span>
           {statusIcon()}
         </div>

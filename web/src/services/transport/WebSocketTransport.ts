@@ -1,5 +1,6 @@
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
+import { sessionManager, messageCache, keyManager } from '../crypto';
 
 type EventHandler = (data: any) => void;
 
@@ -10,6 +11,17 @@ class WebSocketTransport {
   private maxReconnectDelay = 30000;
   private handlers = new Map<string, Set<EventHandler>>();
   private _connected = false;
+  private _pendingTexts = new Map<string, string>();
+
+  setPendingText(convId: string, text: string) {
+    this._pendingTexts.set(convId, text);
+  }
+
+  private consumePendingText(convId: string): string | undefined {
+    const t = this._pendingTexts.get(convId);
+    this._pendingTexts.delete(convId);
+    return t;
+  }
 
   get connected() {
     return this._connected;
@@ -86,47 +98,74 @@ class WebSocketTransport {
     }, this.reconnectDelay);
   }
 
-  private handleBuiltinEvent(event: string, data: any) {
+  private async handleBuiltinEvent(event: string, data: any) {
     const store = useChatStore.getState();
+    const currentUserId = useAuthStore.getState().user?.id;
+
     switch (event) {
       case 'message:new': {
         // From other users — data has sender object
+        let text = data.text;
+        const encrypted = !!data.encrypted;
+        if (encrypted && data.envelope) {
+          try {
+            text = await sessionManager.decryptMessage(data.sender?.id || data.senderId, data.envelope);
+            await messageCache.put(data.id, text);
+          } catch (err) {
+            console.error('Decrypt error (message:new):', err);
+            text = '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0440\u0430\u0441\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435';
+          }
+        }
         const msg = {
           id: data.id,
           conversationId: data.conversationId,
           senderId: data.sender?.id || data.senderId,
           senderName: data.sender?.displayName,
           type: data.type,
-          text: data.text,
+          text,
+          encrypted,
           status: data.status || 'sent',
           createdAt: data.createdAt,
         };
         store.addMessage(data.conversationId, msg);
         store.updateLastMessage(data.conversationId, {
-          text: data.text || '',
+          text: encrypted ? (text || '\u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435') : (text || ''),
           senderId: msg.senderId,
           createdAt: data.createdAt,
         });
-        // Sort conversations by last activity
         store.sortConversations();
         break;
       }
 
       case 'message:sent': {
         // Echo of our own sent message
+        let text = data.text;
+        const encrypted = !!data.encrypted;
+        if (encrypted) {
+          // Try pending plaintext first, then cache
+          const pending = this.consumePendingText(data.conversationId);
+          if (pending) {
+            text = pending;
+            await messageCache.put(data.id, text);
+          } else {
+            const cached = await messageCache.get(data.id);
+            text = cached || '\u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435';
+          }
+        }
         const msg = {
           id: data.id,
           conversationId: data.conversationId,
           senderId: data.sender?.id || data.senderId,
           senderName: data.sender?.displayName,
           type: data.type,
-          text: data.text,
+          text,
+          encrypted,
           status: 'sent',
           createdAt: data.createdAt,
         };
         store.addMessage(data.conversationId, msg);
         store.updateLastMessage(data.conversationId, {
-          text: data.text || '',
+          text: encrypted ? (text || '\u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435') : (text || ''),
           senderId: msg.senderId,
           createdAt: data.createdAt,
         });
@@ -170,7 +209,6 @@ class WebSocketTransport {
         break;
 
       case 'conversation:new': {
-        // New conversation created by another user — add to sidebar
         store.addConversation(data);
         store.sortConversations();
         break;
@@ -180,6 +218,10 @@ class WebSocketTransport {
         if (Array.isArray(data.userIds)) {
           data.userIds.forEach((id: string) => store.setUserOnline(id, true));
         }
+        break;
+
+      case 'keys:low':
+        keyManager.replenishIfNeeded().catch(console.error);
         break;
     }
   }

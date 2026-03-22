@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
 import { User } from '../models/User';
+import { broadcastToConversation, sendToUser } from '../ws/handler';
 import mongoose from 'mongoose';
 
 export async function messageRoutes(app: FastifyInstance) {
@@ -45,6 +46,8 @@ export async function messageRoutes(app: FastifyInstance) {
       },
       type: m.type,
       text: m.text,
+      encrypted: !!m.encryptedPayload,
+      envelope: m.encryptedPayload ? m.encryptedPayload.toString('utf8') : null,
       attachments: m.attachments,
       replyToId: m.replyToId?.toString() || null,
       status: m.status,
@@ -56,13 +59,17 @@ export async function messageRoutes(app: FastifyInstance) {
   // Send message via HTTP (fallback, primary path is WebSocket)
   app.post('/api/conversations/:id/messages', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { type = 'text', text, replyToId } = request.body as {
+    const { type = 'text', text, replyToId, encrypted, envelope } = request.body as {
       type?: string;
       text?: string;
       replyToId?: string;
+      encrypted?: boolean;
+      envelope?: string;
     };
 
-    if (!text?.trim()) {
+    const isEncrypted = !!(encrypted && envelope);
+
+    if (!isEncrypted && !text?.trim()) {
       return reply.code(400).send({ error: 'Message text required' });
     }
 
@@ -79,40 +86,68 @@ export async function messageRoutes(app: FastifyInstance) {
 
     const sender = await User.findById(request.userId).select('displayName');
 
-    const message = await Message.create({
-      conversationId: new mongoose.Types.ObjectId(id),
-      senderId: new mongoose.Types.ObjectId(request.userId),
-      type,
-      text: text.trim(),
-      replyToId: replyToId ? new mongoose.Types.ObjectId(replyToId) : null,
-      deliveredVia: 'ws',
-    });
+    let messageData: Record<string, unknown>;
 
-    // Update conversation's last message
-    conversation.lastMessage = {
-      text: text.trim().slice(0, 100),
-      senderName: sender!.displayName,
-      timestamp: message.createdAt,
-    };
-    await conversation.save();
+    if (isEncrypted) {
+      const message = await Message.create({
+        conversationId: new mongoose.Types.ObjectId(id),
+        senderId: new mongoose.Types.ObjectId(request.userId),
+        type,
+        text: null,
+        encryptedPayload: Buffer.from(envelope, 'utf8'),
+        deliveredVia: 'ws',
+      });
+
+      conversation.lastMessage = {
+        text: 'Зашифрованное сообщение',
+        senderName: sender!.displayName,
+        timestamp: message.createdAt,
+      };
+      await conversation.save();
+
+      messageData = {
+        id: message._id.toString(),
+        conversationId: id,
+        sender: { id: request.userId, displayName: sender!.displayName },
+        type: message.type,
+        text: null,
+        encrypted: true,
+        envelope,
+        status: 'sent',
+        createdAt: message.createdAt.toISOString(),
+      };
+    } else {
+      const message = await Message.create({
+        conversationId: new mongoose.Types.ObjectId(id),
+        senderId: new mongoose.Types.ObjectId(request.userId),
+        type,
+        text: text!.trim(),
+        replyToId: replyToId ? new mongoose.Types.ObjectId(replyToId) : null,
+        deliveredVia: 'ws',
+      });
+
+      conversation.lastMessage = {
+        text: text!.trim().slice(0, 100),
+        senderName: sender!.displayName,
+        timestamp: message.createdAt,
+      };
+      await conversation.save();
+
+      messageData = {
+        id: message._id.toString(),
+        conversationId: id,
+        sender: { id: request.userId, displayName: sender!.displayName },
+        type: message.type,
+        text: message.text,
+        replyToId: message.replyToId?.toString() || null,
+        status: 'sent',
+        createdAt: message.createdAt.toISOString(),
+      };
+    }
 
     // Broadcast via WebSocket (if connected)
-    const messageData = {
-      id: message._id.toString(),
-      conversationId: id,
-      sender: {
-        id: request.userId,
-        displayName: sender!.displayName,
-      },
-      type: message.type,
-      text: message.text,
-      replyToId: message.replyToId?.toString() || null,
-      status: 'sent',
-      createdAt: message.createdAt.toISOString(),
-    };
-
     try {
-      app.broadcastToConversation(id, 'message:new', messageData, request.userId);
+      broadcastToConversation(id, 'message:new', messageData, request.userId);
     } catch {
       // No WebSocket clients connected — message saved via HTTP
     }

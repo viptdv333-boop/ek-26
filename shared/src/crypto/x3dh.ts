@@ -10,7 +10,7 @@
  * Key hierarchy:
  *   Identity Key (long-term) -> Signed Pre-Key (rotated) -> One-Time Pre-Keys (consumed)
  */
-import { dh, verify, KeyPair } from './keys';
+import { dh, verify, KeyPair, generateKeyPair } from './keys';
 import { hkdf } from './hkdf';
 
 /** Bob's pre-key bundle as fetched from the server */
@@ -70,8 +70,6 @@ export function x3dhInitiate(
   }
 
   // Generate ephemeral key pair
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { generateKeyPair } = require('./keys');
   const ephemeralKey: KeyPair = generateKeyPair();
 
   // Compute DH values

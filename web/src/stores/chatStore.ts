@@ -7,6 +7,7 @@ export interface Message {
   senderName?: string;
   type: string;
   text?: string;
+  encrypted?: boolean;
   status: string;
   createdAt: string;
 }

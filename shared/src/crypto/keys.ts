@@ -7,6 +7,7 @@
 import { x25519 } from '@noble/curves/ed25519';
 import { ed25519 } from '@noble/curves/ed25519';
 import { randomBytes } from './random';
+import { toBase64, fromBase64 } from './encoding';
 
 export interface KeyPair {
   privateKey: Uint8Array; // 32 bytes
@@ -82,12 +83,12 @@ export function generateOneTimePreKeys(startId: number, count: number): OneTimeP
 
 /** Encode key to base64 */
 export function keyToBase64(key: Uint8Array): string {
-  return Buffer.from(key).toString('base64');
+  return toBase64(key);
 }
 
 /** Decode key from base64 */
 export function base64ToKey(b64: string): Uint8Array {
-  return new Uint8Array(Buffer.from(b64, 'base64'));
+  return fromBase64(b64);
 }
 
 /** Compare two keys for equality (constant-time) */

@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { KeyBundle } from '../models/KeyBundle';
+import { sendToUser } from '../ws/handler';
 import mongoose from 'mongoose';
 
 const LOW_PREKEY_THRESHOLD = 20;
@@ -87,15 +88,10 @@ export async function keyRoutes(app: FastifyInstance) {
         };
       }
 
-      // Check if pre-keys are running low, notify the user via WebSocket
+      // Check if pre-keys are running low, notify the key owner via WebSocket
       const remaining = bundle.oneTimePreKeys.length - 1;
       if (remaining < LOW_PREKEY_THRESHOLD) {
-        app.broadcastToConversation('', 'keys:low', {
-          remaining,
-          userId,
-        });
-        // Actually, we should send this to the specific user
-        // Using sendToUser from ws/handler would be more correct
+        sendToUser(userId, 'keys:low', { remaining });
       }
     }
 

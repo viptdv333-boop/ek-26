@@ -35,3 +35,12 @@ export const messagesApi = {
   send: (conversationId: string, data: { type: string; text?: string }) =>
     api.post<any>(`/conversations/${conversationId}/messages`, data),
 };
+
+// Keys (E2EE)
+export const keysApi = {
+  uploadBundle: (bundle: any) => api.post<{ success: boolean }>('/keys/bundle', bundle),
+  fetchBundle: (userId: string) => api.get<any>(`/keys/bundle/${userId}`),
+  replenish: (oneTimePreKeys: any[]) =>
+    api.post<{ success: boolean; added: number }>('/keys/replenish', { oneTimePreKeys }),
+  getCount: () => api.get<{ oneTimePreKeyCount: number; hasSignedPreKey: boolean }>('/keys/count'),
+};

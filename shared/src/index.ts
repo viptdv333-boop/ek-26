@@ -7,6 +7,7 @@ export * from './constants/transports';
 export * from './constants/errors';
 
 // Crypto
+export * from './crypto/encoding';
 export * from './crypto/keys';
 export * from './crypto/random';
 export * from './crypto/hkdf';

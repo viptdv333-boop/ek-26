@@ -13,6 +13,7 @@
 import { generateKeyPair, dh, KeyPair } from './keys';
 import { kdfRootKey, kdfChainKey } from './hkdf';
 import { aesEncrypt, aesDecrypt } from './aes';
+import { toBase64, fromBase64, toHex } from './encoding';
 
 const MAX_SKIP = 1000; // Max skipped message keys to store
 
@@ -243,7 +244,7 @@ function serializeHeader(header: MessageHeader): Uint8Array {
 
 /** Create a key for the skippedKeys map */
 function makeSkipKey(dhPublicKey: Uint8Array, messageNumber: number): string {
-  return `${Buffer.from(dhPublicKey).toString('hex')}:${messageNumber}`;
+  return `${toHex(dhPublicKey)}:${messageNumber}`;
 }
 
 /** Constant-time key comparison */
@@ -272,10 +273,10 @@ function concatBytes(...arrays: Uint8Array[]): Uint8Array {
  * Serialize RatchetState to JSON-safe object (for storage).
  */
 export function serializeRatchetState(state: RatchetState): object {
-  const toB64 = (b: Uint8Array | null) => b ? Buffer.from(b).toString('base64') : null;
+  const toB64 = (b: Uint8Array | null) => b ? toBase64(b) : null;
   const skipped: Record<string, string> = {};
   for (const [k, v] of state.skippedKeys) {
-    skipped[k] = Buffer.from(v).toString('base64');
+    skipped[k] = toBase64(v);
   }
   return {
     dhSendingKey: {
@@ -298,12 +299,12 @@ export function serializeRatchetState(state: RatchetState): object {
  */
 export function deserializeRatchetState(obj: any): RatchetState {
   const fromB64 = (s: string | null): Uint8Array | null =>
-    s ? new Uint8Array(Buffer.from(s, 'base64')) : null;
+    s ? fromBase64(s) : null;
 
   const skipped = new Map<string, Uint8Array>();
   if (obj.skippedKeys) {
     for (const [k, v] of Object.entries(obj.skippedKeys)) {
-      skipped.set(k, new Uint8Array(Buffer.from(v as string, 'base64')));
+      skipped.set(k, fromBase64(v as string));
     }
   }
 

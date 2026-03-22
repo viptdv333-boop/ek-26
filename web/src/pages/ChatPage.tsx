@@ -6,6 +6,7 @@ import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 import { conversationsApi } from '../services/api/endpoints';
 import { wsTransport } from '../services/transport/WebSocketTransport';
+import { keyManager } from '../services/crypto';
 
 export function ChatPage() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
@@ -20,6 +21,12 @@ export function ChatPage() {
 
     // Connect WebSocket
     wsTransport.connect();
+
+    // Initialize E2EE keys
+    keyManager.ensureKeysRegistered().catch((err: unknown) => {
+      console.error('E2EE key registration failed:', err);
+    });
+
     return () => wsTransport.disconnect();
   }, [setConversations]);
 

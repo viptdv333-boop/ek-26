@@ -5,6 +5,7 @@
  * This format is transport-agnostic — used over WebSocket, Push, RSS, and Mesh.
  */
 import { keyToBase64, base64ToKey } from './keys';
+import { toBase64, fromBase64 } from './encoding';
 import { EncryptedMessage } from './doubleRatchet';
 
 /** Protocol version */
@@ -51,7 +52,7 @@ export function serializeMessage(msg: EncryptedMessage): SerializedEncryptedMess
     dhKey: keyToBase64(msg.header.dhPublicKey),
     pn: msg.header.previousChainLength,
     n: msg.header.messageNumber,
-    ct: Buffer.from(msg.ciphertext).toString('base64'),
+    ct: toBase64(msg.ciphertext),
   };
 }
 
@@ -65,7 +66,7 @@ export function deserializeMessage(data: SerializedEncryptedMessage): EncryptedM
       previousChainLength: data.pn,
       messageNumber: data.n,
     },
-    ciphertext: new Uint8Array(Buffer.from(data.ct, 'base64')),
+    ciphertext: fromBase64(data.ct),
   };
 }
 

@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { messagesApi } from '../services/api/endpoints';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { MessageBubble } from './MessageBubble';
+import { sessionManager, messageCache } from '../services/crypto';
 
 const EMPTY_ARRAY: string[] = [];
 
@@ -55,18 +56,37 @@ export function ChatRoom({ conversationId }: Props) {
 
   useEffect(() => {
     setLoading(true);
-    messagesApi.list(conversationId).then((res) => {
+    messagesApi.list(conversationId).then(async (res) => {
       const list = Array.isArray(res) ? res : res.messages ?? [];
       // Normalize: API returns sender.id, store expects senderId
-      const normalized = list.map((m: any) => ({
-        id: m.id,
-        conversationId: m.conversationId,
-        senderId: m.senderId || m.sender?.id || '',
-        senderName: m.senderName || m.sender?.displayName || '',
-        type: m.type,
-        text: m.text,
-        status: m.status,
-        createdAt: m.createdAt,
+      const normalized = await Promise.all(list.map(async (m: any) => {
+        let text = m.text;
+        const encrypted = m.encrypted || false;
+        if (encrypted && m.envelope) {
+          try {
+            const cached = await messageCache.get(m.id);
+            if (cached) {
+              text = cached;
+            } else {
+              const senderId = m.senderId || m.sender?.id || '';
+              text = await sessionManager.decryptMessage(senderId, m.envelope);
+              await messageCache.put(m.id, text);
+            }
+          } catch {
+            text = '\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0437\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043e';
+          }
+        }
+        return {
+          id: m.id,
+          conversationId: m.conversationId,
+          senderId: m.senderId || m.sender?.id || '',
+          senderName: m.senderName || m.sender?.displayName || '',
+          type: m.type,
+          text,
+          encrypted,
+          status: m.status,
+          createdAt: m.createdAt,
+        };
       }));
       setMessages(conversationId, normalized.reverse());
     }).catch(() => {}).finally(() => setLoading(false));
@@ -81,19 +101,38 @@ export function ChatRoom({ conversationId }: Props) {
     if (!trimmed) return;
     setText('');
 
-    if (wsTransport.connected) {
-      wsTransport.send('message:send', {
-        conversationId,
-        type: 'text',
-        text: trimmed,
-      });
-    } else {
-      try {
+    try {
+      if (conv?.type === 'direct') {
+        // E2EE for direct chats
+        const other = conv.participants.find((p) => {
+          const id = typeof p === 'string' ? p : p.id;
+          return id !== userId;
+        });
+        const recipientId = other ? (typeof other === 'string' ? other : other.id) : null;
+
+        if (recipientId) {
+          const envelope = await sessionManager.encryptMessage(recipientId, trimmed);
+          // Store pending plaintext so the sent-echo can display it
+          wsTransport.setPendingText(conversationId, trimmed);
+          if (wsTransport.connected) {
+            wsTransport.send('message:send', { conversationId, type: 'text', encrypted: true, envelope });
+          } else {
+            await messagesApi.send(conversationId, { type: 'text', encrypted: true, envelope } as any);
+          }
+          return;
+        }
+      }
+
+      // Fallback: plaintext (group chats or no recipient found)
+      if (wsTransport.connected) {
+        wsTransport.send('message:send', { conversationId, type: 'text', text: trimmed });
+      } else {
         const msg = await messagesApi.send(conversationId, { type: 'text', text: trimmed });
         addMessage(conversationId, msg);
-      } catch {
-        setText(trimmed);
       }
+    } catch (err) {
+      console.error('Send error:', err);
+      setText(trimmed); // Restore text on error
     }
   };
 

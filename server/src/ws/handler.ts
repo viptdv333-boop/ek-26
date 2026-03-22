@@ -178,7 +178,11 @@ async function handleEvent(
   switch (event) {
     case 'message:send': {
       const { conversationId, text, type = 'text', replyToId } = data;
-      if (!conversationId || !text?.trim()) return;
+
+      const isEncrypted = !!(data.encrypted && data.envelope);
+
+      // For plaintext messages, text is required; for encrypted, envelope is required
+      if (!conversationId || (!isEncrypted && !text?.trim())) return;
 
       const sender = await User.findById(client.userId).select('displayName');
       if (!sender) return;
@@ -202,38 +206,69 @@ async function handleEvent(
         }
       }
 
-      const message = await Message.create({
-        conversationId: new mongoose.Types.ObjectId(conversationId),
-        senderId: new mongoose.Types.ObjectId(client.userId),
-        type,
-        text: text.trim(),
-        replyToId: replyToId ? new mongoose.Types.ObjectId(replyToId) : null,
-        deliveredVia: 'ws',
-      });
+      let messageData: Record<string, unknown>;
 
-      // Update conversation last message
-      await Conversation.findByIdAndUpdate(conversationId, {
-        lastMessage: {
-          text: text.trim().slice(0, 100),
-          senderName: sender.displayName,
-          timestamp: message.createdAt,
-        },
-        updatedAt: new Date(),
-      });
+      if (isEncrypted) {
+        // E2EE message — server never sees plaintext
+        const message = await Message.create({
+          conversationId: new mongoose.Types.ObjectId(conversationId),
+          senderId: new mongoose.Types.ObjectId(client.userId),
+          type,
+          text: null,
+          encryptedPayload: Buffer.from(data.envelope, 'utf8'),
+          deliveredVia: 'ws',
+        });
 
-      const messageData = {
-        id: message._id.toString(),
-        conversationId,
-        sender: {
-          id: client.userId,
-          displayName: sender.displayName,
-        },
-        type: message.type,
-        text: message.text,
-        replyToId: message.replyToId?.toString() || null,
-        status: 'sent',
-        createdAt: message.createdAt.toISOString(),
-      };
+        await Conversation.findByIdAndUpdate(conversationId, {
+          lastMessage: { text: 'Зашифрованное сообщение', senderName: sender.displayName, timestamp: message.createdAt },
+          updatedAt: new Date(),
+        });
+
+        messageData = {
+          id: message._id.toString(),
+          conversationId,
+          sender: { id: client.userId, displayName: sender.displayName },
+          type: message.type,
+          text: null,
+          encrypted: true,
+          envelope: data.envelope,
+          status: 'sent',
+          createdAt: message.createdAt.toISOString(),
+        };
+      } else {
+        // Plaintext message (backward compatibility)
+        const message = await Message.create({
+          conversationId: new mongoose.Types.ObjectId(conversationId),
+          senderId: new mongoose.Types.ObjectId(client.userId),
+          type,
+          text: text.trim(),
+          replyToId: replyToId ? new mongoose.Types.ObjectId(replyToId) : null,
+          deliveredVia: 'ws',
+        });
+
+        await Conversation.findByIdAndUpdate(conversationId, {
+          lastMessage: {
+            text: text.trim().slice(0, 100),
+            senderName: sender.displayName,
+            timestamp: message.createdAt,
+          },
+          updatedAt: new Date(),
+        });
+
+        messageData = {
+          id: message._id.toString(),
+          conversationId,
+          sender: {
+            id: client.userId,
+            displayName: sender.displayName,
+          },
+          type: message.type,
+          text: message.text,
+          replyToId: message.replyToId?.toString() || null,
+          status: 'sent',
+          createdAt: message.createdAt.toISOString(),
+        };
+      }
 
       // Send back to sender (confirmation)
       client.ws.send(JSON.stringify({ event: 'message:sent', data: messageData }));
@@ -243,6 +278,7 @@ async function handleEvent(
         .populate('participants', 'displayName avatarUrl')
         .lean();
       if (conv) {
+        const lastMessageText = isEncrypted ? 'Зашифрованное сообщение' : (messageData.text as string);
         const convData = {
           id: conv._id.toString(),
           type: conv.type,
@@ -252,7 +288,7 @@ async function handleEvent(
             avatarUrl: p.avatarUrl,
           })),
           groupMeta: conv.groupMeta || null,
-          lastMessage: { text: messageData.text, senderId: client.userId, createdAt: messageData.createdAt },
+          lastMessage: { text: lastMessageText, senderId: client.userId, createdAt: messageData.createdAt },
           unreadCount: 1,
           createdAt: conv.createdAt.toISOString(),
           updatedAt: new Date().toISOString(),

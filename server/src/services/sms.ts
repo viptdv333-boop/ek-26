@@ -32,6 +32,7 @@ export async function sendSms(phone: string, code: string): Promise<void> {
   url.searchParams.set('to', phone);
   url.searchParams.set('msg', `FOMO: Ваш код: ${code}`);
   url.searchParams.set('json', '1');
+  url.searchParams.set('from', ''); // Send from default number, bypass named sender
 
   console.log(`[SMS.ru] Sending code to ${phone}...`);
 

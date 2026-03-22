@@ -168,6 +168,12 @@ class WebSocketTransport {
       case 'user:offline':
         store.setUserOnline(data.userId, false);
         break;
+
+      case 'online:list':
+        if (Array.isArray(data.userIds)) {
+          data.userIds.forEach((id: string) => store.setUserOnline(id, true));
+        }
+        break;
     }
   }
 }

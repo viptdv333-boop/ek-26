@@ -109,8 +109,14 @@ export async function setupWebSocket(app: FastifyInstance) {
     // Update last seen
     await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
 
-    // Send confirmation
+    // Send confirmation + list of online users
     socket.send(JSON.stringify({ event: 'connected', data: { userId } }));
+
+    // Send current online users list
+    const onlineIds = getOnlineUserIds().filter(id => id !== userId);
+    if (onlineIds.length > 0) {
+      socket.send(JSON.stringify({ event: 'online:list', data: { userIds: onlineIds } }));
+    }
 
     // Handle messages
     socket.on('message', async (raw) => {

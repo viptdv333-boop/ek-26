@@ -179,6 +179,74 @@ export async function authRoutes(app: FastifyInstance) {
     }
   });
 
+  // Link phone number to existing account (request code)
+  app.post('/api/auth/link-phone/request', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { phone } = request.body as { phone: string };
+    if (!phone || phone.length < 10) {
+      return reply.code(400).send({ error: 'Invalid phone number' });
+    }
+
+    // Check if phone already taken by another user
+    const existing = await User.findOne({ phone });
+    if (existing && existing._id.toString() !== request.userId) {
+      return reply.code(409).send({ error: 'Phone number already in use' });
+    }
+
+    // Rate limit
+    const recentCode = await SmsCode.findOne({
+      phone,
+      createdAt: { $gt: new Date(Date.now() - 60_000) },
+    });
+    if (recentCode) {
+      return reply.code(429).send({ error: 'Wait 60 seconds before requesting a new code' });
+    }
+
+    const code = generateOtp();
+    await SmsCode.findOneAndUpdate(
+      { phone },
+      { phone, codeHash: hashOtp(code), attempts: 0, expiresAt: new Date(Date.now() + 5 * 60_000) },
+      { upsert: true }
+    );
+
+    await sendSms(phone, code);
+    return { message: 'Code sent' };
+  });
+
+  // Link phone number to existing account (verify code)
+  app.post('/api/auth/link-phone/verify', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { phone, code } = request.body as { phone: string; code: string };
+
+    const smsCode = await SmsCode.findOne({ phone });
+    if (!smsCode) {
+      return reply.code(400).send({ error: 'No code requested' });
+    }
+    if (smsCode.expiresAt < new Date()) {
+      await SmsCode.deleteOne({ _id: smsCode._id });
+      return reply.code(400).send({ error: 'Code expired' });
+    }
+    if (smsCode.codeHash !== hashOtp(code)) {
+      smsCode.attempts += 1;
+      await smsCode.save();
+      return reply.code(400).send({ error: 'Invalid code' });
+    }
+
+    await SmsCode.deleteOne({ _id: smsCode._id });
+
+    // Link phone to current user
+    await User.findByIdAndUpdate(request.userId, { phone });
+
+    const user = await User.findById(request.userId);
+    return {
+      success: true,
+      user: {
+        id: user!._id.toString(),
+        phone: user!.phone,
+        displayName: user!.displayName,
+        avatarUrl: user!.avatarUrl,
+      },
+    };
+  });
+
   // Refresh access token
   app.post('/api/auth/refresh', async (request, reply) => {
     const { refreshToken } = request.body as { refreshToken?: string };

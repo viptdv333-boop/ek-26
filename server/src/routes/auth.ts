@@ -3,7 +3,7 @@ import { requestCodeSchema, verifyCodeSchema } from '@ek-26/shared';
 import { User } from '../models/User';
 import { SmsCode } from '../models/SmsCode';
 import { Session } from '../models/Session';
-import { generateOtp, hashOtp, sendSms } from '../services/sms';
+import { generateOtp, hashOtp, sendCode } from '../services/sms';
 import { signAccessToken, signRefreshToken, hashToken, verifyToken } from '../services/jwt';
 import crypto from 'crypto';
 
@@ -32,7 +32,7 @@ export async function authRoutes(app: FastifyInstance) {
     });
 
     try {
-      await sendSms(body.phone, code);
+      await sendCode(body.phone, code);
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed' });
       return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });
@@ -214,7 +214,7 @@ export async function authRoutes(app: FastifyInstance) {
     );
 
     try {
-      await sendSms(phone, code);
+      await sendCode(phone, code);
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed (link-phone)' });
       return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });

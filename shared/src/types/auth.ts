@@ -7,7 +7,7 @@ export const requestCodeSchema = z.object({
 
 export const verifyCodeSchema = z.object({
   phone: phoneSchema,
-  code: z.string().length(6, 'Code must be 6 digits'),
+  code: z.string().length(4, 'Code must be 4 digits'),
 });
 
 export const refreshTokenSchema = z.object({

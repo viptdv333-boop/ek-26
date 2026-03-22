@@ -2,56 +2,55 @@ import crypto from 'crypto';
 import { config } from '../config';
 
 export function generateOtp(): string {
-  if (config.SMS_DEV_MODE) {
-    return '123456';
+  if (config.OTP_DEV_MODE) {
+    return '1234';
   }
-  return crypto.randomInt(100000, 999999).toString();
+  // 4-digit code for uCaller (0001–9999)
+  return crypto.randomInt(1, 10000).toString().padStart(4, '0');
 }
 
 export function hashOtp(code: string): string {
   return crypto.createHash('sha256').update(code).digest('hex');
 }
 
-interface SmsRuResponse {
-  status: string;
-  status_code: number;
-  status_text?: string;
-  sms: Record<string, { status: string; status_code: number; status_text?: string; sms_id?: string }>;
-  balance?: number;
+interface UCallerResponse {
+  status: boolean;
+  ucaller_id?: number;
+  phone?: number;
+  code?: number;
+  client?: string;
+  unique_request_id?: string;
+  exists?: boolean;
+  free_repeated?: boolean;
+  error?: string;
 }
 
-export async function sendSms(phone: string, code: string): Promise<void> {
-  if (config.SMS_DEV_MODE) {
-    console.log(`[DEV SMS] Code for ${phone}: ${code}`);
+export async function sendCode(phone: string, code: string): Promise<void> {
+  if (config.OTP_DEV_MODE) {
+    console.log(`[DEV OTP] Code for ${phone}: ${code}`);
     return;
   }
 
-  // Production: SMS.ru
-  const url = new URL('https://sms.ru/sms/send');
-  url.searchParams.set('api_id', config.SMSRU_API_ID);
-  url.searchParams.set('to', phone.replace(/[^\d+]/g, ''));
-  url.searchParams.set('msg', `Код: ${code}`);
-  url.searchParams.set('json', '1');
+  // Production: uCaller flash call
+  const cleanPhone = phone.replace(/[^\d]/g, '');
 
-  console.log(`[SMS.ru] Sending code to ${phone}...`);
+  const url = new URL('https://api.ucaller.ru/v1.0/initCall');
+  url.searchParams.set('service_id', config.UCALLER_SERVICE_ID);
+  url.searchParams.set('key', config.UCALLER_SECRET_KEY);
+  url.searchParams.set('phone', cleanPhone);
+  url.searchParams.set('code', code);
+
+  console.log(`[uCaller] Calling ${cleanPhone} with code ${code}...`);
 
   const res = await fetch(url.toString());
-  const data = (await res.json()) as SmsRuResponse;
+  const data = (await res.json()) as UCallerResponse;
 
-  console.log(`[SMS.ru] Response:`, JSON.stringify(data));
+  console.log(`[uCaller] Response:`, JSON.stringify(data));
 
-  // Check global status
-  if (data.status !== 'OK') {
-    console.error('[SMS.ru] Global error:', data.status_text || data.status_code);
-    throw new Error(`SMS.ru error: ${data.status_text || `code ${data.status_code}`}`);
+  if (!data.status) {
+    console.error('[uCaller] Error:', data.error);
+    throw new Error(`uCaller error: ${data.error || 'unknown'}`);
   }
 
-  // Check per-number status
-  const phoneStatus = data.sms?.[phone];
-  if (phoneStatus && phoneStatus.status !== 'OK') {
-    console.error(`[SMS.ru] Phone ${phone} error:`, phoneStatus.status_text || phoneStatus.status_code);
-    throw new Error(`SMS.ru: ${phoneStatus.status_text || `code ${phoneStatus.status_code}`}`);
-  }
-
-  console.log(`[SMS.ru] SMS sent successfully to ${phone}, balance: ${data.balance}`);
+  console.log(`[uCaller] Call initiated, ucaller_id: ${data.ucaller_id}`);
 }

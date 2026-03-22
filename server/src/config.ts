@@ -7,9 +7,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32).default('dev-secret-change-me-in-production-32chars!!'),
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('30d'),
-  SMSRU_API_ID: z.string().default(''),
+  UCALLER_SERVICE_ID: z.string().default(''),
+  UCALLER_SECRET_KEY: z.string().default(''),
   TELEGRAM_BOT_TOKEN: z.string().default(''),
-  SMS_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
+  OTP_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
   CORS_ORIGIN: z.string().default('*'),
 });
 

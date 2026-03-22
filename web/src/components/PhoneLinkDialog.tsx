@@ -11,7 +11,7 @@ type Step = 'phone' | 'code';
 export function PhoneLinkDialog({ onClose }: Props) {
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('+7');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [code, setCode] = useState(['', '', '', '']);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -50,7 +50,7 @@ export function PhoneLinkDialog({ onClose }: Props) {
       } else if (msg.includes('429')) {
         setError('Подождите перед повторной отправкой');
       } else {
-        setError('Ошибка отправки SMS');
+        setError('Ошибка звонка');
       }
     } finally {
       setLoading(false);
@@ -62,10 +62,10 @@ export function PhoneLinkDialog({ onClose }: Props) {
     const next = [...code];
     next[index] = value.slice(-1);
     setCode(next);
-    if (value && index < 5) {
+    if (value && index < 3) {
       codeRefs.current[index + 1]?.focus();
     }
-    if (next.every((d) => d) && next.join('').length === 6) {
+    if (next.every((d) => d) && next.join('').length === 4) {
       verifyCode(next.join(''));
     }
   };
@@ -85,7 +85,7 @@ export function PhoneLinkDialog({ onClose }: Props) {
       onClose();
     } catch {
       setError('Неверный код');
-      setCode(['', '', '', '', '', '']);
+      setCode(['', '', '', '']);
       codeRefs.current[0]?.focus();
     } finally {
       setLoading(false);
@@ -126,7 +126,7 @@ export function PhoneLinkDialog({ onClose }: Props) {
                 disabled={loading}
                 className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-medium transition-colors"
               >
-                {loading ? 'Отправка...' : 'Получить код'}
+                {loading ? 'Звоним...' : 'Получить код'}
               </button>
             </div>
           </div>
@@ -135,9 +135,12 @@ export function PhoneLinkDialog({ onClose }: Props) {
         {step === 'code' && (
           <div className="space-y-3">
             <p className="text-center text-gray-400 text-sm">
-              Код отправлен на <span className="text-white">{phone}</span>
+              Мы позвоним на <span className="text-white">{phone}</span>
             </p>
-            <div className="flex gap-2 justify-center">
+            <p className="text-center text-gray-500 text-xs">
+              Введите последние 4 цифры входящего номера
+            </p>
+            <div className="flex gap-3 justify-center">
               {code.map((digit, i) => (
                 <input
                   key={i}
@@ -148,21 +151,21 @@ export function PhoneLinkDialog({ onClose }: Props) {
                   value={digit}
                   onChange={(e) => handleCodeInput(i, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                  className="w-12 h-14 text-center text-xl font-mono bg-dark-800 border border-dark-500 rounded-xl text-white focus:outline-none focus:border-accent transition-colors"
+                  className="w-14 h-16 text-center text-2xl font-mono bg-dark-800 border border-dark-500 rounded-xl text-white focus:outline-none focus:border-accent transition-colors"
                 />
               ))}
             </div>
             <div className="text-center">
               {countdown > 0 ? (
-                <span className="text-gray-500 text-sm">Повторная отправка через {countdown}с</span>
+                <span className="text-gray-500 text-sm">Повторный звонок через {countdown}с</span>
               ) : (
                 <button onClick={handleRequestCode} className="text-accent text-sm hover:text-accent-hover">
-                  Отправить код повторно
+                  Позвонить повторно
                 </button>
               )}
             </div>
             <button
-              onClick={() => { setStep('phone'); setCode(['', '', '', '', '', '']); }}
+              onClick={() => { setStep('phone'); setCode(['', '', '', '']); }}
               className="w-full text-center text-gray-500 text-sm hover:text-gray-300"
             >
               Изменить номер

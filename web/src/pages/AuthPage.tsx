@@ -9,7 +9,7 @@ type Step = 'phone' | 'code' | 'profile';
 export function AuthPage() {
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('+7');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [code, setCode] = useState(['', '', '', '']);
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ export function AuthPage() {
       setCountdown(60);
       setTimeout(() => codeRefs.current[0]?.focus(), 100);
     } catch (e: any) {
-      setError(e.message || 'Ошибка отправки SMS');
+      setError(e.message || 'Ошибка звонка');
     } finally {
       setLoading(false);
     }
@@ -92,10 +92,10 @@ export function AuthPage() {
     const next = [...code];
     next[index] = value.slice(-1);
     setCode(next);
-    if (value && index < 5) {
+    if (value && index < 3) {
       codeRefs.current[index + 1]?.focus();
     }
-    if (next.every((d) => d) && next.join('').length === 6) {
+    if (next.every((d) => d) && next.join('').length === 4) {
       verifyCode(next.join(''));
     }
   };
@@ -118,7 +118,7 @@ export function AuthPage() {
       }
     } catch (e: any) {
       setError('Неверный код');
-      setCode(['', '', '', '', '', '']);
+      setCode(['', '', '', '']);
       codeRefs.current[0]?.focus();
     } finally {
       setLoading(false);
@@ -172,7 +172,7 @@ export function AuthPage() {
               disabled={loading}
               className="w-full py-3 bg-accent hover:bg-accent-hover disabled:opacity-50 rounded-xl text-white font-medium transition-colors"
             >
-              {loading ? 'Отправка...' : 'Получить код'}
+              {loading ? 'Звоним...' : 'Получить код'}
             </button>
 
             {/* Divider */}
@@ -191,9 +191,12 @@ export function AuthPage() {
         {step === 'code' && (
           <div className="space-y-4">
             <p className="text-center text-gray-400 text-sm">
-              Код отправлен на <span className="text-white">{phone}</span>
+              Мы позвоним на <span className="text-white">{phone}</span>
             </p>
-            <div className="flex gap-2 justify-center">
+            <p className="text-center text-gray-500 text-xs">
+              Введите последние 4 цифры входящего номера
+            </p>
+            <div className="flex gap-3 justify-center">
               {code.map((digit, i) => (
                 <input
                   key={i}
@@ -204,7 +207,7 @@ export function AuthPage() {
                   value={digit}
                   onChange={(e) => handleCodeInput(i, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                  className="w-12 h-14 text-center text-xl font-mono bg-dark-700 border border-dark-500 rounded-xl text-white focus:outline-none focus:border-accent transition-colors"
+                  className="w-14 h-16 text-center text-2xl font-mono bg-dark-700 border border-dark-500 rounded-xl text-white focus:outline-none focus:border-accent transition-colors"
                 />
               ))}
             </div>
@@ -218,7 +221,7 @@ export function AuthPage() {
               )}
             </div>
             <button
-              onClick={() => { setStep('phone'); setCode(['', '', '', '', '', '']); }}
+              onClick={() => { setStep('phone'); setCode(['', '', '', '']); }}
               className="w-full text-center text-gray-500 text-sm hover:text-gray-300"
             >
               Изменить номер

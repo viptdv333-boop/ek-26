@@ -136,6 +136,7 @@ export async function authRoutes(app: FastifyInstance) {
       const hmac = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
 
       if (hmac !== hash) {
+        app.log.error({ checkString, hmac, hash, tokenLen: config.TELEGRAM_BOT_TOKEN.length }, 'Telegram HMAC mismatch');
         return reply.code(401).send({ error: 'Invalid Telegram signature' });
       }
 

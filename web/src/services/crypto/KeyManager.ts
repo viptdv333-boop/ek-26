@@ -33,6 +33,17 @@ export class KeyManager {
     if (!existing) {
       await this.generateAndUploadAll();
     } else {
+      // Verify server actually has our keys (upload may have failed previously)
+      try {
+        const { hasSignedPreKey } = await keysApi.getCount();
+        if (!hasSignedPreKey) {
+          console.warn('E2EE: Server missing key bundle, re-uploading...');
+          await this.reuploadBundle(existing);
+        }
+      } catch {
+        // If getCount fails, try re-uploading anyway
+        await this.reuploadBundle(existing).catch(() => {});
+      }
       await this.replenishIfNeeded();
     }
   }
@@ -103,6 +114,20 @@ export class KeyManager {
         publicKey: keyToBase64(opk.keyPair.publicKey),
       })),
     });
+  }
+
+  private async reuploadBundle(identity: import('./KeyStore').IdentityRecord): Promise<void> {
+    await keysApi.uploadBundle({
+      identityKey: identity.identityKeyPair.publicKey,
+      signingKey: identity.signingKeyPair.publicKey,
+      signedPreKey: {
+        keyId: identity.signedPreKey.keyId,
+        publicKey: identity.signedPreKey.keyPair.publicKey,
+        signature: identity.signedPreKey.signature,
+      },
+      oneTimePreKeys: [], // Will be replenished separately
+    });
+    console.log('E2EE: Key bundle re-uploaded to server');
   }
 
   private async generateAndUploadOPKs(count: number): Promise<void> {

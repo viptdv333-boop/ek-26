@@ -183,6 +183,25 @@ async function handleEvent(
       const sender = await User.findById(client.userId).select('displayName');
       if (!sender) return;
 
+      // Auto-subscribe participants if not yet subscribed (new conversations)
+      if (!conversationSubscribers.has(conversationId)) {
+        const conv = await Conversation.findById(conversationId).select('participants');
+        if (conv) {
+          conversationSubscribers.set(conversationId, new Set());
+          for (const p of conv.participants) {
+            const pid = p.toString();
+            conversationSubscribers.get(conversationId)!.add(pid);
+            // Also add to client's conversationIds
+            const userClients = clients.get(pid);
+            if (userClients) {
+              for (const c of userClients) {
+                c.conversationIds.add(conversationId);
+              }
+            }
+          }
+        }
+      }
+
       const message = await Message.create({
         conversationId: new mongoose.Types.ObjectId(conversationId),
         senderId: new mongoose.Types.ObjectId(client.userId),
@@ -219,7 +238,35 @@ async function handleEvent(
       // Send back to sender (confirmation)
       client.ws.send(JSON.stringify({ event: 'message:sent', data: messageData }));
 
-      // Broadcast to other participants
+      // Broadcast to other participants (also send conversation data for new chats)
+      const conv = await Conversation.findById(conversationId)
+        .populate('participants', 'displayName avatarUrl')
+        .lean();
+      if (conv) {
+        const convData = {
+          id: conv._id.toString(),
+          type: conv.type,
+          participants: (conv.participants as any[]).map((p: any) => ({
+            id: p._id.toString(),
+            displayName: p.displayName,
+            avatarUrl: p.avatarUrl,
+          })),
+          groupMeta: conv.groupMeta || null,
+          lastMessage: { text: messageData.text, senderId: client.userId, createdAt: messageData.createdAt },
+          unreadCount: 1,
+          createdAt: conv.createdAt.toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Send conversation:new event to other participants so chat appears in their sidebar
+        for (const p of conv.participants as any[]) {
+          const pid = p._id.toString();
+          if (pid !== client.userId) {
+            sendToUser(pid, 'conversation:new', convData);
+          }
+        }
+      }
+
       broadcastToConversation(conversationId, 'message:new', messageData, client.userId);
       break;
     }

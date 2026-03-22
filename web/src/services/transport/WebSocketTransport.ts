@@ -169,6 +169,13 @@ class WebSocketTransport {
         store.setUserOnline(data.userId, false);
         break;
 
+      case 'conversation:new': {
+        // New conversation created by another user — add to sidebar
+        store.addConversation(data);
+        store.sortConversations();
+        break;
+      }
+
       case 'online:list':
         if (Array.isArray(data.userIds)) {
           data.userIds.forEach((id: string) => store.setUserOnline(id, true));

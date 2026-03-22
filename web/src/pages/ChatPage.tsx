@@ -22,10 +22,16 @@ export function ChatPage() {
     // Connect WebSocket
     wsTransport.connect();
 
-    // Initialize E2EE keys
-    keyManager.ensureKeysRegistered().catch((err: unknown) => {
-      console.error('E2EE key registration failed:', err);
-    });
+    // Initialize E2EE keys (retry on failure)
+    const registerKeys = (attempt = 1) => {
+      keyManager.ensureKeysRegistered().catch((err: unknown) => {
+        console.warn(`E2EE key registration attempt ${attempt} failed:`, err);
+        if (attempt < 3) {
+          setTimeout(() => registerKeys(attempt + 1), 2000 * attempt);
+        }
+      });
+    };
+    registerKeys();
 
     return () => wsTransport.disconnect();
   }, [setConversations]);

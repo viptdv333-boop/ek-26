@@ -2,8 +2,52 @@ import { useAuthStore } from '../../stores/authStore';
 
 const BASE_URL = '/api';
 
+// Mutex for token refresh — prevents concurrent refresh attempts
+let refreshPromise: Promise<boolean> | null = null;
+
+async function doRefresh(): Promise<boolean> {
+  const { refreshToken, setTokens, logout } = useAuthStore.getState();
+  if (!refreshToken) {
+    logout();
+    return false;
+  }
+
+  try {
+    const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (refreshRes.ok) {
+      const data = await refreshRes.json();
+      setTokens(data.accessToken, data.refreshToken);
+      return true;
+    } else {
+      logout();
+      return false;
+    }
+  } catch {
+    logout();
+    return false;
+  }
+}
+
+async function refreshTokenIfNeeded(): Promise<boolean> {
+  // If a refresh is already in progress, wait for it
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+  refreshPromise = doRefresh();
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const { token, refreshToken, setTokens, logout } = useAuthStore.getState();
+  const { token } = useAuthStore.getState();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -16,24 +60,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
 
-  if (res.status === 401 && refreshToken) {
-    const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (refreshRes.ok) {
-      const data = await refreshRes.json();
-      setTokens(data.accessToken, data.refreshToken);
-      headers['Authorization'] = `Bearer ${data.accessToken}`;
+  if (res.status === 401) {
+    const refreshed = await refreshTokenIfNeeded();
+    if (refreshed) {
+      // Retry with new token
+      const { token: newToken } = useAuthStore.getState();
+      headers['Authorization'] = `Bearer ${newToken}`;
       const retry = await fetch(`${BASE_URL}${path}`, { ...options, headers });
       if (!retry.ok) throw new Error(`${retry.status}: ${await retry.text()}`);
       return retry.json();
-    } else {
-      logout();
-      throw new Error('Session expired');
     }
+    throw new Error('Session expired');
   }
 
   if (!res.ok) {

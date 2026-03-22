@@ -57,7 +57,18 @@ export function ChatRoom({ conversationId }: Props) {
     setLoading(true);
     messagesApi.list(conversationId).then((res) => {
       const list = Array.isArray(res) ? res : res.messages ?? [];
-      setMessages(conversationId, list.reverse());
+      // Normalize: API returns sender.id, store expects senderId
+      const normalized = list.map((m: any) => ({
+        id: m.id,
+        conversationId: m.conversationId,
+        senderId: m.senderId || m.sender?.id || '',
+        senderName: m.senderName || m.sender?.displayName || '',
+        type: m.type,
+        text: m.text,
+        status: m.status,
+        createdAt: m.createdAt,
+      }));
+      setMessages(conversationId, normalized.reverse());
     }).catch(() => {}).finally(() => setLoading(false));
   }, [conversationId, setMessages]);
 

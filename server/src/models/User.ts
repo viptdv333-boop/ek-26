@@ -30,8 +30,8 @@ export interface IUser extends Document {
 const userSchema = new Schema<IUser>(
   {
     phone: { type: String, default: null },
-    telegramId: { type: Number, default: null },
-    telegramUsername: { type: String, default: null },
+    telegramId: { type: Number },
+    telegramUsername: { type: String },
     displayName: { type: String, required: true, default: '' },
     avatarUrl: { type: String, default: null },
     status: { type: String, default: '' },
@@ -59,7 +59,7 @@ const userSchema = new Schema<IUser>(
   { timestamps: true, autoIndex: false }
 );
 
-userSchema.index({ phone: 1 }, { unique: true, sparse: true });
-userSchema.index({ telegramId: 1 }, { unique: true, sparse: true });
+userSchema.index({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $exists: true, $ne: null } } });
+userSchema.index({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $exists: true, $ne: null } } });
 
 export const User = mongoose.model<IUser>('User', userSchema);

@@ -67,6 +67,18 @@ async function main() {
   try {
     await mongoose.connect(config.MONGODB_URI);
     app.log.info(`Connected to MongoDB: ${config.MONGODB_URI}`);
+
+    // Fix indexes: drop old sparse indexes and recreate as partial
+    const usersCol = mongoose.connection.collection('users');
+    for (const idx of ['phone_1', 'telegramId_1']) {
+      try { await usersCol.dropIndex(idx); } catch {}
+    }
+    // Remove null telegramId/phone values so partial index works
+    await usersCol.updateMany({ telegramId: null }, { $unset: { telegramId: '' } });
+    await usersCol.updateMany({ phone: null }, { $unset: { phone: '' } });
+    await usersCol.createIndex({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $exists: true, $ne: null } } });
+    await usersCol.createIndex({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $exists: true, $ne: null } } });
+    app.log.info('Database indexes synced');
   } catch (err: unknown) {
     app.log.error('Failed to connect to MongoDB: %s', String(err));
     process.exit(1);

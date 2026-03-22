@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 import { messagesApi } from '../services/api/endpoints';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { MessageBubble } from './MessageBubble';
+
+const EMPTY_ARRAY: string[] = [];
 
 interface Props {
   conversationId: string;
@@ -13,11 +15,11 @@ export function ChatRoom({ conversationId }: Props) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messages = useChatStore((s) => s.messages[conversationId] || []);
+  const messages = useChatStore((s) => s.messages[conversationId]) || EMPTY_ARRAY;
   const setMessages = useChatStore((s) => s.setMessages);
   const addMessage = useChatStore((s) => s.addMessage);
   const conversations = useChatStore((s) => s.conversations);
-  const typingUsers = useChatStore((s) => s.typingUsers[conversationId] || []);
+  const typingUsers = useChatStore((s) => s.typingUsers[conversationId]) || EMPTY_ARRAY;
   const isUserOnline = useChatStore((s) => s.isUserOnline);
   const userId = useAuthStore((s) => s.user?.id);
 

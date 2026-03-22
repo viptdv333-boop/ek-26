@@ -84,7 +84,9 @@ export async function userRoutes(app: FastifyInstance) {
     const filter: Record<string, unknown> = { _id: { $ne: request.userId } };
 
     if (isPhone) {
-      filter.phone = { $regex: q.replace(/[^+\d]/g, ''), $options: 'i' };
+      // Escape + for regex, clean non-digit chars
+      const cleanPhone = q.replace(/[^+\d]/g, '').replace(/\+/g, '\\+');
+      filter.phone = { $regex: cleanPhone, $options: 'i' };
     } else {
       filter.$or = [
         { displayName: { $regex: q, $options: 'i' } },

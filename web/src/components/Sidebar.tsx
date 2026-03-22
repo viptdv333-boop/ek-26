@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useChatStore, Conversation } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 import { NewChatDialog } from './NewChatDialog';
+import { PhoneLinkDialog } from './PhoneLinkDialog';
 
 export function Sidebar() {
   const conversations = useChatStore((s) => s.conversations);
@@ -9,8 +10,10 @@ export function Sidebar() {
   const setActive = useChatStore((s) => s.setActiveConversation);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const authLogout = useAuthStore((s) => s.logout);
+  const resetChat = useChatStore((s) => s.reset);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [showPhoneLink, setShowPhoneLink] = useState(false);
   const [search, setSearch] = useState('');
 
   const getConversationName = (conv: Conversation): string => {
@@ -64,7 +67,7 @@ export function Sidebar() {
             </svg>
           </button>
           <button
-            onClick={logout}
+            onClick={() => { resetChat(); authLogout(); }}
             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
             title="Выйти"
           >
@@ -143,14 +146,29 @@ export function Sidebar() {
       </div>
 
       {/* User info */}
-      <div className="h-14 px-4 flex items-center border-t border-dark-600">
-        <div className="w-8 h-8 rounded-full bg-accent/30 flex items-center justify-center mr-3">
-          <span className="text-accent text-xs font-medium">{user?.displayName?.[0]?.toUpperCase()}</span>
+      <div className="px-4 py-3 border-t border-dark-600">
+        <div className="flex items-center">
+          <div className="w-8 h-8 rounded-full bg-accent/30 flex items-center justify-center mr-3">
+            <span className="text-accent text-xs font-medium">{user?.displayName?.[0]?.toUpperCase()}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-sm text-gray-300 truncate block">{user?.displayName}</span>
+            {user?.phone ? (
+              <span className="text-xs text-gray-500 truncate block">{user.phone}</span>
+            ) : (
+              <button
+                onClick={() => setShowPhoneLink(true)}
+                className="text-xs text-accent hover:text-accent-hover transition-colors"
+              >
+                Привязать телефон
+              </button>
+            )}
+          </div>
         </div>
-        <span className="text-sm text-gray-300 truncate">{user?.displayName}</span>
       </div>
 
       {showNewChat && <NewChatDialog onClose={() => setShowNewChat(false)} />}
+      {showPhoneLink && <PhoneLinkDialog onClose={() => setShowPhoneLink(false)} />}
     </div>
   );
 }

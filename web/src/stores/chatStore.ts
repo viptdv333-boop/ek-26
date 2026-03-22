@@ -40,12 +40,13 @@ interface ChatState {
   sortConversations: () => void;
   setUserOnline: (userId: string, online: boolean) => void;
   isUserOnline: (userId: string) => boolean;
+  reset: () => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   messages: {},
-  activeConversationId: null,
+  activeConversationId: sessionStorage.getItem('ek26_activeConv'),
   typingUsers: {},
   onlineUsers: new Set(),
 
@@ -70,7 +71,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
       };
     }),
 
-  setActiveConversation: (id) => set({ activeConversationId: id }),
+  setActiveConversation: (id) => {
+    if (id) {
+      sessionStorage.setItem('ek26_activeConv', id);
+    } else {
+      sessionStorage.removeItem('ek26_activeConv');
+    }
+    set({ activeConversationId: id });
+  },
 
   setTyping: (conversationId, userIds) =>
     set((state) => ({
@@ -110,4 +118,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }),
 
   isUserOnline: (userId) => get().onlineUsers.has(userId),
+
+  reset: () => {
+    sessionStorage.removeItem('ek26_activeConv');
+    set({
+      conversations: [],
+      messages: {},
+      activeConversationId: null,
+      typingUsers: {},
+      onlineUsers: new Set(),
+    });
+  },
 }));

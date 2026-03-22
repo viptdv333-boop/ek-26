@@ -94,7 +94,14 @@ export function ChatRoom({ conversationId }: Props) {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Mark incoming messages as read
+    if (messages.length > 0) {
+      const unread = messages.filter(m => m.senderId !== userId && m.status !== 'read');
+      for (const m of unread) {
+        wsTransport.send('message:read', { messageId: m.id });
+      }
+    }
+  }, [messages, userId]);
 
   const handleSend = async () => {
     const trimmed = text.trim();

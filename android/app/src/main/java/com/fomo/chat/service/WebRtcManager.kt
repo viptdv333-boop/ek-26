@@ -2,6 +2,7 @@ package com.fomo.chat.service
 
 import android.content.Context
 import com.fomo.chat.data.remote.WebSocketClient
+import com.google.gson.JsonObject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -92,10 +93,10 @@ class WebRtcManager @Inject constructor(
     private fun observeWebSocketEvents() {
         scope.launch {
             webSocketClient.events.collect { event ->
-                when (event.event) {
-                    "call:incoming" -> handleIncomingCall(event.data)
-                    "call:answer" -> handleAnswer(event.data)
-                    "call:ice" -> handleIceCandidate(event.data)
+                when (event.type) {
+                    "call:incoming" -> handleIncomingCall(event.payload)
+                    "call:answer" -> handleAnswer(event.payload)
+                    "call:ice" -> handleIceCandidate(event.payload)
                     "call:end" -> handleCallEnd()
                     "call:decline" -> handleCallEnd()
                     "call:busy" -> handleCallEnd()
@@ -114,12 +115,15 @@ class WebRtcManager @Inject constructor(
         scope.launch {
             val offer = createOffer()
             peerConnection?.setLocalDescription(SdpObserverAdapter(), offer)
-            webSocketClient.send("call:offer", mapOf(
-                "targetUserId" to peerId,
-                "callId" to callId,
-                "type" to type,
-                "offer" to mapOf("type" to offer.type.canonicalForm(), "sdp" to offer.description)
-            ))
+            webSocketClient.send("call:offer", JsonObject().apply {
+                addProperty("targetUserId", peerId)
+                addProperty("callId", callId)
+                addProperty("type", type)
+                add("offer", JsonObject().apply {
+                    addProperty("type", offer.type.canonicalForm())
+                    addProperty("sdp", offer.description)
+                })
+            })
         }
     }
 
@@ -132,11 +136,11 @@ class WebRtcManager @Inject constructor(
     fun endCall() {
         val info = _callInfo.value
         if (info != null) {
-            webSocketClient.send("call:end", mapOf(
-                "targetUserId" to info.peerId,
-                "callId" to info.callId,
-                "reason" to "hangup"
-            ))
+            webSocketClient.send("call:end", JsonObject().apply {
+                addProperty("targetUserId", info.peerId)
+                addProperty("callId", info.callId)
+                addProperty("reason", "hangup")
+            })
         }
         cleanup()
     }
@@ -144,10 +148,10 @@ class WebRtcManager @Inject constructor(
     fun declineCall() {
         val info = _callInfo.value
         if (info != null) {
-            webSocketClient.send("call:decline", mapOf(
-                "callerId" to info.peerId,
-                "callId" to info.callId
-            ))
+            webSocketClient.send("call:decline", JsonObject().apply {
+                addProperty("callerId", info.peerId)
+                addProperty("callId", info.callId)
+            })
         }
         cleanup()
     }
@@ -162,13 +166,13 @@ class WebRtcManager @Inject constructor(
         localVideoTrack?.setEnabled(!_isCameraOff.value)
     }
 
-    private fun handleIncomingCall(data: Map<String, Any?>) {
-        val callId = data["callId"] as? String ?: return
-        val callerId = data["callerId"] as? String ?: return
-        val callerName = data["callerName"] as? String ?: ""
-        val callerAvatar = data["callerAvatar"] as? String
-        val type = data["type"] as? String ?: "audio"
-        val offerMap = data["offer"] as? Map<*, *> ?: return
+    private fun handleIncomingCall(data: JsonObject) {
+        val callId = data.get("callId")?.asString ?: return
+        val callerId = data.get("callerId")?.asString ?: return
+        val callerName = data.get("callerName")?.asString ?: ""
+        val callerAvatar = data.get("callerAvatar")?.asString
+        val type = data.get("type")?.asString ?: "audio"
+        val offerObj = data.getAsJsonObject("offer") ?: return
 
         _callInfo.value = CallInfo(callId, callerId, callerName, callerAvatar, type, "incoming", CallState.RINGING)
 
@@ -177,7 +181,7 @@ class WebRtcManager @Inject constructor(
 
         val offer = SessionDescription(
             SessionDescription.Type.OFFER,
-            offerMap["sdp"] as? String ?: return
+            offerObj.get("sdp")?.asString ?: return
         )
 
         scope.launch {
@@ -189,19 +193,22 @@ class WebRtcManager @Inject constructor(
             peerConnection?.setLocalDescription(SdpObserverAdapter(), answer)
             _callInfo.value = _callInfo.value?.copy(state = CallState.CONNECTING)
 
-            webSocketClient.send("call:answer", mapOf(
-                "callerId" to callerId,
-                "callId" to callId,
-                "answer" to mapOf("type" to answer.type.canonicalForm(), "sdp" to answer.description)
-            ))
+            webSocketClient.send("call:answer", JsonObject().apply {
+                addProperty("callerId", callerId)
+                addProperty("callId", callId)
+                add("answer", JsonObject().apply {
+                    addProperty("type", answer.type.canonicalForm())
+                    addProperty("sdp", answer.description)
+                })
+            })
         }
     }
 
-    private fun handleAnswer(data: Map<String, Any?>) {
-        val answerMap = data["answer"] as? Map<*, *> ?: return
+    private fun handleAnswer(data: JsonObject) {
+        val answerObj = data.getAsJsonObject("answer") ?: return
         val answer = SessionDescription(
             SessionDescription.Type.ANSWER,
-            answerMap["sdp"] as? String ?: return
+            answerObj.get("sdp")?.asString ?: return
         )
         peerConnection?.setRemoteDescription(SdpObserverAdapter(), answer)
         remoteDescriptionSet = true
@@ -209,12 +216,12 @@ class WebRtcManager @Inject constructor(
         flushCandidates()
     }
 
-    private fun handleIceCandidate(data: Map<String, Any?>) {
-        val candidateMap = data["candidate"] as? Map<*, *> ?: return
+    private fun handleIceCandidate(data: JsonObject) {
+        val candidateObj = data.getAsJsonObject("candidate") ?: return
         val candidate = IceCandidate(
-            candidateMap["sdpMid"] as? String ?: "",
-            (candidateMap["sdpMLineIndex"] as? Number)?.toInt() ?: 0,
-            candidateMap["candidate"] as? String ?: return
+            candidateObj.get("sdpMid")?.asString ?: "",
+            candidateObj.get("sdpMLineIndex")?.asInt ?: 0,
+            candidateObj.get("candidate")?.asString ?: return
         )
         if (remoteDescriptionSet) {
             peerConnection?.addIceCandidate(candidate)
@@ -242,15 +249,15 @@ class WebRtcManager @Inject constructor(
             override fun onIceCandidate(candidate: IceCandidate?) {
                 candidate?.let {
                     val info = _callInfo.value ?: return
-                    webSocketClient.send("call:ice", mapOf(
-                        "targetUserId" to info.peerId,
-                        "callId" to info.callId,
-                        "candidate" to mapOf(
-                            "candidate" to it.sdp,
-                            "sdpMid" to it.sdpMid,
-                            "sdpMLineIndex" to it.sdpMLineIndex
-                        )
-                    ))
+                    webSocketClient.send("call:ice", JsonObject().apply {
+                        addProperty("targetUserId", info.peerId)
+                        addProperty("callId", info.callId)
+                        add("candidate", JsonObject().apply {
+                            addProperty("candidate", it.sdp)
+                            addProperty("sdpMid", it.sdpMid)
+                            addProperty("sdpMLineIndex", it.sdpMLineIndex)
+                        })
+                    })
                 }
             }
 

@@ -10,6 +10,7 @@ import com.fomo.chat.MainActivity
 import com.fomo.chat.R
 import com.fomo.chat.data.local.crypto.TokenManager
 import com.fomo.chat.data.remote.api.UsersApi
+import com.fomo.chat.data.remote.dto.PushTokenRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,7 +30,7 @@ class FcmService : FirebaseMessagingService() {
         if (tokenManager.getAccessToken() != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    usersApi.registerPushToken(mapOf("token" to token, "platform" to "fcm"))
+                    usersApi.registerPushToken(PushTokenRequest(token = token, platform = "fcm"))
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

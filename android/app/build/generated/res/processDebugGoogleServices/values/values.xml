@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">1041371304955</string>
+    <string name="google_api_key" translatable="false">AIzaSyCYl_ngQzWWkk_T5stMmjk2ucEbrkAbh5Y</string>
+    <string name="google_app_id" translatable="false">1:1041371304955:android:26c6ae6c0e7307f1ad315e</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCYl_ngQzWWkk_T5stMmjk2ucEbrkAbh5Y</string>
+    <string name="google_storage_bucket" translatable="false">fomo-chat-665e9.firebasestorage.app</string>
+    <string name="project_id" translatable="false">fomo-chat-665e9</string>
+</resources>

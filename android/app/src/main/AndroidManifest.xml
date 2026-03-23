@@ -16,7 +16,7 @@
     <application
         android:name=".FomoApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher_foreground"
         android:label="FOMO Chat"
         android:supportsRtl="true"
         android:theme="@style/Theme.FomoChat"

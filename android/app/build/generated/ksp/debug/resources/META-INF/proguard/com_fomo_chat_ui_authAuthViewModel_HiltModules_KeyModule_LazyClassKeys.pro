@@ -1,0 +1,4 @@
+-keep,allowobfuscation,allowshrinking class com.fomo.chat.MainViewModel
+-keep,allowobfuscation,allowshrinking class com.fomo.chat.MainViewModel
+-keep,allowobfuscation,allowshrinking class com.fomo.chat.ui.auth.AuthViewModel
+-keep,allowobfuscation,allowshrinking class com.fomo.chat.ui.auth.AuthViewModel

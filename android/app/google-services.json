@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1041371304955",
+    "project_id": "fomo-chat-665e9",
+    "storage_bucket": "fomo-chat-665e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041371304955:android:26c6ae6c0e7307f1ad315e",
+        "android_client_info": {
+          "package_name": "com.fomo.chat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYl_ngQzWWkk_T5stMmjk2ucEbrkAbh5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -133,6 +133,10 @@ class WebSocketTransport {
           senderId: msg.senderId,
           createdAt: data.createdAt,
         });
+        // Increment unread if this conversation is not active
+        if (store.activeConversationId !== data.conversationId) {
+          store.incrementUnread(data.conversationId);
+        }
         store.sortConversations();
         break;
       }

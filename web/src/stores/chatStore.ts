@@ -38,6 +38,8 @@ interface ChatState {
   setTyping: (conversationId: string, userIds: string[]) => void;
   updateLastMessage: (conversationId: string, message: { text: string; senderId: string; createdAt: string }) => void;
   updateMessageStatus: (messageId: string, status: string) => void;
+  incrementUnread: (conversationId: string) => void;
+  clearUnread: (conversationId: string) => void;
   sortConversations: () => void;
   setUserOnline: (userId: string, online: boolean) => void;
   isUserOnline: (userId: string) => boolean;
@@ -75,10 +77,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setActiveConversation: (id) => {
     if (id) {
       sessionStorage.setItem('ek26_activeConv', id);
+      // Clear unread count when opening a conversation
+      set((state) => ({
+        activeConversationId: id,
+        conversations: state.conversations.map((c) =>
+          c.id === id ? { ...c, unreadCount: 0 } : c
+        ),
+      }));
     } else {
       sessionStorage.removeItem('ek26_activeConv');
+      set({ activeConversationId: id });
     }
-    set({ activeConversationId: id });
   },
 
   setTyping: (conversationId, userIds) =>
@@ -103,6 +112,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
       return { messages: newMessages };
     }),
+
+  incrementUnread: (conversationId) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === conversationId ? { ...c, unreadCount: (c.unreadCount || 0) + 1 } : c
+      ),
+    })),
+
+  clearUnread: (conversationId) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === conversationId ? { ...c, unreadCount: 0 } : c
+      ),
+    })),
 
   sortConversations: () =>
     set((state) => ({

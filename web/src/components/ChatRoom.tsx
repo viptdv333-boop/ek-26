@@ -44,9 +44,21 @@ export function ChatRoom({ conversationId }: Props) {
   const userId = useAuthStore((s) => s.user?.id);
   const myAvatarUrl = useAuthStore((s) => s.user?.avatarUrl) || null;
 
-  // Wallpaper support
+  // Wallpaper support — reactive via storage event
+  const [currentWallpaper, setCurrentWallpaper] = useState(() => localStorage.getItem('ek26_wallpaper') || 'default');
+
+  useEffect(() => {
+    const handler = () => setCurrentWallpaper(localStorage.getItem('ek26_wallpaper') || 'default');
+    window.addEventListener('wallpaper-changed', handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener('wallpaper-changed', handler);
+      window.removeEventListener('storage', handler);
+    };
+  }, []);
+
   const getWallpaperStyle = (): React.CSSProperties => {
-    const wallpaper = localStorage.getItem('ek26_wallpaper') || 'default';
+    const wallpaper = currentWallpaper;
     const presets: Record<string, string> = {
       default: '#1a1a2e',
       'dark-blue': '#0f1b2d',

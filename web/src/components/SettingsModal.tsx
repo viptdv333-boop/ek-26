@@ -115,6 +115,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   const handleWallpaperChange = (id: string) => {
     setWallpaper(id);
     localStorage.setItem('ek26_wallpaper', id);
+    window.dispatchEvent(new Event('wallpaper-changed'));
   };
 
   const handleWallpaperUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +132,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
       const url = att.url;
       setWallpaper(url);
       localStorage.setItem('ek26_wallpaper', url);
+      window.dispatchEvent(new Event('wallpaper-changed'));
     } catch (err: any) {
       alert(err.message || 'Ошибка загрузки');
     } finally {
@@ -336,27 +338,8 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               {/* Theme toggle */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-3">Тема</label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleThemeChange('dark')}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                      theme === 'dark'
-                        ? 'bg-accent text-white'
-                        : 'bg-dark-600 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    Тёмная
-                  </button>
-                  <button
-                    onClick={() => handleThemeChange('light')}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                      theme === 'light'
-                        ? 'bg-accent text-white'
-                        : 'bg-dark-600 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    Светлая
-                  </button>
+                <div className="px-3 py-2.5 bg-dark-600 rounded-xl text-sm text-gray-500">
+                  Тёмная тема (светлая в разработке)
                 </div>
               </div>
 

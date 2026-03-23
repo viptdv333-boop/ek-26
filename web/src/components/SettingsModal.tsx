@@ -432,7 +432,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                           className={`px-3 py-1.5 text-xs text-white ${shape.radius}`}
                           style={{
                             backgroundColor: bubbleColor,
-                            ...(shape.id === 'cloud' ? { borderRadius: '1.5rem 1.5rem 1.5rem 1.5rem / 50% 50% 50% 50%', padding: '6px 16px' } : {}),
+                            ...(shape.id === 'cloud' ? { borderRadius: '50%', padding: '8px 20px' } : {}),
                           }}
                         >
                           Привет

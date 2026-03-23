@@ -28,7 +28,10 @@ export function ChatRoom({ conversationId }: Props) {
   const setEditingMessage = useChatStore((s) => s.setEditingMessage);
   const editMessage = useChatStore((s) => s.editMessage);
   const deleteMessage = useChatStore((s) => s.deleteMessage);
-  const setPinnedMessage = useChatStore((s) => s.setPinnedMessage);
+  const setPinnedMessages = useChatStore((s) => s.setPinnedMessages);
+  const addPinnedMessage = useChatStore((s) => s.addPinnedMessage);
+  const removePinnedMessage = useChatStore((s) => s.removePinnedMessage);
+  const [pinIndex, setPinIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messages = useChatStore((s) => s.messages[conversationId]) || EMPTY_ARRAY;
@@ -120,11 +123,12 @@ export function ChatRoom({ conversationId }: Props) {
       setMessages(conversationId, decrypted.reverse());
     }).catch(() => {}).finally(() => setLoading(false));
 
-    // Load pinned message
-    messageActionsApi.getPin(conversationId).then((res: any) => {
-      setPinnedMessage(conversationId, res?.pinned || null);
+    // Load pinned messages
+    messageActionsApi.getPins(conversationId).then((res: any) => {
+      setPinnedMessages(conversationId, res?.pinned || []);
+      setPinIndex(0);
     }).catch(() => {});
-  }, [conversationId, setMessages, setPinnedMessage]);
+  }, [conversationId, setMessages, setPinnedMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -301,16 +305,18 @@ export function ChatRoom({ conversationId }: Props) {
   const handlePin = async (msg: any) => {
     try {
       await messageActionsApi.pin(conversationId, msg.id);
-      setPinnedMessage(conversationId, { id: msg.id, text: msg.text, senderName: msg.senderName || '' });
-    } catch (err) {
-      console.error('Pin failed:', err);
+      addPinnedMessage(conversationId, { id: msg.id, text: msg.text, senderName: msg.senderName || '' });
+      setPinIndex(0);
+    } catch (err: any) {
+      if (!err.message?.includes('409')) console.error('Pin failed:', err);
     }
   };
 
-  const handleUnpin = async () => {
+  const handleUnpin = async (messageId: string) => {
     try {
-      await messageActionsApi.pin(conversationId, null);
-      setPinnedMessage(conversationId, null);
+      await messageActionsApi.unpin(conversationId, messageId);
+      removePinnedMessage(conversationId, messageId);
+      setPinIndex(0);
     } catch (err) {
       console.error('Unpin failed:', err);
     }
@@ -339,33 +345,45 @@ export function ChatRoom({ conversationId }: Props) {
         </div>
       </div>
 
-      {/* Pinned message bar */}
-      {conv?.pinnedMessage && (
-        <div
-          className="px-4 py-2 border-b border-dark-600 bg-dark-800/80 flex items-center gap-3 cursor-pointer hover:bg-dark-700 transition-colors"
-          onClick={() => {
-            const el = document.getElementById(`msg-${conv.pinnedMessage!.id}`);
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              el.classList.add('ring-2', 'ring-accent', 'ring-opacity-50');
-              setTimeout(() => el.classList.remove('ring-2', 'ring-accent', 'ring-opacity-50'), 2000);
-            }
-          }}
-        >
-          <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-          </svg>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] text-accent font-medium">Закреплено</p>
-            <p className="text-xs text-gray-300 truncate">{conv.pinnedMessage.text || 'Сообщение'}</p>
+      {/* Pinned messages bar */}
+      {conv?.pinnedMessages && conv.pinnedMessages.length > 0 && (() => {
+        const pins = conv.pinnedMessages;
+        const currentPin = pins[pinIndex % pins.length];
+        if (!currentPin) return null;
+        return (
+          <div
+            className="px-4 py-2 border-b border-dark-600 bg-dark-800/80 flex items-center gap-3 cursor-pointer hover:bg-dark-700 transition-colors"
+            onClick={() => {
+              const el = document.getElementById(`msg-${currentPin.id}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('ring-2', 'ring-accent', 'ring-opacity-50');
+                setTimeout(() => el.classList.remove('ring-2', 'ring-accent', 'ring-opacity-50'), 2000);
+              }
+              // Cycle to next pin on click
+              if (pins.length > 1) setPinIndex((pinIndex + 1) % pins.length);
+            }}
+          >
+            <div className="flex flex-col items-center flex-shrink-0">
+              <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              </svg>
+              {pins.length > 1 && (
+                <span className="text-[9px] text-accent">{pinIndex % pins.length + 1}/{pins.length}</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-accent font-medium">Закреплено {currentPin.senderName && `· ${currentPin.senderName}`}</p>
+              <p className="text-xs text-gray-300 truncate">{currentPin.text || 'Сообщение'}</p>
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); handleUnpin(currentPin.id); }} className="text-gray-400 hover:text-white p-1 flex-shrink-0" title="Открепить">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <button onClick={(e) => { e.stopPropagation(); handleUnpin(); }} className="text-gray-400 hover:text-white p-1 flex-shrink-0" title="Открепить">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">

@@ -49,8 +49,9 @@ export const keysApi = {
 export const messageActionsApi = {
   edit: (msgId: string, text: string) => api.patch<any>(`/messages/${msgId}/edit`, { text }),
   delete: (msgId: string) => api.delete<any>(`/messages/${msgId}`),
-  pin: (convId: string, messageId: string | null) => api.post<any>(`/conversations/${convId}/pin`, { messageId }),
-  getPin: (convId: string) => api.get<any>(`/conversations/${convId}/pin`),
+  pin: (convId: string, messageId: string) => api.post<any>(`/conversations/${convId}/pin`, { messageId }),
+  unpin: (convId: string, messageId: string) => api.delete<any>(`/conversations/${convId}/pin/${messageId}`),
+  getPins: (convId: string) => api.get<any>(`/conversations/${convId}/pin`),
 };
 
 // Contacts

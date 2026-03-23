@@ -44,7 +44,7 @@ export interface Conversation {
   groupMeta: { name: string; avatarUrl: string | null; admins: string[]; createdBy: string } | null;
   lastMessage: { text: string; senderId: string; createdAt: string } | null;
   unreadCount: number;
-  pinnedMessage?: { id: string; text: string | null; senderName: string } | null;
+  pinnedMessages?: Array<{ id: string; text: string | null; senderName: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,7 +70,9 @@ interface ChatState {
   setReplyingTo: (data: { conversationId: string; messageId: string; text: string; senderName: string } | null) => void;
   editMessage: (messageId: string, text: string, editedAt: string) => void;
   deleteMessage: (messageId: string) => void;
-  setPinnedMessage: (conversationId: string, pinned: { id: string; text: string | null; senderName: string } | null) => void;
+  setPinnedMessages: (conversationId: string, pinned: Array<{ id: string; text: string | null; senderName: string }>) => void;
+  addPinnedMessage: (conversationId: string, pinned: { id: string; text: string | null; senderName: string }) => void;
+  removePinnedMessage: (conversationId: string, messageId: string) => void;
   editingMessage: { messageId: string; text: string } | null;
   setEditingMessage: (data: { messageId: string; text: string } | null) => void;
   sortConversations: () => void;
@@ -186,10 +188,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return { messages: newMessages };
     }),
 
-  setPinnedMessage: (conversationId, pinned) =>
+  setPinnedMessages: (conversationId, pinned) =>
     set((state) => ({
       conversations: state.conversations.map((c) =>
-        c.id === conversationId ? { ...c, pinnedMessage: pinned } : c
+        c.id === conversationId ? { ...c, pinnedMessages: pinned } : c
+      ),
+    })),
+
+  addPinnedMessage: (conversationId, pinned) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === conversationId
+          ? { ...c, pinnedMessages: [pinned, ...(c.pinnedMessages || [])] }
+          : c
+      ),
+    })),
+
+  removePinnedMessage: (conversationId, messageId) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === conversationId
+          ? { ...c, pinnedMessages: (c.pinnedMessages || []).filter((p) => p.id !== messageId) }
+          : c
       ),
     })),
 

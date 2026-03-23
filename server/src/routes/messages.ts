@@ -235,52 +235,79 @@ export async function messageRoutes(app: FastifyInstance) {
     return { success: true };
   });
 
-  // Pin/unpin message
+  // Pin message (add to pinned list)
   app.post('/api/conversations/:convId/pin', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { convId } = request.params as { convId: string };
-    const { messageId } = request.body as { messageId: string | null };
+    const { messageId } = request.body as { messageId: string };
 
     const conv = await Conversation.findById(convId);
     if (!conv) return reply.code(404).send({ error: 'Conversation not found' });
 
-    if (messageId) {
-      const msg = await Message.findById(messageId).populate('senderId', 'displayName');
-      if (!msg) return reply.code(404).send({ error: 'Message not found' });
+    const msg = await Message.findById(messageId).populate('senderId', 'displayName');
+    if (!msg) return reply.code(404).send({ error: 'Message not found' });
 
-      conv.pinnedMessageId = new mongoose.Types.ObjectId(messageId);
-      await conv.save();
+    // Check if already pinned
+    const already = (conv.pinnedMessages || []).some(
+      (p: any) => p.messageId.toString() === messageId
+    );
+    if (already) return reply.code(409).send({ error: 'Already pinned' });
 
-      broadcastToConversation(convId, 'message:pinned', {
-        conversationId: convId,
-        messageId,
-        text: msg.text,
-        senderName: (msg.senderId as any).displayName,
-      });
-    } else {
-      conv.pinnedMessageId = null;
-      await conv.save();
+    conv.pinnedMessages = conv.pinnedMessages || [];
+    conv.pinnedMessages.push({
+      messageId: new mongoose.Types.ObjectId(messageId),
+      pinnedBy: new mongoose.Types.ObjectId(request.userId),
+      pinnedAt: new Date(),
+    });
+    await conv.save();
 
-      broadcastToConversation(convId, 'message:unpinned', { conversationId: convId });
-    }
+    broadcastToConversation(convId, 'message:pinned', {
+      conversationId: convId,
+      messageId,
+      text: msg.text,
+      senderName: (msg.senderId as any).displayName,
+    });
 
     return { success: true };
   });
 
-  // Get pinned message
-  app.get('/api/conversations/:convId/pin', { preHandler: [app.authenticate] }, async (request, reply) => {
+  // Unpin message (remove from pinned list)
+  app.delete('/api/conversations/:convId/pin/:messageId', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { convId, messageId } = request.params as { convId: string; messageId: string };
+
+    const conv = await Conversation.findById(convId);
+    if (!conv) return reply.code(404).send({ error: 'Conversation not found' });
+
+    conv.pinnedMessages = (conv.pinnedMessages || []).filter(
+      (p: any) => p.messageId.toString() !== messageId
+    );
+    await conv.save();
+
+    broadcastToConversation(convId, 'message:unpinned', {
+      conversationId: convId,
+      messageId,
+    });
+
+    return { success: true };
+  });
+
+  // Get all pinned messages
+  app.get('/api/conversations/:convId/pin', { preHandler: [app.authenticate] }, async (request) => {
     const { convId } = request.params as { convId: string };
     const conv = await Conversation.findById(convId);
-    if (!conv || !conv.pinnedMessageId) return { pinned: null };
+    if (!conv || !conv.pinnedMessages?.length) return { pinned: [] };
 
-    const msg = await Message.findById(conv.pinnedMessageId).populate('senderId', 'displayName');
-    if (!msg) return { pinned: null };
+    const msgIds = conv.pinnedMessages.map((p: any) => p.messageId);
+    const msgs = await Message.find({ _id: { $in: msgIds } }).populate('senderId', 'displayName').lean();
+
+    const pinMap = new Map(conv.pinnedMessages.map((p: any) => [p.messageId.toString(), p]));
 
     return {
-      pinned: {
-        id: msg._id.toString(),
-        text: msg.text,
-        senderName: (msg.senderId as any).displayName,
-      },
+      pinned: msgs.map((m) => ({
+        id: m._id.toString(),
+        text: m.text,
+        senderName: (m.senderId as any).displayName,
+        pinnedAt: (pinMap.get(m._id.toString()) as any)?.pinnedAt?.toISOString(),
+      })).sort((a: any, b: any) => new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime()),
     };
   });
 }

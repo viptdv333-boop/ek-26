@@ -205,7 +205,7 @@ class WebSocketTransport {
       }
 
       case 'message:pinned': {
-        store.setPinnedMessage(data.conversationId, {
+        store.addPinnedMessage(data.conversationId, {
           id: data.messageId,
           text: data.text,
           senderName: data.senderName,
@@ -214,7 +214,7 @@ class WebSocketTransport {
       }
 
       case 'message:unpinned': {
-        store.setPinnedMessage(data.conversationId, null);
+        store.removePinnedMessage(data.conversationId, data.messageId);
         break;
       }
 

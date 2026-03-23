@@ -32,14 +32,19 @@ export function Sidebar() {
     return other.displayName || 'Пользователь';
   };
 
-  const getOtherUserId = (conv: Conversation): string | null => {
+  const getOtherUser = (conv: Conversation) => {
     if (conv.type !== 'direct') return null;
     const other = conv.participants.find((p) => {
       const id = typeof p === 'string' ? p : p.id;
       return id !== user?.id;
     });
-    if (!other) return null;
-    return typeof other === 'string' ? other : other.id;
+    if (!other || typeof other === 'string') return null;
+    return other;
+  };
+
+  const getOtherUserId = (conv: Conversation): string | null => {
+    const other = getOtherUser(conv);
+    return other?.id || null;
   };
 
   const formatTime = (dateStr: string) => {
@@ -140,10 +145,16 @@ export function Sidebar() {
               }`}
             >
               {/* Avatar */}
-              <div className="relative w-10 h-10 rounded-full bg-accent/20 flex-shrink-0 flex items-center justify-center">
-                <span className="text-accent text-sm font-medium">
-                  {isGroup ? '#' : name[0]?.toUpperCase() || '?'}
-                </span>
+              <div className="relative w-10 h-10 flex-shrink-0">
+                {!isGroup && getOtherUser(conv)?.avatarUrl ? (
+                  <img src={getOtherUser(conv)!.avatarUrl!} alt="" className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                    <span className="text-accent text-sm font-medium">
+                      {isGroup ? '#' : name[0]?.toUpperCase() || '?'}
+                    </span>
+                  </div>
+                )}
                 {!isGroup && isOnline && (
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-800" />
                 )}

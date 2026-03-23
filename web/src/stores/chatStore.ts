@@ -24,6 +24,7 @@ export interface Message {
   conversationId: string;
   senderId: string;
   senderName?: string;
+  senderAvatarUrl?: string | null;
   type: string;
   text?: string | null;
   attachments?: Attachment[];

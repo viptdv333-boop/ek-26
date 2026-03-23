@@ -24,6 +24,7 @@ interface Message {
   id: string;
   text?: string | null;
   senderName?: string;
+  senderAvatarUrl?: string | null;
   encrypted?: boolean;
   attachments?: Attachment[];
   replyTo?: ReplyTo | null;
@@ -36,11 +37,13 @@ interface Props {
   message: Message;
   isMine: boolean;
   showSender?: boolean;
+  showAvatar?: boolean;
+  myAvatarUrl?: string | null;
   onReply?: (msg: Message) => void;
   onForward?: (msg: Message) => void;
 }
 
-export function MessageBubble({ message, isMine, showSender, onReply, onForward }: Props) {
+export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward }: Props) {
   const [showActions, setShowActions] = useState(false);
 
   const time = new Date(message.createdAt).toLocaleTimeString('ru', {
@@ -59,12 +62,33 @@ export function MessageBubble({ message, isMine, showSender, onReply, onForward 
 
   const hasAttachments = message.attachments && message.attachments.length > 0;
 
+  const avatarUrl = isMine ? myAvatarUrl : message.senderAvatarUrl;
+  const avatarInitial = isMine ? '' : (message.senderName?.[0]?.toUpperCase() || '?');
+
+  const renderAvatar = () => {
+    if (!showAvatar) return null;
+    if (avatarUrl) {
+      return <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />;
+    }
+    if (!isMine) {
+      return (
+        <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+          <span className="text-accent text-[10px] font-medium">{avatarInitial}</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div
-      className={`flex ${isMine ? 'justify-end' : 'justify-start'} group`}
+      className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-1.5`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
+      {/* Avatar for received messages */}
+      {!isMine && renderAvatar()}
+
       {/* Action buttons (left for mine, right for theirs) */}
       {isMine && showActions && (
         <div className="flex items-center gap-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -135,6 +159,11 @@ export function MessageBubble({ message, isMine, showSender, onReply, onForward 
           {statusIcon()}
         </div>
       </div>
+
+      {/* Avatar for sent messages */}
+      {isMine && myAvatarUrl && showAvatar && (
+        <img src={myAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+      )}
 
       {/* Action buttons for received messages */}
       {!isMine && showActions && (

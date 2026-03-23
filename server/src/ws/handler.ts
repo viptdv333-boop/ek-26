@@ -185,7 +185,7 @@ async function handleEvent(
       const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
       if (!conversationId || (!isEncrypted && !text?.trim() && !hasAttachments)) return;
 
-      const sender = await User.findById(client.userId).select('displayName');
+      const sender = await User.findById(client.userId).select('displayName avatarUrl');
       if (!sender) return;
 
       // Auto-subscribe participants if not yet subscribed (new conversations)
@@ -228,7 +228,7 @@ async function handleEvent(
         messageData = {
           id: message._id.toString(),
           conversationId,
-          sender: { id: client.userId, displayName: sender.displayName },
+          sender: { id: client.userId, displayName: sender.displayName, avatarUrl: sender.avatarUrl },
           type: message.type,
           text: null,
           encrypted: true,

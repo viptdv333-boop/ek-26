@@ -33,19 +33,28 @@ export function ChatRoom({ conversationId }: Props) {
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]) || EMPTY_ARRAY;
   const isUserOnline = useChatStore((s) => s.isUserOnline);
   const userId = useAuthStore((s) => s.user?.id);
+  const myAvatarUrl = useAuthStore((s) => s.user?.avatarUrl) || null;
 
   const conv = conversations.find((c) => c.id === conversationId);
 
-  const getTitle = () => {
-    if (conv?.groupMeta?.name) return conv.groupMeta.name;
-    if (!conv) return 'Чат';
+  const getOther = () => {
+    if (!conv) return null;
     const other = conv.participants.find((p) => {
       const id = typeof p === 'string' ? p : p.id;
       return id !== userId;
     });
-    if (!other) return 'Чат';
-    return typeof other === 'string' ? 'Пользователь' : other.displayName || 'Пользователь';
+    if (!other || typeof other === 'string') return null;
+    return other;
   };
+
+  const getTitle = () => {
+    if (conv?.groupMeta?.name) return conv.groupMeta.name;
+    const other = getOther();
+    return other?.displayName || 'Чат';
+  };
+
+  const otherUser = getOther();
+  const otherAvatarUrl = otherUser?.avatarUrl || null;
 
   const getSubtitle = () => {
     if (typingUsers.length > 0) return 'печатает...';
@@ -90,6 +99,7 @@ export function ChatRoom({ conversationId }: Props) {
           conversationId: m.conversationId,
           senderId: m.senderId || m.sender?.id || '',
           senderName: m.senderName || m.sender?.displayName || '',
+          senderAvatarUrl: m.senderAvatarUrl || m.sender?.avatarUrl || null,
           type: m.type,
           text,
           attachments: m.attachments || [],
@@ -249,11 +259,15 @@ export function ChatRoom({ conversationId }: Props) {
     <div className="flex-1 flex flex-col bg-dark-900">
       {/* Header */}
       <div className="h-14 px-6 flex items-center border-b border-dark-600 bg-dark-800">
-        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
-          <span className="text-accent text-sm font-medium">
-            {conv?.type === 'group' ? '#' : title[0]?.toUpperCase()}
-          </span>
-        </div>
+        {otherAvatarUrl ? (
+          <img src={otherAvatarUrl} alt="" className="w-8 h-8 rounded-full object-cover mr-3" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+            <span className="text-accent text-sm font-medium">
+              {conv?.type === 'group' ? '#' : title[0]?.toUpperCase()}
+            </span>
+          </div>
+        )}
         <div className="flex-1">
           <h2 className="text-sm font-medium text-white">{title}</h2>
           {subtitle && (
@@ -280,6 +294,8 @@ export function ChatRoom({ conversationId }: Props) {
             message={msg}
             isMine={msg.senderId === userId}
             showSender={conv?.type === 'group'}
+            showAvatar={true}
+            myAvatarUrl={myAvatarUrl}
             onReply={handleReply}
             onForward={handleForward}
           />

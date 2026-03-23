@@ -210,18 +210,19 @@ async function handleEvent(
       let messageData: Record<string, unknown>;
 
       if (isEncrypted) {
-        // E2EE message — server never sees plaintext
+        // E2EE message — store plaintext alongside envelope for multi-device access
+        const plaintext = data.text?.trim() || null;
         const message = await Message.create({
           conversationId: new mongoose.Types.ObjectId(conversationId),
           senderId: new mongoose.Types.ObjectId(client.userId),
           type,
-          text: null,
+          text: plaintext,
           encryptedPayload: Buffer.from(data.envelope, 'utf8'),
           deliveredVia: 'ws',
         });
 
         await Conversation.findByIdAndUpdate(conversationId, {
-          lastMessage: { text: 'Зашифрованное сообщение', senderName: sender.displayName, timestamp: message.createdAt },
+          lastMessage: { text: plaintext?.slice(0, 100) || 'Сообщение', senderName: sender.displayName, timestamp: message.createdAt },
           updatedAt: new Date(),
         });
 
@@ -230,7 +231,7 @@ async function handleEvent(
           conversationId,
           sender: { id: client.userId, displayName: sender.displayName, avatarUrl: sender.avatarUrl },
           type: message.type,
-          text: null,
+          text: plaintext,
           encrypted: true,
           envelope: data.envelope,
           status: 'sent',
@@ -284,7 +285,7 @@ async function handleEvent(
         .populate('participants', 'displayName avatarUrl')
         .lean();
       if (conv) {
-        const lastMessageText = isEncrypted ? 'Зашифрованное сообщение' : (messageData.text as string);
+        const lastMessageText = (messageData.text as string) || (isEncrypted ? 'Сообщение' : '');
         const convData = {
           id: conv._id.toString(),
           type: conv.type,

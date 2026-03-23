@@ -107,13 +107,14 @@ class WebSocketTransport {
         // From other users — data has sender object
         let text = data.text;
         const encrypted = !!data.encrypted;
-        if (encrypted && data.envelope) {
+        // If server provides text, use it; only decrypt if text is missing (old flow)
+        if (!text && encrypted && data.envelope) {
           try {
             text = await sessionManager.decryptMessage(data.sender?.id || data.senderId, data.envelope);
             await messageCache.put(data.id, text);
           } catch (err) {
             console.error('Decrypt error (message:new):', err);
-            text = '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0440\u0430\u0441\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435';
+            text = 'Сообщение';
           }
         }
         const hasAttachments = Array.isArray(data.attachments) && data.attachments.length > 0;

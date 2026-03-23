@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useContactsStore, Contact } from '../stores/contactsStore';
 import { useChatStore } from '../stores/chatStore';
-import { conversationsApi } from '../services/api/endpoints';
+import { conversationsApi, usersApi, contactsApi } from '../services/api/endpoints';
 import { AddContactDialog } from './AddContactDialog';
 
 export function ContactsPanel() {
@@ -13,6 +13,49 @@ export function ContactsPanel() {
   const addConversation = useChatStore((s) => s.addConversation);
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  const hasContactPicker = 'contacts' in navigator && 'ContactsManager' in window;
+
+  const handleSyncContacts = async () => {
+    if (!hasContactPicker) {
+      alert('Синхронизация контактов доступна только в Chrome на Android');
+      return;
+    }
+    setSyncing(true);
+    try {
+      const deviceContacts = await (navigator as any).contacts.select(['name', 'tel'], { multiple: true });
+      const phones: string[] = deviceContacts
+        .flatMap((c: any) => c.tel || [])
+        .map((t: string) => {
+          let phone = t.replace(/[^\d+]/g, '');
+          if (phone.startsWith('8') && phone.length === 11) phone = '+7' + phone.slice(1);
+          if (!phone.startsWith('+')) phone = '+' + phone;
+          return phone;
+        })
+        .filter((p: string) => p.length >= 10);
+
+      if (phones.length === 0) {
+        alert('Не найдено номеров телефонов');
+        return;
+      }
+
+      const found = await usersApi.lookupByPhones([...new Set(phones)]);
+      let added = 0;
+      for (const user of (Array.isArray(found) ? found : [])) {
+        try {
+          await contactsApi.add(user.id);
+          added++;
+        } catch { /* 409 already exists */ }
+      }
+      await fetchContacts();
+      alert(`Найдено ${(found as any[]).length} пользователей, добавлено ${added} новых контактов`);
+    } catch (err) {
+      console.error('Contact sync failed:', err);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   useEffect(() => {
     fetchContacts();
@@ -58,6 +101,18 @@ export function ContactsPanel() {
           </svg>
           Добавить контакт
         </button>
+        {hasContactPicker && (
+          <button
+            onClick={handleSyncContacts}
+            disabled={syncing}
+            className="w-full flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-accent hover:bg-dark-600 rounded-lg transition-colors text-sm disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            </svg>
+            {syncing ? 'Синхронизация...' : 'Синхронизировать контакты'}
+          </button>
+        )}
       </div>
 
       {/* Contact list */}

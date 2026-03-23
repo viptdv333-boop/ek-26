@@ -88,7 +88,9 @@ export function ChatRoom({ conversationId }: Props) {
       const normalized = await Promise.all(list.map(async (m: any) => {
         let text = m.text;
         const encrypted = m.encrypted || false;
-        if (encrypted && m.envelope) {
+        // If server has plaintext — use it directly (multi-device support)
+        // Only attempt decryption for old messages with text=null
+        if (!text && encrypted && m.envelope) {
           try {
             const cached = await messageCache.get(m.id);
             if (cached) {
@@ -99,7 +101,7 @@ export function ChatRoom({ conversationId }: Props) {
               await messageCache.put(m.id, text);
             }
           } catch {
-            text = null;
+            text = 'Сообщение из старой версии';
           }
         }
         return {
@@ -119,7 +121,8 @@ export function ChatRoom({ conversationId }: Props) {
           createdAt: m.createdAt,
         };
       }));
-      const decrypted = normalized.filter(m => m.text !== null || (m.attachments && m.attachments.length > 0));
+      // Show all messages — text is always available now (server stores plaintext)
+      const decrypted = normalized.filter(m => m.text || (m.attachments && m.attachments.length > 0));
       setMessages(conversationId, decrypted.reverse());
     }).catch(() => {}).finally(() => setLoading(false));
 
@@ -224,9 +227,9 @@ export function ChatRoom({ conversationId }: Props) {
           const envelope = await sessionManager.encryptMessage(recipientId, trimmed);
           wsTransport.setPendingText(conversationId, trimmed);
           if (wsTransport.connected) {
-            wsTransport.send('message:send', { conversationId, type: 'text', encrypted: true, envelope });
+            wsTransport.send('message:send', { conversationId, type: 'text', encrypted: true, envelope, text: trimmed });
           } else {
-            await messagesApi.send(conversationId, { type: 'text', encrypted: true, envelope } as any);
+            await messagesApi.send(conversationId, { type: 'text', encrypted: true, envelope, text: trimmed } as any);
           }
           sent = true;
         } catch (err) {

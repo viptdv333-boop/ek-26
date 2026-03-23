@@ -74,12 +74,21 @@ class CallManager {
     };
 
     this.pc.onconnectionstatechange = () => {
+      console.log('[Call] Connection state:', this.pc?.connectionState);
       if (this.pc?.connectionState === 'connected') {
         useCallStore.getState().updateCallStatus('connected');
       }
       if (this.pc?.connectionState === 'failed' || this.pc?.connectionState === 'disconnected') {
         this.endCall(targetUserId);
       }
+    };
+
+    this.pc.oniceconnectionstatechange = () => {
+      console.log('[Call] ICE state:', this.pc?.iceConnectionState);
+    };
+
+    this.pc.onicegatheringstatechange = () => {
+      console.log('[Call] ICE gathering:', this.pc?.iceGatheringState);
     };
 
     // Create offer
@@ -215,16 +224,18 @@ class CallManager {
   }
 
   async handleAnswer(data: any) {
-    if (!this.pc) return;
+    console.log('[Call] Received answer');
+    if (!this.pc) { console.warn('[Call] No PC for answer'); return; }
     await this.pc.setRemoteDescription(new RTCSessionDescription(data.answer));
     useCallStore.getState().updateCallStatus('connecting');
   }
 
   async handleIceCandidate(data: any) {
-    if (!this.pc) return;
+    console.log('[Call] Received ICE candidate');
+    if (!this.pc) { console.warn('[Call] No PC for ICE'); return; }
     try {
       await this.pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-    } catch {}
+    } catch (err) { console.error('[Call] ICE error:', err); }
   }
 
   declineCall() {

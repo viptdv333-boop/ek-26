@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { Conversation } from '../models/Conversation';
 import { User } from '../models/User';
+import { sendToUser } from '../ws/handler';
 import mongoose from 'mongoose';
 
 export async function conversationRoutes(app: FastifyInstance) {
@@ -78,7 +79,7 @@ export async function conversationRoutes(app: FastifyInstance) {
       .populate('participants', 'displayName avatarUrl phone')
       .lean();
 
-    return {
+    const convData = {
       id: populated!._id.toString(),
       type: populated!.type,
       participants: (populated!.participants as any[]).map((p: any) => ({
@@ -92,6 +93,11 @@ export async function conversationRoutes(app: FastifyInstance) {
       createdAt: populated!.createdAt.toISOString(),
       updatedAt: populated!.updatedAt.toISOString(),
     };
+
+    // Notify other participant via WebSocket so chat appears in their sidebar
+    sendToUser(participantId, 'conversation:new', convData);
+
+    return convData;
   });
 
   // Create group conversation

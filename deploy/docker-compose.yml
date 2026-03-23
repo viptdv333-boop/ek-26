@@ -18,6 +18,8 @@ services:
       - .env.production
     environment:
       - MONGODB_URI=mongodb://mongo:27017/ek26
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       - mongo
     healthcheck:
@@ -37,3 +39,4 @@ services:
 
 volumes:
   mongo_data:
+  uploads_data:

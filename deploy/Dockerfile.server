@@ -37,6 +37,7 @@ COPY mobile/package.json mobile/
 COPY web/package.json web/
 
 RUN pnpm install --no-frozen-lockfile --prod
+RUN mkdir -p /app/uploads
 
 EXPOSE 3000
 CMD ["node", "server/dist/app.js"]

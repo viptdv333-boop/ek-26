@@ -1,12 +1,21 @@
 import { create } from 'zustand';
 
+export interface Attachment {
+  fileId: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
   senderId: string;
   senderName?: string;
   type: string;
-  text?: string;
+  text?: string | null;
+  attachments?: Attachment[];
   encrypted?: boolean;
   status: string;
   createdAt: string;

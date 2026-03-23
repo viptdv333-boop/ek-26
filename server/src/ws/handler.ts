@@ -177,12 +177,13 @@ async function handleEvent(
 ) {
   switch (event) {
     case 'message:send': {
-      const { conversationId, text, type = 'text', replyToId } = data;
+      const { conversationId, text, type = 'text', replyToId, attachments } = data;
 
       const isEncrypted = !!(data.encrypted && data.envelope);
 
-      // For plaintext messages, text is required; for encrypted, envelope is required
-      if (!conversationId || (!isEncrypted && !text?.trim())) return;
+      // For plaintext messages, text or attachments required; for encrypted, envelope required
+      const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+      if (!conversationId || (!isEncrypted && !text?.trim() && !hasAttachments)) return;
 
       const sender = await User.findById(client.userId).select('displayName');
       if (!sender) return;
@@ -240,15 +241,17 @@ async function handleEvent(
         const message = await Message.create({
           conversationId: new mongoose.Types.ObjectId(conversationId),
           senderId: new mongoose.Types.ObjectId(client.userId),
-          type,
-          text: text.trim(),
+          type: hasAttachments ? (attachments[0].mimeType?.startsWith('image/') ? 'image' : 'file') : type,
+          text: text?.trim() || null,
+          attachments: hasAttachments ? attachments : [],
           replyToId: replyToId ? new mongoose.Types.ObjectId(replyToId) : null,
           deliveredVia: 'ws',
         });
 
+        const lastText = message.text?.slice(0, 100) || (hasAttachments ? '📎 Файл' : '');
         await Conversation.findByIdAndUpdate(conversationId, {
           lastMessage: {
-            text: text.trim().slice(0, 100),
+            text: lastText,
             senderName: sender.displayName,
             timestamp: message.createdAt,
           },
@@ -264,6 +267,7 @@ async function handleEvent(
           },
           type: message.type,
           text: message.text,
+          attachments: message.attachments || [],
           replyToId: message.replyToId?.toString() || null,
           status: 'sent',
           createdAt: message.createdAt.toISOString(),

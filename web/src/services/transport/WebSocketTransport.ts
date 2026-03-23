@@ -116,6 +116,7 @@ class WebSocketTransport {
             text = '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0440\u0430\u0441\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435';
           }
         }
+        const hasAttachments = Array.isArray(data.attachments) && data.attachments.length > 0;
         const msg = {
           id: data.id,
           conversationId: data.conversationId,
@@ -123,17 +124,18 @@ class WebSocketTransport {
           senderName: data.sender?.displayName,
           type: data.type,
           text,
+          attachments: data.attachments || [],
           encrypted,
           status: data.status || 'sent',
           createdAt: data.createdAt,
         };
         store.addMessage(data.conversationId, msg);
+        const lastText = encrypted ? (text || 'Зашифрованное сообщение') : (hasAttachments ? (text || '📎 Файл') : (text || ''));
         store.updateLastMessage(data.conversationId, {
-          text: encrypted ? (text || '\u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435') : (text || ''),
+          text: lastText,
           senderId: msg.senderId,
           createdAt: data.createdAt,
         });
-        // Increment unread if this conversation is not active
         if (store.activeConversationId !== data.conversationId) {
           store.incrementUnread(data.conversationId);
         }
@@ -146,16 +148,16 @@ class WebSocketTransport {
         let text = data.text;
         const encrypted = !!data.encrypted;
         if (encrypted) {
-          // Try pending plaintext first, then cache
           const pending = this.consumePendingText(data.conversationId);
           if (pending) {
             text = pending;
             await messageCache.put(data.id, text);
           } else {
             const cached = await messageCache.get(data.id);
-            text = cached || '\u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435';
+            text = cached || 'Зашифрованное сообщение';
           }
         }
+        const hasAttachments2 = Array.isArray(data.attachments) && data.attachments.length > 0;
         const msg = {
           id: data.id,
           conversationId: data.conversationId,
@@ -163,13 +165,15 @@ class WebSocketTransport {
           senderName: data.sender?.displayName,
           type: data.type,
           text,
+          attachments: data.attachments || [],
           encrypted,
           status: 'sent',
           createdAt: data.createdAt,
         };
         store.addMessage(data.conversationId, msg);
+        const lastText2 = encrypted ? (text || 'Зашифрованное сообщение') : (hasAttachments2 ? (text || '📎 Файл') : (text || ''));
         store.updateLastMessage(data.conversationId, {
-          text: encrypted ? (text || '\u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435') : (text || ''),
+          text: lastText2,
           senderId: msg.senderId,
           createdAt: data.createdAt,
         });

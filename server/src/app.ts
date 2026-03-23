@@ -9,6 +9,7 @@ import { userRoutes } from './routes/users';
 import { conversationRoutes } from './routes/conversations';
 import { messageRoutes } from './routes/messages';
 import { keyRoutes } from './routes/keys';
+import { uploadRoutes } from './routes/uploads';
 import { setupWebSocket, broadcastToConversation } from './ws/handler';
 
 // Extend Fastify types
@@ -56,6 +57,7 @@ async function main() {
   await app.register(conversationRoutes);
   await app.register(messageRoutes);
   await app.register(keyRoutes);
+  await app.register(uploadRoutes);
 
   // WebSocket
   await setupWebSocket(app);

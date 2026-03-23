@@ -1,15 +1,37 @@
 import admin from 'firebase-admin';
 import { config } from '../config';
 import { User } from '../models/User';
+import fs from 'fs';
 
 let initialized = false;
 
 function ensureInit() {
   if (initialized) return true;
-  if (!config.FIREBASE_SERVICE_ACCOUNT) return false;
 
   try {
-    const serviceAccount = JSON.parse(config.FIREBASE_SERVICE_ACCOUNT);
+    let serviceAccount: any = null;
+
+    // Try reading from file first (Docker volume mount)
+    const filePaths = ['/app/firebase-sa.json', './firebase-sa.json', '../deploy/firebase-sa.json'];
+    for (const p of filePaths) {
+      if (fs.existsSync(p)) {
+        serviceAccount = JSON.parse(fs.readFileSync(p, 'utf8'));
+        console.log(`[Push] Loaded Firebase SA from file: ${p}`);
+        break;
+      }
+    }
+
+    // Fallback to env variable
+    if (!serviceAccount && config.FIREBASE_SERVICE_ACCOUNT) {
+      serviceAccount = JSON.parse(config.FIREBASE_SERVICE_ACCOUNT);
+      console.log('[Push] Loaded Firebase SA from env');
+    }
+
+    if (!serviceAccount) {
+      console.warn('[Push] No Firebase service account found — push disabled');
+      return false;
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });

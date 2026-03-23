@@ -20,6 +20,7 @@ services:
       - MONGODB_URI=mongodb://mongo:27017/ek26
     volumes:
       - uploads_data:/app/uploads
+      - ./firebase-sa.json:/app/firebase-sa.json:ro
     depends_on:
       - mongo
     healthcheck:

@@ -323,6 +323,10 @@ class WebSocketTransport {
         callManager.handleCallBusy();
         break;
 
+      case 'reaction:updated':
+        store.updateReactions(data.messageId, data.reactions);
+        break;
+
       case 'keys:low':
         keyManager.replenishIfNeeded().catch(console.error);
         break;

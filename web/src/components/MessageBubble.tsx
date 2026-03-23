@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { formatFileSize, isImageFile, isVideoFile } from '../services/api/upload';
 import { MessageContextMenu } from './MessageContextMenu';
 import { ImageLightbox } from './ImageLightbox';
+import { VoicePlayer } from './VoicePlayer';
 
 interface Attachment {
   fileId: string;
@@ -31,6 +32,7 @@ export interface MessageData {
   attachments?: Attachment[];
   replyTo?: ReplyTo | null;
   forwardedFrom?: ForwardedFrom | null;
+  reactions?: Array<{ emoji: string; userId: string }>;
   editedAt?: string;
   createdAt: string;
   status: string;
@@ -47,11 +49,18 @@ interface Props {
   onEdit?: (msg: MessageData) => void;
   onDelete?: (msg: MessageData) => void;
   onPin?: (msg: MessageData) => void;
+  onReact?: (msg: MessageData, emoji: string) => void;
+  userId?: string;
+  fontSize?: number;
+  bubbleShape?: string;
+  bubbleColor?: string;
 }
 
-export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin }: Props) {
+export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'rounded', bubbleColor = '#6366f1' }: Props) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);
+  const [showReactionBar, setShowReactionBar] = useState(false);
+  const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🔥','👎','🎉'];
 
   const time = new Date(message.createdAt).toLocaleTimeString('ru', {
     hour: '2-digit',
@@ -101,17 +110,22 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
   return (
     <>
       <div
-        className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-1.5`}
+        className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-1.5 relative`}
         onContextMenu={handleContextMenu}
+        onMouseEnter={() => setShowReactionBar(true)}
+        onMouseLeave={() => setShowReactionBar(false)}
       >
         {!isMine && renderAvatar()}
 
         <div
-          className={`max-w-[70%] rounded-2xl overflow-hidden ${
-            isMine
-              ? 'bg-accent text-white rounded-br-md'
-              : 'bg-dark-600 text-gray-100 rounded-bl-md'
+          className={`max-w-[70%] overflow-hidden ${
+            bubbleShape === 'square' ? 'rounded-md' :
+            bubbleShape === 'cloud' ? 'rounded-3xl' :
+            isMine ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md'
+          } ${
+            isMine ? 'text-white' : 'bg-dark-600 text-gray-100'
           } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : 'px-3.5 py-2'}`}
+          style={isMine ? { backgroundColor: bubbleColor } : undefined}
         >
           {showSender && !isMine && message.senderName && (
             <p className="text-xs font-medium text-accent mb-0.5">{message.senderName}</p>
@@ -140,7 +154,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           ))}
 
           {message.text && (
-            <p className={`text-sm whitespace-pre-wrap break-words ${hasAttachments ? 'px-3.5 pt-1' : ''}`}>{message.text}</p>
+            <p className={`whitespace-pre-wrap break-words ${hasAttachments ? 'px-3.5 pt-1' : ''}`} style={{ fontSize: `${fontSize}px` }}>{message.text}</p>
           )}
 
           <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''} ${isMine ? 'text-white/50' : 'text-gray-500'}`}>
@@ -150,10 +164,50 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           </div>
         </div>
 
+        {/* Reaction bar on hover */}
+        {showReactionBar && onReact && (
+          <div className={`absolute ${isMine ? 'right-8' : 'left-8'} -top-8 flex gap-0.5 bg-dark-700 border border-dark-500 rounded-full px-1.5 py-0.5 shadow-lg z-10`}>
+            {REACTION_EMOJIS.map(emoji => (
+              <button
+                key={emoji}
+                onClick={(e) => { e.stopPropagation(); onReact(message, emoji); }}
+                className="w-7 h-7 flex items-center justify-center text-sm hover:scale-125 transition-transform rounded-full hover:bg-dark-500"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+
         {isMine && myAvatarUrl && showAvatar && (
           <img src={myAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
         )}
       </div>
+
+      {/* Reaction badges */}
+      {message.reactions && message.reactions.length > 0 && (
+        <div className={`flex gap-1 mt-0.5 ${isMine ? 'justify-end pr-9' : 'justify-start pl-9'}`}>
+          {Object.entries(
+            message.reactions.reduce((acc, r) => {
+              acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>)
+          ).map(([emoji, count]) => (
+            <button
+              key={emoji}
+              onClick={() => onReact?.(message, emoji)}
+              className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors ${
+                message.reactions?.some(r => r.emoji === emoji && r.userId === userId)
+                  ? 'bg-accent/20 border-accent/50 text-accent'
+                  : 'bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500'
+              }`}
+            >
+              <span>{emoji}</span>
+              {count > 1 && <span>{count}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {contextMenu && (
         <MessageContextMenu
@@ -178,6 +232,10 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
 }
 
 function AttachmentView({ attachment, isMine, onImageClick }: { attachment: Attachment; isMine: boolean; onImageClick: () => void }) {
+  if (attachment.mimeType?.startsWith('audio/')) {
+    return <VoicePlayer url={attachment.url} isMine={isMine} />;
+  }
+
   if (isImageFile(attachment.mimeType)) {
     return (
       <div onClick={onImageClick} className="cursor-pointer">

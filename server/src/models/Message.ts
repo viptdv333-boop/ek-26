@@ -22,6 +22,7 @@ export interface IMessage extends Document {
     originalSenderName: string;
     originalText: string | null;
   } | null;
+  reactions: Array<{ emoji: string; userId: Types.ObjectId }>;
   editedAt: Date | null;
   deletedAt: Date | null;
   status: 'sent' | 'delivered' | 'read';
@@ -57,6 +58,7 @@ const messageSchema = new Schema<IMessage>(
       },
       default: null,
     },
+    reactions: [{ emoji: String, userId: { type: Schema.Types.ObjectId, ref: 'User' } }],
     editedAt: { type: Date, default: null },
     deletedAt: { type: Date, default: null },
     status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },

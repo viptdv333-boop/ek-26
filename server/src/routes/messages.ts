@@ -74,6 +74,7 @@ export async function messageRoutes(app: FastifyInstance) {
         replyToId: m.replyToId?.toString() || null,
         replyTo,
         forwardedFrom: (m as any).forwardedFrom || null,
+        reactions: (m.reactions || []).map((r: any) => ({ emoji: r.emoji, userId: r.userId.toString() })),
         status: m.status,
         deliveredVia: m.deliveredVia,
         createdAt: m.createdAt.toISOString(),
@@ -233,6 +234,40 @@ export async function messageRoutes(app: FastifyInstance) {
     });
 
     return { success: true };
+  });
+
+  // Toggle reaction on message
+  const ALLOWED_REACTIONS = ['👍','❤️','😂','😮','😢','🔥','👎','🎉'];
+  app.post('/api/messages/:msgId/reactions', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { msgId } = request.params as { msgId: string };
+    const { emoji } = request.body as { emoji: string };
+
+    if (!ALLOWED_REACTIONS.includes(emoji)) return reply.code(400).send({ error: 'Invalid reaction' });
+
+    const message = await Message.findById(msgId);
+    if (!message) return reply.code(404).send({ error: 'Message not found' });
+
+    const userId = new mongoose.Types.ObjectId(request.userId);
+    const existing = (message.reactions || []).findIndex(
+      (r: any) => r.emoji === emoji && r.userId.toString() === request.userId
+    );
+
+    if (existing >= 0) {
+      message.reactions.splice(existing, 1);
+    } else {
+      if (!message.reactions) message.reactions = [];
+      message.reactions.push({ emoji, userId });
+    }
+    await message.save();
+
+    const reactions = message.reactions.map((r: any) => ({ emoji: r.emoji, userId: r.userId.toString() }));
+
+    broadcastToConversation(message.conversationId.toString(), 'reaction:updated', {
+      messageId: msgId,
+      reactions,
+    });
+
+    return { reactions };
   });
 
   // Pin message (add to pinned list)

@@ -52,6 +52,7 @@ export const keysApi = {
 export const messageActionsApi = {
   edit: (msgId: string, text: string) => api.patch<any>(`/messages/${msgId}/edit`, { text }),
   delete: (msgId: string) => api.delete<any>(`/messages/${msgId}`),
+  react: (msgId: string, emoji: string) => api.post<any>(`/messages/${msgId}/reactions`, { emoji }),
   pin: (convId: string, messageId: string) => api.post<any>(`/conversations/${convId}/pin`, { messageId }),
   unpin: (convId: string, messageId: string) => api.delete<any>(`/conversations/${convId}/pin/${messageId}`),
   getPins: (convId: string) => api.get<any>(`/conversations/${convId}/pin`),

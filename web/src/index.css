@@ -9,9 +9,41 @@
     padding: 0;
   }
 
+  /* Dark theme (default) */
+  :root {
+    --color-dark-900: #0a0a0f;
+    --color-dark-800: #12121a;
+    --color-dark-700: #1a1a25;
+    --color-dark-600: #22222f;
+    --color-dark-500: #2a2a38;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #9ca3af;
+    --color-text-muted: #6b7280;
+    --color-border: #2a2a38;
+    --color-scrollbar: #2a2a38;
+    --color-scrollbar-hover: #3a3a4a;
+  }
+
+  /* Light theme */
+  :root.light {
+    --color-dark-900: #f3f4f6;
+    --color-dark-800: #ffffff;
+    --color-dark-700: #f9fafb;
+    --color-dark-600: #e5e7eb;
+    --color-dark-500: #d1d5db;
+    --color-text-primary: #111827;
+    --color-text-secondary: #6b7280;
+    --color-text-muted: #9ca3af;
+    --color-border: #e5e7eb;
+    --color-scrollbar: #d1d5db;
+    --color-scrollbar-hover: #9ca3af;
+  }
+
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
+    background-color: var(--color-dark-900);
+    color: var(--color-text-primary);
   }
 
   /* Custom scrollbar */
@@ -22,10 +54,27 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #2a2a38;
+    background: var(--color-scrollbar);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a4a;
+    background: var(--color-scrollbar-hover);
   }
+
+  /* Utility: hide scrollbar but keep scroll */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Light theme text overrides — applied globally so text-white adapts */
+  .light .text-white { color: var(--color-text-primary) !important; }
+  .light .text-gray-100 { color: #374151 !important; }
+  .light .text-gray-300 { color: #4b5563 !important; }
+  .light .text-gray-400 { color: var(--color-text-secondary) !important; }
+  .light .text-gray-500 { color: var(--color-text-muted) !important; }
+  .light .border-dark-500 { border-color: var(--color-border) !important; }
+  .light .border-dark-600 { border-color: var(--color-border) !important; }
+  .light .placeholder-gray-500::placeholder { color: #9ca3af !important; }
+
+  /* Light theme: green-500 online indicator needs dark border */
+  .light .border-dark-800 { border-color: #ffffff !important; }
 }

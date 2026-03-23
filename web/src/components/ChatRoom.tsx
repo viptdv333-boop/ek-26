@@ -7,6 +7,8 @@ import { MessageBubble } from './MessageBubble';
 import { sessionManager, messageCache } from '../services/crypto';
 import { uploadFile, isImageFile } from '../services/api/upload';
 import { ForwardDialog } from './ForwardDialog';
+import { EmojiPicker } from './EmojiPicker';
+import { VoiceRecorder } from './VoiceRecorder';
 import { callManager } from '../services/webrtc/CallManager';
 import type { Attachment } from '../stores/chatStore';
 
@@ -23,6 +25,9 @@ export function ChatRoom({ conversationId }: Props) {
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [forwardMsg, setForwardMsg] = useState<any>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const replyingTo = useChatStore((s) => s.replyingTo);
   const setReplyingTo = useChatStore((s) => s.setReplyingTo);
   const editingMessage = useChatStore((s) => s.editingMessage);
@@ -48,13 +53,28 @@ export function ChatRoom({ conversationId }: Props) {
   // Wallpaper support — reactive via storage event
   const [currentWallpaper, setCurrentWallpaper] = useState(() => localStorage.getItem('ek26_wallpaper') || 'default');
 
+  // Font size, bubble style — reactive
+  const fontSizeMap = [12, 13, 14, 15, 16, 17, 18, 19, 20, 22];
+  const [chatFontSize, setChatFontSize] = useState(() => fontSizeMap[(parseInt(localStorage.getItem('ek26_font_size') || '3') - 1)] || 14);
+  const [bubbleShape, setBubbleShape] = useState(() => localStorage.getItem('ek26_bubble_shape') || 'rounded');
+  const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '#6366f1');
+
   useEffect(() => {
-    const handler = () => setCurrentWallpaper(localStorage.getItem('ek26_wallpaper') || 'default');
-    window.addEventListener('wallpaper-changed', handler);
-    window.addEventListener('storage', handler);
+    const wallpaperHandler = () => setCurrentWallpaper(localStorage.getItem('ek26_wallpaper') || 'default');
+    const fontHandler = () => setChatFontSize(fontSizeMap[(parseInt(localStorage.getItem('ek26_font_size') || '3') - 1)] || 14);
+    const bubbleHandler = () => {
+      setBubbleShape(localStorage.getItem('ek26_bubble_shape') || 'rounded');
+      setBubbleColor(localStorage.getItem('ek26_bubble_color') || '#6366f1');
+    };
+    window.addEventListener('wallpaper-changed', wallpaperHandler);
+    window.addEventListener('storage', wallpaperHandler);
+    window.addEventListener('font-size-changed', fontHandler);
+    window.addEventListener('bubble-style-changed', bubbleHandler);
     return () => {
-      window.removeEventListener('wallpaper-changed', handler);
-      window.removeEventListener('storage', handler);
+      window.removeEventListener('wallpaper-changed', wallpaperHandler);
+      window.removeEventListener('storage', wallpaperHandler);
+      window.removeEventListener('font-size-changed', fontHandler);
+      window.removeEventListener('bubble-style-changed', bubbleHandler);
     };
   }, []);
 
@@ -158,6 +178,7 @@ export function ChatRoom({ conversationId }: Props) {
           replyToId: m.replyToId || null,
           replyTo: m.replyTo || null,
           forwardedFrom: m.forwardedFrom || null,
+          reactions: m.reactions || [],
           encrypted,
           status: m.status,
           createdAt: m.createdAt,
@@ -456,45 +477,44 @@ export function ChatRoom({ conversationId }: Props) {
         </div>
       </div>
 
-      {/* Pinned messages bar */}
-      {conv?.pinnedMessages && conv.pinnedMessages.length > 0 && (() => {
-        const pins = conv.pinnedMessages;
-        const currentPin = pins[pinIndex % pins.length];
-        if (!currentPin) return null;
-        return (
-          <div
-            className="px-4 py-2 border-b border-dark-600 bg-dark-800/80 flex items-center gap-3 cursor-pointer hover:bg-dark-700 transition-colors"
-            onClick={() => {
-              const el = document.getElementById(`msg-${currentPin.id}`);
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.classList.add('ring-2', 'ring-accent', 'ring-opacity-50');
-                setTimeout(() => el.classList.remove('ring-2', 'ring-accent', 'ring-opacity-50'), 2000);
-              }
-              // Cycle to next pin on click
-              if (pins.length > 1) setPinIndex((pinIndex + 1) % pins.length);
-            }}
-          >
-            <div className="flex flex-col items-center flex-shrink-0">
-              <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-              </svg>
-              {pins.length > 1 && (
-                <span className="text-[9px] text-accent">{pinIndex % pins.length + 1}/{pins.length}</span>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-accent font-medium">Закреплено {currentPin.senderName && `· ${currentPin.senderName}`}</p>
-              <p className="text-xs text-gray-300 truncate">{currentPin.text || 'Сообщение'}</p>
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); handleUnpin(currentPin.id); }} className="text-gray-400 hover:text-white p-1 flex-shrink-0" title="Открепить">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+      {/* Pinned messages — horizontal scroll */}
+      {conv?.pinnedMessages && conv.pinnedMessages.length > 0 && (
+        <div className="border-b border-dark-600 bg-dark-800/80">
+          <div className="flex gap-2 px-3 py-2 overflow-x-auto scrollbar-hide">
+            {conv.pinnedMessages.map((pin) => (
+              <div
+                key={pin.id}
+                className="flex items-center gap-2 px-3 py-1.5 bg-dark-700 rounded-lg cursor-pointer hover:bg-dark-600 transition-colors flex-shrink-0 min-w-[180px] max-w-[240px]"
+                onClick={() => {
+                  const el = document.getElementById(`msg-${pin.id}`);
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.classList.add('ring-2', 'ring-accent', 'rounded-lg', 'bg-accent/10');
+                    setTimeout(() => el.classList.remove('ring-2', 'ring-accent', 'rounded-lg', 'bg-accent/10'), 2000);
+                  }
+                }}
+              >
+                <svg className="w-3.5 h-3.5 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-accent font-medium truncate">{pin.senderName || 'Закреплено'}</p>
+                  <p className="text-[11px] text-gray-300 truncate">{pin.text || 'Сообщение'}</p>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleUnpin(pin.id); }}
+                  className="text-gray-500 hover:text-white p-0.5 flex-shrink-0"
+                  title="Открепить"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1" style={getWallpaperStyle()}>
@@ -519,6 +539,13 @@ export function ChatRoom({ conversationId }: Props) {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onPin={handlePin}
+            onReact={(msg, emoji) => {
+              messageActionsApi.react(msg.id, emoji).catch(console.error);
+            }}
+            userId={userId}
+            fontSize={chatFontSize}
+            bubbleShape={bubbleShape}
+            bubbleColor={bubbleColor}
           />
           </div>
         ))}
@@ -590,13 +617,30 @@ export function ChatRoom({ conversationId }: Props) {
       )}
 
       {/* Input */}
-      <div className="px-4 py-3 border-t border-dark-600 bg-dark-800">
-        <div className="flex items-end gap-2">
+      <div className="border-t border-dark-600 bg-dark-800">
+        {isRecordingVoice ? (
+          <VoiceRecorder
+            onSend={(att) => {
+              setIsRecordingVoice(false);
+              // Send voice message
+              const voiceMsg = {
+                type: 'voice' as const,
+                text: '',
+                attachments: [att],
+              };
+              messagesApi.send(conversationId, voiceMsg as any).then((res: any) => {
+                if (res) addMessage(conversationId, res);
+              }).catch(console.error);
+            }}
+            onCancel={() => setIsRecordingVoice(false)}
+          />
+        ) : (
+        <div className="px-4 py-3 flex items-end gap-2">
           {/* Attach button */}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-white hover:bg-dark-600 disabled:opacity-30 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-white hover:bg-dark-600 disabled:opacity-30 transition-colors flex-shrink-0"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
@@ -610,7 +654,38 @@ export function ChatRoom({ conversationId }: Props) {
             className="hidden"
           />
 
+          {/* Emoji button */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+            >
+              <span className="text-xl">😊</span>
+            </button>
+            {showEmojiPicker && (
+              <EmojiPicker
+                onSelect={(emoji) => {
+                  const ta = textareaRef.current;
+                  if (ta) {
+                    const start = ta.selectionStart || text.length;
+                    const before = text.slice(0, start);
+                    const after = text.slice(start);
+                    setText(before + emoji + after);
+                    setTimeout(() => {
+                      ta.focus();
+                      ta.selectionStart = ta.selectionEnd = start + emoji.length;
+                    }, 0);
+                  } else {
+                    setText(text + emoji);
+                  }
+                }}
+                onClose={() => setShowEmojiPicker(false)}
+              />
+            )}
+          </div>
+
           <textarea
+            ref={textareaRef}
             value={text}
             onChange={(e) => { setText(e.target.value); handleTyping(); }}
             onKeyDown={handleKeyDown}
@@ -619,16 +694,31 @@ export function ChatRoom({ conversationId }: Props) {
             className="flex-1 px-4 py-2.5 bg-dark-700 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 resize-none focus:outline-none focus:border-accent transition-colors"
             style={{ maxHeight: '120px' }}
           />
-          <button
-            onClick={handleSend}
-            disabled={(!text.trim() && !pendingAttachment) || uploading}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
+
+          {/* Send or Mic button */}
+          {text.trim() || pendingAttachment ? (
+            <button
+              onClick={handleSend}
+              disabled={uploading}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsRecordingVoice(true)}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-white hover:bg-dark-600 transition-colors flex-shrink-0"
+              title="Голосовое сообщение"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+          )}
         </div>
+        )}
       </div>
 
       {forwardMsg && <ForwardDialog message={forwardMsg} onClose={() => setForwardMsg(null)} />}

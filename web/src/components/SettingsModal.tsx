@@ -102,14 +102,39 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
     }
   };
 
+  // Font size
+  const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('ek26_font_size') || '3'));
+  // Bubble style
+  const [bubbleShape, setBubbleShape] = useState(() => localStorage.getItem('ek26_bubble_shape') || 'rounded');
+  const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '#6366f1');
+
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
     localStorage.setItem('ek26_theme', newTheme);
     if (newTheme === 'light') {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
     } else {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
     }
+    window.dispatchEvent(new Event('theme-changed'));
+  };
+
+  const handleFontSizeChange = (val: number) => {
+    setFontSize(val);
+    localStorage.setItem('ek26_font_size', String(val));
+    window.dispatchEvent(new Event('font-size-changed'));
+  };
+
+  const handleBubbleShapeChange = (shape: string) => {
+    setBubbleShape(shape);
+    localStorage.setItem('ek26_bubble_shape', shape);
+    window.dispatchEvent(new Event('bubble-style-changed'));
+  };
+
+  const handleBubbleColorChange = (color: string) => {
+    setBubbleColor(color);
+    localStorage.setItem('ek26_bubble_color', color);
+    window.dispatchEvent(new Event('bubble-style-changed'));
   };
 
   const handleWallpaperChange = (id: string) => {
@@ -338,8 +363,102 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               {/* Theme toggle */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-3">Тема</label>
-                <div className="px-3 py-2.5 bg-dark-600 rounded-xl text-sm text-gray-500">
-                  Тёмная тема (светлая в разработке)
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleThemeChange('dark')}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                      theme === 'dark' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Тёмная
+                  </button>
+                  <button
+                    onClick={() => handleThemeChange('light')}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                      theme === 'light' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Светлая
+                  </button>
+                </div>
+              </div>
+
+              {/* Font size */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-3">Размер шрифта: {fontSize}</label>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={fontSize}
+                  onChange={(e) => handleFontSizeChange(parseInt(e.target.value))}
+                  className="w-full accent-accent"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Мелкий</span>
+                  <span>Крупный</span>
+                </div>
+                <p className="text-sm mt-2 text-gray-300" style={{ fontSize: `${[12,13,14,15,16,17,18,19,20,22][fontSize - 1]}px` }}>
+                  Пример текста сообщения
+                </p>
+              </div>
+
+              {/* Bubble shape */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-3">Форма сообщений</label>
+                <div className="flex gap-3">
+                  {([
+                    { id: 'rounded', label: 'Скруглённые', cls: 'rounded-2xl rounded-br-md' },
+                    { id: 'square', label: 'Квадратные', cls: 'rounded-md' },
+                    { id: 'cloud', label: 'Облачко', cls: 'rounded-3xl' },
+                  ] as const).map((shape) => (
+                    <button
+                      key={shape.id}
+                      onClick={() => handleBubbleShapeChange(shape.id)}
+                      className={`flex-1 flex flex-col items-center gap-2 py-3 rounded-xl border-2 transition-colors ${
+                        bubbleShape === shape.id ? 'border-accent bg-accent/10' : 'border-dark-500 hover:border-gray-400'
+                      }`}
+                    >
+                      <div
+                        className={`px-3 py-1.5 text-xs text-white ${shape.cls}`}
+                        style={{ backgroundColor: bubbleColor }}
+                      >
+                        Привет
+                      </div>
+                      <span className="text-xs text-gray-400">{shape.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bubble color */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-3">Цвет сообщений</label>
+                <div className="flex items-center gap-3">
+                  {['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'].map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleBubbleColorChange(color)}
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        bubbleColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                  <label className="relative">
+                    <input
+                      type="color"
+                      value={bubbleColor}
+                      onChange={(e) => handleBubbleColorChange(e.target.value)}
+                      className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
+                    />
+                    <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </div>
+                  </label>
                 </div>
               </div>
 

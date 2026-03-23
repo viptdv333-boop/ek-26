@@ -5,6 +5,8 @@ import { SmsCode } from '../models/SmsCode';
 import { Session } from '../models/Session';
 import { generateOtp, hashOtp, sendCode } from '../services/sms';
 import { signAccessToken, signRefreshToken, hashToken, verifyToken } from '../services/jwt';
+import { Message } from '../models/Message';
+import { Conversation } from '../models/Conversation';
 import crypto from 'crypto';
 
 export async function authRoutes(app: FastifyInstance) {
@@ -192,11 +194,7 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Invalid phone number' });
     }
 
-    // Check if phone already taken by another user
-    const existing = await User.findOne({ phone });
-    if (existing && existing._id.toString() !== request.userId) {
-      return reply.code(409).send({ error: 'Phone number already in use' });
-    }
+    // Phone may belong to another user — we'll merge accounts on verify
 
     // Rate limit
     const recentCode = await SmsCode.findOne({
@@ -242,6 +240,39 @@ export async function authRoutes(app: FastifyInstance) {
     }
 
     await SmsCode.deleteOne({ _id: smsCode._id });
+
+    // Check if phone belongs to another user — merge accounts if so
+    const phoneUser = await User.findOne({ phone });
+    if (phoneUser && phoneUser._id.toString() !== request.userId) {
+      const oldId = phoneUser._id;
+      const newId = request.userId;
+      app.log.info(`Merging user ${oldId} into ${newId} (phone: ${phone})`);
+
+      // Transfer all conversations — replace old user in participants
+      await Conversation.updateMany(
+        { participants: oldId },
+        { $addToSet: { participants: newId } }
+      );
+      await Conversation.updateMany(
+        { participants: oldId },
+        { $pull: { participants: oldId } }
+      );
+
+      // Transfer all messages
+      await Message.updateMany(
+        { senderId: oldId },
+        { senderId: newId }
+      );
+
+      // Transfer contacts
+      const { Contact } = await import('../models/Contact');
+      await Contact.updateMany({ userId: oldId }, { userId: newId }).catch(() => {});
+      await Contact.updateMany({ contactUserId: oldId }, { contactUserId: newId }).catch(() => {});
+
+      // Delete old user
+      await Session.deleteMany({ userId: oldId.toString() });
+      await User.findByIdAndDelete(oldId);
+    }
 
     // Link phone to current user
     await User.findByIdAndUpdate(request.userId, { phone });

@@ -40,6 +40,7 @@ export function ChatRoom({ conversationId }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]) || EMPTY_ARRAY;
   const isUserOnline = useChatStore((s) => s.isUserOnline);
+  const setActiveConversation = useChatStore((s) => s.setActiveConversation);
   const userId = useAuthStore((s) => s.user?.id);
   const myAvatarUrl = useAuthStore((s) => s.user?.avatarUrl) || null;
 

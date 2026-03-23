@@ -416,9 +416,12 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 <label className="block text-sm font-medium text-gray-400 mb-3">Форма сообщений</label>
                 <div className="flex gap-3">
                   {([
-                    { id: 'rounded', label: 'Скруглённые' },
-                    { id: 'square', label: 'Квадратные' },
-                    { id: 'cloud', label: 'Облачко' },
+                    { id: 'rounded', label: 'Скруглённые',
+                      path: "M 18,5 C 8,6 3,13 3,22 L 2,72 C 2,83 7,91 18,91 L 162,91 L 184,114 L 173,91 L 182,91 C 193,91 198,83 198,72 L 198,22 C 198,13 193,5 182,5 Z" },
+                    { id: 'square', label: 'Квадратные',
+                      path: "M 6,3 L 194,3 C 197,3 199,5 199,8 L 199,83 C 199,87 197,89 194,89 L 175,89 L 186,114 L 160,89 L 6,89 C 3,89 1,87 1,83 L 1,8 C 1,5 3,3 6,3 Z" },
+                    { id: 'cloud', label: 'Облачко',
+                      path: "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z" },
                   ] as const).map((shape) => (
                     <button
                       key={shape.id}
@@ -427,31 +430,13 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                         bubbleShape === shape.id ? 'border-accent bg-accent/10' : 'border-dark-500 hover:border-gray-400'
                       }`}
                     >
-                      <div className="relative pb-1">
-                        {shape.id === 'cloud' ? (
-                          /* Cloud preview: oval speech bubble shape */
-                          <div
-                            className="px-4 py-2 text-xs text-white"
-                            style={{
-                              backgroundColor: bubbleColor,
-                              borderRadius: '48% 48% 42% 8% / 50% 50% 35% 25%',
-                            }}
-                          >
-                            Привет
-                          </div>
-                        ) : (
-                          <>
-                            <div
-                              className={`px-3 py-1.5 text-xs text-white ${shape.id === 'square' ? 'rounded-lg' : 'rounded-2xl'}`}
-                              style={{ backgroundColor: bubbleColor }}
-                            >
-                              Привет
-                            </div>
-                            <svg className="absolute bottom-0 right-[-6px]" width="8" height="12" viewBox="0 0 8 12">
-                              <path d={shape.id === 'square' ? 'M0 0 L0 12 L8 12 Z' : 'M0 0 C0 6 3 10 8 12 L0 12 Z'} fill={bubbleColor} />
-                            </svg>
-                          </>
-                        )}
+                      <div className="relative w-20 h-10">
+                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="none">
+                          <path d={shape.path} fill={bubbleColor} />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-xs text-white" style={{ zIndex: 1, paddingBottom: '6px' }}>
+                          Привет
+                        </span>
                       </div>
                       <span className="text-xs text-gray-400">{shape.label}</span>
                     </button>

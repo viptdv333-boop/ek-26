@@ -119,36 +119,38 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
         {!isMine && renderAvatar()}
 
         <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
-          {/* Tail SVG — only for rounded and square shapes */}
-          {bubbleShape !== 'cloud' && (
-            <svg
-              className="absolute bottom-0"
-              style={{ [isMine ? 'right' : 'left']: '-8px' }}
-              width="12" height="16" viewBox="0 0 12 16"
-            >
-              {bubbleShape === 'square' ? (
+          {/* SVG bubble background — organic shapes with integrated tails */}
+          <svg
+            className="absolute inset-0 w-full h-full"
+            viewBox="0 0 200 120"
+            preserveAspectRatio="none"
+            style={{ zIndex: 0 }}
+          >
+            <path d={
+              bubbleShape === 'square' ? (
                 isMine
-                  ? <path d="M0 0 L0 16 L12 16 Z" fill={bubbleColor} />
-                  : <path d="M12 0 L12 16 L0 16 Z" fill={bubbleColorOther} />
+                  ? "M 6,3 L 194,3 C 197,3 199,5 199,8 L 199,83 C 199,87 197,89 194,89 L 175,89 L 186,114 L 160,89 L 6,89 C 3,89 1,87 1,83 L 1,8 C 1,5 3,3 6,3 Z"
+                  : "M 6,3 L 194,3 C 197,3 199,5 199,8 L 199,83 C 199,87 197,89 194,89 L 40,89 L 14,114 L 25,89 L 6,89 C 3,89 1,87 1,83 L 1,8 C 1,5 3,3 6,3 Z"
+              ) : bubbleShape === 'cloud' ? (
+                isMine
+                  ? "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z"
+                  : "M 28,10 C 55,-4 140,-4 165,8 C 198,20 202,50 194,70 C 200,83 192,89 175,91 L 55,93 Q 45,100 26,114 Q 30,105 42,91 L 28,91 C 8,89 -2,76 4,58 C -2,42 2,20 28,10 Z"
               ) : (
                 isMine
-                  ? <path d="M0 0 C0 8 4 14 12 16 L0 16 Z" fill={bubbleColor} />
-                  : <path d="M12 0 C12 8 8 14 0 16 L12 16 Z" fill={bubbleColorOther} />
-              )}
-            </svg>
-          )}
+                  ? "M 18,5 C 8,6 3,13 3,22 L 2,72 C 2,83 7,91 18,91 L 162,91 L 184,114 L 173,91 L 182,91 C 193,91 198,83 198,72 L 198,22 C 198,13 193,5 182,5 Z"
+                  : "M 18,5 C 8,6 3,13 3,22 L 2,72 C 2,83 7,91 18,91 L 27,91 L 16,114 L 38,91 L 182,91 C 193,91 198,83 198,72 L 198,22 C 198,13 193,5 182,5 Z"
+              )
+            } fill={isMine ? bubbleColor : bubbleColorOther} />
+          </svg>
           <div
-            className={`relative overflow-hidden ${
-              bubbleShape === 'square' ? 'rounded-md' :
-              bubbleShape === 'cloud' ? 'cloud-bubble' :
-              'rounded-2xl'
-            } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : bubbleShape === 'cloud' ? 'px-5 py-3 pb-4' : 'px-3.5 py-2'}`}
+            className="relative overflow-hidden"
             style={{
-              backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-              ...(bubbleShape === 'cloud' ? {
-                borderRadius: '48% 48% 42% 8% / 50% 50% 35% 25%',
-                ...(isMine ? {} : { borderRadius: '48% 48% 8% 42% / 50% 50% 25% 35%' }),
-              } : {}),
+              zIndex: 1,
+              padding: bubbleShape === 'cloud'
+                ? '14px 22px 24px 22px'
+                : bubbleShape === 'square'
+                  ? '8px 14px 22px 14px'
+                  : '10px 16px 22px 16px',
             }}
           >
           {showSender && !isMine && message.senderName && (

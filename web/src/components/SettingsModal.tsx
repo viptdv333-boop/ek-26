@@ -6,6 +6,7 @@ import { useChatStore } from '../stores/chatStore';
 
 interface Props {
   onClose: () => void;
+  initialTab?: 'profile' | 'appearance';
 }
 
 const WALLPAPER_PRESETS = [
@@ -19,7 +20,7 @@ const WALLPAPER_PRESETS = [
 
 type SettingsTab = 'profile' | 'appearance';
 
-export function SettingsModal({ onClose }: Props) {
+export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const authLogout = useAuthStore((s) => s.logout);
@@ -34,7 +35,7 @@ export function SettingsModal({ onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   // Theme
   const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'dark');

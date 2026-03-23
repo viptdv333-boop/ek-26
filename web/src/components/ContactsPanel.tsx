@@ -1,22 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useContactsStore, Contact } from '../stores/contactsStore';
 import { useChatStore } from '../stores/chatStore';
-import { conversationsApi, usersApi, contactsApi } from '../services/api/endpoints';
+import { conversationsApi, usersApi, contactsApi, chatActionsApi } from '../services/api/endpoints';
 import { MessageContextMenu } from './MessageContextMenu';
+import { ContactCard } from './ContactCard';
 
 export function ContactsPanel() {
   const contacts = useContactsStore((s) => s.contacts);
   const loading = useContactsStore((s) => s.loading);
   const fetchContacts = useContactsStore((s) => s.fetchContacts);
   const removeContact = useContactsStore((s) => s.removeContact);
+  const updateContact = useContactsStore((s) => s.updateContact);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const setActive = useChatStore((s) => s.setActiveConversation);
   const addConversation = useChatStore((s) => s.addConversation);
-  const [phone, setPhone] = useState('+7');
+  const [phone, setPhone] = useState('+');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
   const [contactMenu, setContactMenu] = useState<{ x: number; y: number; contact: Contact } | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
   const hasContactPicker = 'contacts' in navigator && 'ContactsManager' in window;
 
@@ -40,7 +43,7 @@ export function ContactsPanel() {
       }
       await contactsApi.add(users[0].id);
       await fetchContacts();
-      setPhone('+7');
+      setPhone('+');
     } catch (err: any) {
       setAddError(err?.message?.includes('409') ? 'Уже в контактах' : 'Ошибка');
     } finally {
@@ -93,7 +96,40 @@ export function ContactsPanel() {
     }
   };
 
+  const handleToggleFavorite = async (contact: Contact) => {
+    setContactMenu(null);
+    try {
+      await updateContact(contact.userId, { isFavorite: !contact.isFavorite });
+    } catch (err) {
+      console.error('Failed to toggle favorite:', err);
+    }
+  };
+
+  const handleBlockContact = async (contact: Contact) => {
+    setContactMenu(null);
+    await new Promise(r => setTimeout(r, 100));
+    if (!window.confirm(`Заблокировать ${contact.displayName}?`)) return;
+    try {
+      await chatActionsApi.block(contact.userId);
+    } catch (err) {
+      console.error('Failed to block contact:', err);
+    }
+  };
+
+  const handleEditContact = (contact: Contact) => {
+    setContactMenu(null);
+    setEditingContact(contact);
+  };
+
   const isOnline = (userId: string) => onlineUsers.has(userId);
+
+  // Sort: favorites first (max 5), then alphabetically
+  const sortedContacts = [...contacts].sort((a, b) => {
+    const aFav = a.isFavorite ? 1 : 0;
+    const bFav = b.isFavorite ? 1 : 0;
+    if (aFav !== bFav) return bFav - aFav;
+    return (a.displayName || '').localeCompare(b.displayName || '', 'ru');
+  });
 
   return (
     <>
@@ -104,7 +140,7 @@ export function ContactsPanel() {
             value={phone}
             onChange={(e) => { setPhone(e.target.value); setAddError(''); }}
             onKeyDown={(e) => e.key === 'Enter' && handleAddByPhone()}
-            placeholder="+7..."
+            placeholder="Номер телефона..."
             className="flex-1 px-3 py-2 bg-dark-700 border border-dark-500 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
           />
           <button
@@ -139,7 +175,7 @@ export function ContactsPanel() {
         {!loading && contacts.length === 0 && (
           <p className="text-center text-gray-500 text-sm py-8">Нет контактов.<br />Добавьте по номеру телефона.</p>
         )}
-        {contacts.map((contact) => (
+        {sortedContacts.map((contact) => (
           <div
             key={contact.id}
             className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors group"
@@ -160,25 +196,17 @@ export function ContactsPanel() {
 
             {/* Info */}
             <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenChat(contact)}>
-              <p className="text-sm text-white truncate">{contact.displayName}</p>
+              <p className="text-sm text-white truncate flex items-center gap-1">
+                {contact.isFavorite && <span className="text-yellow-400 flex-shrink-0">&#11088;</span>}
+                {contact.displayName}
+              </p>
               {contact.phone && (
                 <p className="text-xs text-gray-500 truncate">{contact.phone}</p>
               )}
             </div>
 
-            {/* Actions */}
+            {/* Actions - only menu button */}
             <div className="flex items-center gap-1">
-              {/* Write message */}
-              <button
-                onClick={() => handleOpenChat(contact)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-dark-500 text-gray-400 hover:text-accent transition-colors"
-                title="Написать"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                </svg>
-              </button>
-              {/* Menu */}
               <div
                 onClick={(e) => {
                   e.stopPropagation();
@@ -203,11 +231,17 @@ export function ContactsPanel() {
           x={contactMenu.x}
           y={contactMenu.y}
           items={[
-            { label: 'Написать', icon: 'reply', onClick: () => { setContactMenu(null); handleOpenChat(contactMenu.contact); } },
+            { label: 'Изменить', icon: 'edit', onClick: () => handleEditContact(contactMenu.contact) },
+            { label: contactMenu.contact.isFavorite ? 'Из избранного' : 'В избранное', icon: 'star', onClick: () => handleToggleFavorite(contactMenu.contact) },
+            { label: 'Заблокировать', icon: 'block', onClick: () => handleBlockContact(contactMenu.contact) },
             { label: 'Удалить', icon: 'delete', onClick: () => handleDeleteContact(contactMenu.contact), danger: true },
           ]}
           onClose={() => setContactMenu(null)}
         />
+      )}
+
+      {editingContact && (
+        <ContactCard contact={editingContact} onClose={() => setEditingContact(null)} />
       )}
     </>
   );

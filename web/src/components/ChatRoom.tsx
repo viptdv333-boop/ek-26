@@ -44,6 +44,35 @@ export function ChatRoom({ conversationId }: Props) {
   const userId = useAuthStore((s) => s.user?.id);
   const myAvatarUrl = useAuthStore((s) => s.user?.avatarUrl) || null;
 
+  // Wallpaper support
+  const getWallpaperStyle = (): React.CSSProperties => {
+    const wallpaper = localStorage.getItem('ek26_wallpaper') || 'default';
+    const presets: Record<string, string> = {
+      default: '#1a1a2e',
+      'dark-blue': '#0f1b2d',
+      'dark-green': '#0d1f17',
+      'dark-purple': '#1a0f2e',
+      'gradient-blue-purple': 'linear-gradient(135deg, #0f1b2d, #1a0f2e)',
+      'gradient-green-teal': 'linear-gradient(135deg, #0d1f17, #0f2027)',
+    };
+    if (presets[wallpaper]) {
+      const val = presets[wallpaper];
+      if (val.startsWith('linear-gradient')) {
+        return { background: val };
+      }
+      return { backgroundColor: val };
+    }
+    // Custom URL
+    if (wallpaper.startsWith('http') || wallpaper.startsWith('/')) {
+      return {
+        backgroundImage: `url(${wallpaper})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      };
+    }
+    return { backgroundColor: '#1a1a2e' };
+  };
+
   const conv = conversations.find((c) => c.id === conversationId);
 
   const getOther = () => {
@@ -369,6 +398,27 @@ export function ChatRoom({ conversationId }: Props) {
             </span>
           )}
         </div>
+        {/* Call buttons */}
+        <div className="flex items-center gap-1 ml-2">
+          <button
+            onClick={() => alert('Звонки в разработке')}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+            title="Аудиозвонок"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => alert('Звонки в разработке')}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+            title="Видеозвонок"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9.75a2.25 2.25 0 002.25-2.25V7.5a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Pinned messages bar */}
@@ -412,7 +462,7 @@ export function ChatRoom({ conversationId }: Props) {
       })()}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1" style={getWallpaperStyle()}>
         {loading && (
           <div className="text-center text-gray-500 text-sm py-4">Загрузка...</div>
         )}

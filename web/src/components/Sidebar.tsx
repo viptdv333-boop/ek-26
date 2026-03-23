@@ -1,12 +1,20 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore, Conversation } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
-import { conversationsApi } from '../services/api/endpoints';
+import { conversationsApi, searchApi, chatActionsApi } from '../services/api/endpoints';
 import { NewChatDialog } from './NewChatDialog';
 import { PhoneLinkDialog } from './PhoneLinkDialog';
 import { SettingsModal } from './SettingsModal';
 import { ContactsPanel } from './ContactsPanel';
 import { MessageContextMenu } from './MessageContextMenu';
+
+interface SearchResult {
+  conversationId: string;
+  conversationName: string;
+  messageText: string;
+  senderName: string;
+  createdAt: string;
+}
 
 export function Sidebar() {
   const conversations = useChatStore((s) => s.conversations);
@@ -21,9 +29,49 @@ export function Sidebar() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<'chats' | 'contacts'>('chats');
   const [search, setSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [chatMenu, setChatMenu] = useState<{ x: number; y: number; convId: string } | null>(null);
   const setConversations = useChatStore((s) => s.setConversations);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showArchive, setShowArchive] = useState(false);
+
+  const doSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    setSearchLoading(true);
+    try {
+      const res = await searchApi.messages(query.trim());
+      const results = (res as any)?.results || res || [];
+      setSearchResults(Array.isArray(results) ? results : []);
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    if (!val.trim()) {
+      setSearchResults(null);
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      return;
+    }
+    // Debounce 500ms
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => doSearch(val), 500);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      doSearch(search);
+    }
+  };
 
   const handleChatContextMenu = (e: React.MouseEvent, convId: string) => {
     e.preventDefault();
@@ -66,6 +114,49 @@ export function Sidebar() {
       c.id === convId ? { ...c, isPinned: !isPinned, updatedAt: isPinned ? c.updatedAt : new Date().toISOString() } as any : c
     );
     setConversations(updated);
+  };
+
+  const handleMuteChat = async (convId: string) => {
+    setChatMenu(null);
+    try {
+      const res = await chatActionsApi.mute(convId);
+      const muted = (res as any).muted;
+      const updated = conversations.map(c =>
+        c.id === convId ? { ...c, isMuted: muted } as any : c
+      );
+      setConversations(updated);
+    } catch (err) {
+      console.error('Mute failed:', err);
+    }
+  };
+
+  const handleArchiveChat = async (convId: string) => {
+    setChatMenu(null);
+    try {
+      const res = await chatActionsApi.archive(convId);
+      const archived = (res as any).archived;
+      const updated = conversations.map(c =>
+        c.id === convId ? { ...c, isArchived: archived } as any : c
+      );
+      setConversations(updated);
+    } catch (err) {
+      console.error('Archive failed:', err);
+    }
+  };
+
+  const handleBlockUser = async (convId: string) => {
+    setChatMenu(null);
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv || conv.type !== 'direct') return;
+    const otherId = getOtherUserId(conv);
+    if (!otherId) return;
+    await new Promise(r => setTimeout(r, 100));
+    if (!window.confirm('Заблокировать пользователя? Вы не будете получать от него сообщения.')) return;
+    try {
+      await chatActionsApi.block(otherId);
+    } catch (err) {
+      console.error('Block failed:', err);
+    }
   };
 
   const handleDeleteChat = async (convId: string) => {
@@ -126,9 +217,27 @@ export function Sidebar() {
     return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
   });
 
-  const filtered = search
-    ? sortedConversations.filter((c) => getConversationName(c).toLowerCase().includes(search.toLowerCase()))
-    : sortedConversations;
+  // Separate archived and non-archived
+  const activeConversations = sortedConversations.filter(c => !(c as any).isArchived);
+  const archivedConversations = sortedConversations.filter(c => (c as any).isArchived);
+
+  // Local name filtering as fallback while typing (before search results arrive)
+  const filtered = search && !searchResults
+    ? activeConversations.filter((c) => getConversationName(c).toLowerCase().includes(search.toLowerCase()))
+    : activeConversations;
+
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return text;
+    return (
+      <>
+        {text.slice(0, idx)}
+        <span className="bg-accent/30 text-white">{text.slice(idx, idx + query.length)}</span>
+        {text.slice(idx + query.length)}
+      </>
+    );
+  };
 
   return (
     <div className="w-full md:w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
@@ -176,12 +285,45 @@ export function Sidebar() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Поиск по чатам..."
+          onChange={(e) => handleSearchChange(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          placeholder="Поиск по чатам и сообщениям..."
           className="w-full px-3 py-2 bg-dark-700 border border-dark-500 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
         />
       </div>
 
+      {/* Search results */}
+      {searchResults !== null && search.trim() ? (
+        <div className="flex-1 overflow-y-auto">
+          {searchLoading && (
+            <div className="px-4 py-4 text-center text-gray-500 text-sm">Поиск...</div>
+          )}
+          {!searchLoading && searchResults.length === 0 && (
+            <div className="px-4 py-8 text-center text-gray-500 text-sm">Ничего не найдено</div>
+          )}
+          {!searchLoading && searchResults.map((result, i) => (
+            <button
+              key={`${result.conversationId}-${i}`}
+              onClick={() => {
+                setActive(result.conversationId);
+                setSearch('');
+                setSearchResults(null);
+              }}
+              className="w-full px-4 py-3 flex flex-col gap-1 hover:bg-dark-700 transition-colors text-left border-b border-dark-600/50"
+            >
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm font-medium text-accent truncate">{result.conversationName || 'Чат'}</span>
+                <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatTime(result.createdAt)}</span>
+              </div>
+              <p className="text-xs text-gray-400">{result.senderName || 'Пользователь'}</p>
+              <p className="text-xs text-gray-300 truncate">
+                {highlightMatch(result.messageText || '', search)}
+              </p>
+            </button>
+          ))}
+        </div>
+      ) : (
+      <>
       {/* Conversation list */}
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 && (
@@ -197,6 +339,7 @@ export function Sidebar() {
           const isGroup = conv.type === 'group';
 
           const isPinned = (conv as any).isPinned;
+          const isMuted = (conv as any).isMuted;
           return (
             <button
               key={conv.id}
@@ -227,7 +370,10 @@ export function Sidebar() {
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm font-medium text-white truncate">{name}</span>
+                  <span className="text-sm font-medium text-white truncate flex items-center gap-1">
+                    {name}
+                    {isMuted && <span className="text-gray-500 text-xs" title="Уведомления выключены">🔇</span>}
+                  </span>
                   {conv.lastMessage && (
                     <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                       {formatTime(conv.lastMessage.createdAt)}
@@ -268,7 +414,65 @@ export function Sidebar() {
             </button>
           );
         })}
+
+        {/* Archive section */}
+        {archivedConversations.length > 0 && (
+          <>
+            <button
+              onClick={() => setShowArchive(!showArchive)}
+              className="w-full px-4 py-2.5 flex items-center gap-2 text-gray-400 hover:text-white hover:bg-dark-700 transition-colors text-sm"
+            >
+              <svg className={`w-4 h-4 transition-transform ${showArchive ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+              Архив ({archivedConversations.length})
+            </button>
+            {showArchive && archivedConversations.map((conv) => {
+              const isActive = conv.id === activeId;
+              const name = getConversationName(conv);
+              const otherUserId = getOtherUserId(conv);
+              const isOnline = otherUserId ? onlineUsers.has(otherUserId) : false;
+              const isGroup = conv.type === 'group';
+              return (
+                <button
+                  key={conv.id}
+                  onClick={() => { if (!longPressTriggered.current) setActive(conv.id); }}
+                  onContextMenu={(e) => handleChatContextMenu(e, conv.id)}
+                  onTouchStart={(e) => handleTouchStart(conv.id, e)}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchMove={handleTouchMove}
+                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-dark-700 transition-colors text-left opacity-70 ${
+                    isActive ? 'bg-dark-600' : ''
+                  }`}
+                >
+                  <div className="relative w-10 h-10 flex-shrink-0">
+                    {!isGroup && getOtherUser(conv)?.avatarUrl ? (
+                      <img src={getOtherUser(conv)!.avatarUrl!} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                        <span className="text-accent text-sm font-medium">
+                          {isGroup ? '#' : name[0]?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-white truncate block">{name}</span>
+                    {conv.lastMessage && (
+                      <p className="text-xs text-gray-400 truncate mt-0.5">{conv.lastMessage.text}</p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </>
+        )}
       </div>
+      </>
+      )}
       </>
       )}
 
@@ -334,6 +538,21 @@ export function Sidebar() {
               icon: 'pin',
               onClick: () => handlePinChat(chatMenu.convId),
             },
+            {
+              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isMuted ? 'Вкл. уведомления' : 'Выкл. уведомления',
+              icon: 'mute',
+              onClick: () => handleMuteChat(chatMenu.convId),
+            },
+            {
+              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isArchived ? 'Из архива' : 'В архив',
+              icon: 'archive',
+              onClick: () => handleArchiveChat(chatMenu.convId),
+            },
+            ...(conversations.find(c => c.id === chatMenu.convId)?.type === 'direct' ? [{
+              label: 'Заблокировать',
+              icon: 'block',
+              onClick: () => handleBlockUser(chatMenu.convId),
+            }] : []),
             {
               label: 'Удалить чат',
               icon: 'delete',

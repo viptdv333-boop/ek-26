@@ -18,11 +18,13 @@ export async function contactRoutes(app: FastifyInstance) {
         displayName: (c.nickname || user.displayName) as string,
         originalName: user.displayName as string,
         nickname: c.nickname,
-        avatarUrl: user.avatarUrl,
+        avatarUrl: c.customAvatar || user.avatarUrl,
         phone: user.phone,
         status: user.status,
         lastSeen: user.lastSeen?.toISOString() || null,
         telegramUsername: user.telegramUsername,
+        note: c.note,
+        isFavorite: c.isFavorite || false,
         createdAt: c.createdAt.toISOString(),
       };
     });
@@ -78,6 +80,38 @@ export async function contactRoutes(app: FastifyInstance) {
     });
 
     if (result.deletedCount === 0) {
+      return reply.code(404).send({ error: 'Contact not found' });
+    }
+
+    return { success: true };
+  });
+
+  // Update contact (nickname, note, customAvatar, isFavorite)
+  app.patch('/api/contacts/:contactUserId', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { contactUserId } = request.params as { contactUserId: string };
+    const { nickname, note, customAvatar, isFavorite } = request.body as {
+      nickname?: string | null;
+      note?: string | null;
+      customAvatar?: string | null;
+      isFavorite?: boolean;
+    };
+
+    const update: Record<string, any> = {};
+    if (nickname !== undefined) update.nickname = nickname;
+    if (note !== undefined) update.note = note;
+    if (customAvatar !== undefined) update.customAvatar = customAvatar;
+    if (isFavorite !== undefined) update.isFavorite = isFavorite;
+
+    const contact = await Contact.findOneAndUpdate(
+      {
+        userId: new mongoose.Types.ObjectId(request.userId),
+        contactUserId: new mongoose.Types.ObjectId(contactUserId),
+      },
+      { $set: update },
+      { new: true }
+    );
+
+    if (!contact) {
       return reply.code(404).send({ error: 'Contact not found' });
     }
 

@@ -19,6 +19,8 @@ export interface IConversation extends Document {
     pinnedBy: Types.ObjectId;
     pinnedAt: Date;
   }>;
+  archivedBy: Types.ObjectId[];
+  mutedBy: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +51,8 @@ const conversationSchema = new Schema<IConversation>(
       pinnedBy: { type: Schema.Types.ObjectId, ref: 'User' },
       pinnedAt: { type: Date, default: Date.now },
     }],
+    archivedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    mutedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );

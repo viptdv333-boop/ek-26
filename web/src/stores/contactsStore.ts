@@ -12,6 +12,8 @@ export interface Contact {
   status: string;
   lastSeen: string | null;
   telegramUsername?: string | null;
+  note?: string | null;
+  isFavorite?: boolean;
   createdAt: string;
 }
 
@@ -21,6 +23,7 @@ interface ContactsState {
   fetchContacts: () => Promise<void>;
   addContact: (userId: string, nickname?: string) => Promise<Contact>;
   removeContact: (userId: string) => Promise<void>;
+  updateContact: (userId: string, data: { nickname?: string | null; note?: string | null; customAvatar?: string | null; isFavorite?: boolean }) => Promise<void>;
   reset: () => void;
 }
 
@@ -52,6 +55,24 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
     await contactsApi.remove(userId);
     set((state) => ({
       contacts: state.contacts.filter((c) => c.userId !== userId),
+    }));
+  },
+
+  updateContact: async (userId, data) => {
+    await contactsApi.update(userId, data);
+    set((state) => ({
+      contacts: state.contacts.map((c) =>
+        c.userId === userId
+          ? {
+              ...c,
+              nickname: data.nickname !== undefined ? data.nickname : c.nickname,
+              displayName: data.nickname || c.originalName,
+              note: data.note !== undefined ? data.note : c.note,
+              avatarUrl: data.customAvatar !== undefined ? data.customAvatar : c.avatarUrl,
+              isFavorite: data.isFavorite !== undefined ? data.isFavorite : c.isFavorite,
+            }
+          : c
+      ),
     }));
   },
 

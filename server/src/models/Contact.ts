@@ -4,6 +4,9 @@ export interface IContact extends Document {
   userId: Types.ObjectId;
   contactUserId: Types.ObjectId;
   nickname: string | null;
+  note: string | null;
+  customAvatar: string | null;
+  isFavorite: boolean;
   createdAt: Date;
 }
 
@@ -12,6 +15,9 @@ const contactSchema = new Schema<IContact>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     contactUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     nickname: { type: String, default: null },
+    note: { type: String, default: null },
+    customAvatar: { type: String, default: null },
+    isFavorite: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

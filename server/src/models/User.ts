@@ -24,6 +24,7 @@ export interface IUser extends Document {
     keyId: number;
     publicKey: Buffer;
   }>;
+  blockedUsers: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +58,7 @@ const userSchema = new Schema<IUser>(
         publicKey: Buffer,
       },
     ],
+    blockedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true, autoIndex: false }
 );

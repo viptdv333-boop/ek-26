@@ -290,6 +290,36 @@ export async function messageRoutes(app: FastifyInstance) {
     return { success: true };
   });
 
+  // Full-text search across all user's conversations
+  app.get('/api/messages/search', { preHandler: [app.authenticate] }, async (request) => {
+    const { q, limit = 30 } = request.query as { q?: string; limit?: number };
+    if (!q || q.length < 2) return { results: [] };
+
+    // Get user's conversations
+    const convs = await Conversation.find({ participants: new mongoose.Types.ObjectId(request.userId) }).select('_id').lean();
+    const convIds = convs.map((c) => c._id);
+
+    const messages = await Message.find({
+      conversationId: { $in: convIds },
+      text: { $regex: q, $options: 'i' },
+      deletedAt: null,
+    })
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .populate('senderId', 'displayName')
+      .lean();
+
+    return {
+      results: messages.map((m) => ({
+        messageId: m._id.toString(),
+        conversationId: m.conversationId.toString(),
+        text: m.text,
+        senderName: (m.senderId as any)?.displayName || 'Пользователь',
+        createdAt: m.createdAt.toISOString(),
+      })),
+    };
+  });
+
   // Get all pinned messages
   app.get('/api/conversations/:convId/pin', { preHandler: [app.authenticate] }, async (request) => {
     const { convId } = request.params as { convId: string };

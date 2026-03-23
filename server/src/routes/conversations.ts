@@ -266,4 +266,84 @@ export async function conversationRoutes(app: FastifyInstance) {
 
     return { success: true };
   });
+
+  // Toggle mute conversation
+  app.patch('/api/conversations/:id/mute', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const conv = await Conversation.findById(id);
+    if (!conv) return reply.code(404).send({ error: 'Not found' });
+
+    const userId = new mongoose.Types.ObjectId(request.userId);
+    const isMuted = (conv.mutedBy || []).some((u: any) => u.toString() === request.userId);
+
+    if (isMuted) {
+      await Conversation.findByIdAndUpdate(id, { $pull: { mutedBy: userId } });
+    } else {
+      await Conversation.findByIdAndUpdate(id, { $addToSet: { mutedBy: userId } });
+    }
+    return { muted: !isMuted };
+  });
+
+  // Toggle archive conversation
+  app.patch('/api/conversations/:id/archive', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const conv = await Conversation.findById(id);
+    if (!conv) return reply.code(404).send({ error: 'Not found' });
+
+    const userId = new mongoose.Types.ObjectId(request.userId);
+    const isArchived = (conv.archivedBy || []).some((u: any) => u.toString() === request.userId);
+
+    if (isArchived) {
+      await Conversation.findByIdAndUpdate(id, { $pull: { archivedBy: userId } });
+    } else {
+      await Conversation.findByIdAndUpdate(id, { $addToSet: { archivedBy: userId } });
+    }
+    return { archived: !isArchived };
+  });
+
+  // Block user
+  app.post('/api/users/block/:targetId', { preHandler: [app.authenticate] }, async (request) => {
+    const { targetId } = request.params as { targetId: string };
+    await User.findByIdAndUpdate(request.userId, {
+      $addToSet: { blockedUsers: new mongoose.Types.ObjectId(targetId) },
+    });
+    return { success: true };
+  });
+
+  // Unblock user
+  app.delete('/api/users/block/:targetId', { preHandler: [app.authenticate] }, async (request) => {
+    const { targetId } = request.params as { targetId: string };
+    await User.findByIdAndUpdate(request.userId, {
+      $pull: { blockedUsers: new mongoose.Types.ObjectId(targetId) },
+    });
+    return { success: true };
+  });
+
+  // Delete own account
+  app.delete('/api/users/me', { preHandler: [app.authenticate] }, async (request) => {
+    const userId = request.userId;
+    const { Message } = await import('../models/Message');
+    const { Session } = await import('../models/Session');
+
+    // Replace messages with "Аккаунт удалён"
+    await Message.updateMany(
+      { senderId: new mongoose.Types.ObjectId(userId) },
+      { $set: { text: 'Аккаунт удалён', attachments: [], encryptedPayload: null } }
+    );
+
+    // Remove from conversations
+    await Conversation.updateMany(
+      { participants: new mongoose.Types.ObjectId(userId) },
+      { $pull: { participants: new mongoose.Types.ObjectId(userId) } }
+    );
+
+    // Delete empty conversations (no participants left)
+    await Conversation.deleteMany({ participants: { $size: 0 } });
+
+    // Delete sessions and user
+    await Session.deleteMany({ userId: new mongoose.Types.ObjectId(userId) });
+    await User.findByIdAndDelete(userId);
+
+    return { success: true };
+  });
 }

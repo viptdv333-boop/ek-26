@@ -63,4 +63,20 @@ export const contactsApi = {
   add: (contactUserId: string, nickname?: string) =>
     api.post<any>('/contacts', { contactUserId, nickname }),
   remove: (contactUserId: string) => api.delete<{ success: boolean }>(`/contacts/${contactUserId}`),
+  update: (contactUserId: string, data: { nickname?: string | null; note?: string | null; customAvatar?: string | null; isFavorite?: boolean }) =>
+    api.patch<any>(`/contacts/${contactUserId}`, data),
+};
+
+// Search
+export const searchApi = {
+  messages: (q: string) => api.get<{ results: any[] }>(`/messages/search?q=${encodeURIComponent(q)}`),
+};
+
+// Chat actions
+export const chatActionsApi = {
+  mute: (convId: string) => api.patch<{ muted: boolean }>(`/conversations/${convId}/mute`, {}),
+  archive: (convId: string) => api.patch<{ archived: boolean }>(`/conversations/${convId}/archive`, {}),
+  block: (userId: string) => api.post<any>(`/users/block/${userId}`, {}),
+  unblock: (userId: string) => api.delete<any>(`/users/block/${userId}`),
+  deleteAccount: () => api.delete<any>('/users/me'),
 };

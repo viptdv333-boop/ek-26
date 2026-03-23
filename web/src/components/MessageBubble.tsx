@@ -119,17 +119,29 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
         {!isMine && renderAvatar()}
 
         <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
-          {/* Tail */}
-          <div
-            className="absolute bottom-0 w-3 h-3"
-            style={{
-              [isMine ? 'right' : 'left']: '-6px',
-              clipPath: isMine
-                ? 'polygon(0 0, 0% 100%, 100% 100%)'
-                : 'polygon(100% 0, 0% 100%, 100% 100%)',
-              backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-            }}
-          />
+          {/* Tail SVG */}
+          <svg
+            className="absolute bottom-0"
+            style={{ [isMine ? 'right' : 'left']: '-8px' }}
+            width="12" height="16" viewBox="0 0 12 16"
+          >
+            {bubbleShape === 'square' ? (
+              // Square: sharp angular tail
+              isMine
+                ? <path d="M0 0 L0 16 L12 16 Z" fill={bubbleColor} />
+                : <path d="M12 0 L12 16 L0 16 Z" fill={bubbleColorOther} />
+            ) : bubbleShape === 'cloud' ? (
+              // Cloud: smooth curved tail
+              isMine
+                ? <path d="M0 0 Q0 12 10 16 Q4 12 0 16 Z" fill={bubbleColor} />
+                : <path d="M12 0 Q12 12 2 16 Q8 12 12 16 Z" fill={bubbleColorOther} />
+            ) : (
+              // Rounded: pointed tail
+              isMine
+                ? <path d="M0 0 C0 8 4 14 12 16 L0 16 Z" fill={bubbleColor} />
+                : <path d="M12 0 C12 8 8 14 0 16 L12 16 Z" fill={bubbleColorOther} />
+            )}
+          </svg>
           <div
             className={`relative overflow-hidden ${
               bubbleShape === 'square' ? 'rounded-lg' :

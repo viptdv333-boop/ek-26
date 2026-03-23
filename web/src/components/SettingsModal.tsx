@@ -416,9 +416,9 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 <label className="block text-sm font-medium text-gray-400 mb-3">Форма сообщений</label>
                 <div className="flex gap-3">
                   {([
-                    { id: 'rounded', label: 'Скруглённые', radius: 'rounded-2xl' },
-                    { id: 'square', label: 'Квадратные', radius: 'rounded-lg' },
-                    { id: 'cloud', label: 'Облачко', radius: 'rounded-[2rem]' },
+                    { id: 'rounded', label: 'Скруглённые', radius: 'rounded-2xl', tail: 'M0 0 C0 6 3 10 8 12 L0 12 Z' },
+                    { id: 'square', label: 'Квадратные', radius: 'rounded-lg', tail: 'M0 0 L0 12 L8 12 Z' },
+                    { id: 'cloud', label: 'Облачко', radius: 'rounded-[2rem]', tail: 'M0 0 Q0 8 7 12 Q3 8 0 12 Z' },
                   ] as const).map((shape) => (
                     <button
                       key={shape.id}
@@ -427,20 +427,16 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                         bubbleShape === shape.id ? 'border-accent bg-accent/10' : 'border-dark-500 hover:border-gray-400'
                       }`}
                     >
-                      <div className="relative">
+                      <div className="relative pb-1">
                         <div
                           className={`px-3 py-1.5 text-xs text-white ${shape.radius}`}
                           style={{ backgroundColor: bubbleColor }}
                         >
                           Привет
                         </div>
-                        <div
-                          className="absolute bottom-0 right-[-5px] w-2.5 h-2.5"
-                          style={{
-                            clipPath: 'polygon(0 0, 0% 100%, 100% 100%)',
-                            backgroundColor: bubbleColor,
-                          }}
-                        />
+                        <svg className="absolute bottom-0 right-[-6px]" width="8" height="12" viewBox="0 0 8 12">
+                          <path d={shape.tail} fill={bubbleColor} />
+                        </svg>
                       </div>
                       <span className="text-xs text-gray-400">{shape.label}</span>
                     </button>

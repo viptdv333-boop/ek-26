@@ -38,8 +38,13 @@ export function ChatPage() {
 
   return (
     <div className="h-screen flex bg-dark-900">
-      <Sidebar />
-      {activeConversationId ? <ChatRoom conversationId={activeConversationId} /> : <EmptyState />}
+      {/* Mobile: show sidebar OR chat, not both */}
+      <div className={`${activeConversationId ? 'hidden md:flex' : 'flex'} w-full md:w-auto`}>
+        <Sidebar />
+      </div>
+      <div className={`${activeConversationId ? 'flex' : 'hidden md:flex'} flex-1`}>
+        {activeConversationId ? <ChatRoom conversationId={activeConversationId} /> : <EmptyState />}
+      </div>
     </div>
   );
 }

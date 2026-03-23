@@ -61,7 +61,7 @@ export function Sidebar() {
     : conversations;
 
   return (
-    <div className="w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
+    <div className="w-full md:w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
         <h1 className="text-lg font-semibold text-white">FOMO Chat</h1>

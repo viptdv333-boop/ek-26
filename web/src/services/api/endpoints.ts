@@ -19,6 +19,7 @@ export const usersApi = {
   lookupByPhone: (phone: string) => api.get<any>(`/users/lookup/${encodeURIComponent(phone)}`),
   search: (query: string) => api.get<any[]>(`/users/search?q=${encodeURIComponent(query)}`),
   lookupByPhones: (phones: string[]) => api.post<any[]>('/users/lookup', { phones }),
+  registerPushToken: (token: string, platform: 'fcm' | 'apns') => api.post<any>('/users/me/push-token', { token, platform }),
 };
 
 // Conversations

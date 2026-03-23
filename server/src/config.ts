@@ -11,6 +11,7 @@ const envSchema = z.object({
   UCALLER_SECRET_KEY: z.string().default(''),
   TELEGRAM_BOT_TOKEN: z.string().default(''),
   OTP_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
+  FIREBASE_SERVICE_ACCOUNT: z.string().default(''),
   CORS_ORIGIN: z.string().default('*'),
   UPLOADS_DIR: z.string().default('/app/uploads'),
   MAX_FILE_SIZE: z.coerce.number().default(15_728_640), // 15MB

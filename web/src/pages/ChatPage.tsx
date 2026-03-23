@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/authStore';
 import { conversationsApi } from '../services/api/endpoints';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { keyManager } from '../services/crypto';
+import { requestNotificationPermission, onForegroundMessage } from '../services/firebase';
 
 export function ChatPage() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
@@ -34,6 +35,22 @@ export function ChatPage() {
       });
     };
     registerKeys();
+
+    // Request push notification permission
+    requestNotificationPermission().catch(() => {});
+
+    // Handle foreground push messages — show notification if chat not active
+    onForegroundMessage((payload: any) => {
+      const activeConvId = useChatStore.getState().activeConversationId;
+      const convId = payload.data?.conversationId;
+      if (convId && convId !== activeConvId && Notification.permission === 'granted') {
+        new Notification(payload.notification?.title || 'FOMO Chat', {
+          body: payload.notification?.body || 'Новое сообщение',
+          icon: '/icon-192.png',
+          tag: convId,
+        });
+      }
+    });
 
     return () => wsTransport.disconnect();
   }, [setConversations]);

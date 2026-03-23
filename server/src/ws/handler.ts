@@ -6,6 +6,7 @@ import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
 import { User } from '../models/User';
 import mongoose from 'mongoose';
+import { sendPushNotification } from '../services/push';
 
 const secret = new TextEncoder().encode(config.JWT_SECRET);
 
@@ -311,6 +312,19 @@ async function handleEvent(
       }
 
       broadcastToConversation(conversationId, 'message:new', messageData, client.userId);
+
+      // Send push notifications to offline participants
+      for (const p of conv.participants as any[]) {
+        const pid = p._id ? p._id.toString() : p.toString();
+        if (pid === client.userId) continue;
+        if (!clients.has(pid)) {
+          sendPushNotification(pid, {
+            title: sender.displayName || 'FOMO Chat',
+            body: (messageData as any).text || 'Новое сообщение',
+            data: { conversationId, messageId: (messageData as any).id },
+          });
+        }
+      }
       break;
     }
 

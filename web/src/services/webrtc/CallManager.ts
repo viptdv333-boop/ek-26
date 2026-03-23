@@ -4,13 +4,16 @@ import { wsTransport } from '../transport/WebSocketTransport';
 const ICE_CONFIG: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
     {
-      urls: 'turn:85.198.82.136:3478',
+      urls: [
+        'turn:85.198.82.136:3478?transport=udp',
+        'turn:85.198.82.136:3478?transport=tcp',
+      ],
       username: 'fomo',
       credential: 'FomoTurn2024!',
     },
   ],
+  iceTransportPolicy: 'all',
 };
 
 class CallManager {
@@ -147,13 +150,8 @@ class CallManager {
       offer: data.offer,
     });
 
-    // Play ringtone
-    try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ==');
-      audio.loop = true;
-      audio.play().catch(() => {});
-      this._ringtone = audio;
-    } catch {}
+    // Vibrate on incoming call (mobile)
+    try { navigator.vibrate?.([500, 200, 500, 200, 500, 200, 500]); } catch {}
   }
 
   async acceptCall() {

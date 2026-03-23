@@ -29,17 +29,41 @@ async function getMessagingInstance() {
 
 export async function requestNotificationPermission(): Promise<boolean> {
   try {
-    const permission = await Notification.requestPermission();
+    // Check if Notification API is available
+    if (!('Notification' in window)) {
+      console.warn('[FCM] Notification API not available');
+      return false;
+    }
+
+    console.log('[FCM] Current permission:', Notification.permission);
+
+    // If already granted, just get token
+    let permission = Notification.permission;
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+      console.log('[FCM] Permission after request:', permission);
+    }
+
     if (permission !== 'granted') {
-      console.log('[Firebase] Notification permission denied');
+      console.warn('[FCM] Notification permission denied');
       return false;
     }
 
     const messaging = await getMessagingInstance();
-    if (!messaging) return false;
+    if (!messaging) {
+      console.warn('[FCM] Messaging not supported');
+      return false;
+    }
 
     // Register the Firebase messaging service worker
-    const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    let swRegistration: ServiceWorkerRegistration;
+    try {
+      swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      console.log('[FCM] Service worker registered');
+    } catch (swErr) {
+      console.error('[FCM] Service worker registration failed:', swErr);
+      return false;
+    }
 
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
@@ -47,19 +71,22 @@ export async function requestNotificationPermission(): Promise<boolean> {
     });
 
     if (token) {
-      console.log('[Firebase] FCM token obtained');
+      console.log('[FCM] Token obtained:', token.slice(0, 20) + '...');
       // Register token with server
       try {
         await usersApi.registerPushToken(token, 'fcm');
-        console.log('[Firebase] Token registered with server');
+        console.log('[FCM] Token registered with server');
+        localStorage.setItem('fcm_token', token);
       } catch (err) {
-        console.error('[Firebase] Failed to register token:', err);
+        console.error('[FCM] Failed to register token with server:', err);
       }
+    } else {
+      console.warn('[FCM] No token returned');
     }
 
     return true;
   } catch (err) {
-    console.error('[Firebase] Permission request failed:', err);
+    console.error('[FCM] Error:', err);
     return false;
   }
 }

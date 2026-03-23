@@ -18,6 +18,10 @@ export interface IMessage extends Document {
     encryptedUrl: string;
   }>;
   replyToId: Types.ObjectId | null;
+  forwardedFrom: {
+    originalSenderName: string;
+    originalText: string | null;
+  } | null;
   status: 'sent' | 'delivered' | 'read';
   deliveredVia: 'ws' | 'push' | 'rss' | 'mesh';
   createdAt: Date;
@@ -44,6 +48,13 @@ const messageSchema = new Schema<IMessage>(
       },
     ],
     replyToId: { type: Schema.Types.ObjectId, ref: 'Message', default: null },
+    forwardedFrom: {
+      type: {
+        originalSenderName: String,
+        originalText: String,
+      },
+      default: null,
+    },
     status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },
     deliveredVia: { type: String, enum: ['ws', 'push', 'rss', 'mesh'], default: 'ws' },
   },

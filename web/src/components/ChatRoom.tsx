@@ -6,6 +6,7 @@ import { wsTransport } from '../services/transport/WebSocketTransport';
 import { MessageBubble } from './MessageBubble';
 import { sessionManager, messageCache } from '../services/crypto';
 import { uploadFile, isImageFile } from '../services/api/upload';
+import { ForwardDialog } from './ForwardDialog';
 import type { Attachment } from '../stores/chatStore';
 
 const EMPTY_ARRAY: string[] = [];
@@ -20,6 +21,9 @@ export function ChatRoom({ conversationId }: Props) {
   const [uploading, setUploading] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState<Attachment | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [forwardMsg, setForwardMsg] = useState<any>(null);
+  const replyingTo = useChatStore((s) => s.replyingTo);
+  const setReplyingTo = useChatStore((s) => s.setReplyingTo);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messages = useChatStore((s) => s.messages[conversationId]) || EMPTY_ARRAY;
@@ -89,6 +93,9 @@ export function ChatRoom({ conversationId }: Props) {
           type: m.type,
           text,
           attachments: m.attachments || [],
+          replyToId: m.replyToId || null,
+          replyTo: m.replyTo || null,
+          forwardedFrom: m.forwardedFrom || null,
           encrypted,
           status: m.status,
           createdAt: m.createdAt,
@@ -150,6 +157,9 @@ export function ChatRoom({ conversationId }: Props) {
     if (!trimmed && !pendingAttachment) return;
     setText('');
 
+    const currentReplyToId = replyingTo?.conversationId === conversationId ? replyingTo?.messageId : null;
+    if (replyingTo) setReplyingTo(null);
+
     const attachments = pendingAttachment ? [pendingAttachment] : [];
     const hasAttachments = attachments.length > 0;
 
@@ -194,6 +204,7 @@ export function ChatRoom({ conversationId }: Props) {
         type: hasAttachments ? (isImageFile(attachments[0].mimeType) ? 'image' : 'file') : 'text',
         text: trimmed || undefined,
         attachments: hasAttachments ? attachments : undefined,
+        replyToId: currentReplyToId || undefined,
       };
 
       if (wsTransport.connected) {
@@ -219,6 +230,19 @@ export function ChatRoom({ conversationId }: Props) {
 
   const handleTyping = () => {
     wsTransport.send('typing:start', { conversationId });
+  };
+
+  const handleReply = (msg: any) => {
+    setReplyingTo({
+      conversationId,
+      messageId: msg.id,
+      text: msg.text || '',
+      senderName: msg.senderName || 'Пользователь',
+    });
+  };
+
+  const handleForward = (msg: any) => {
+    setForwardMsg(msg);
   };
 
   return (
@@ -256,10 +280,27 @@ export function ChatRoom({ conversationId }: Props) {
             message={msg}
             isMine={msg.senderId === userId}
             showSender={conv?.type === 'group'}
+            onReply={handleReply}
+            onForward={handleForward}
           />
         ))}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Reply bar */}
+      {replyingTo && replyingTo.conversationId === conversationId && (
+        <div className="px-4 py-2 border-t border-dark-600 bg-dark-800 flex items-center gap-3">
+          <div className="border-l-2 border-accent pl-3 flex-1 min-w-0">
+            <p className="text-xs font-medium text-accent">{replyingTo.senderName}</p>
+            <p className="text-xs text-gray-400 truncate">{replyingTo.text || 'Сообщение'}</p>
+          </div>
+          <button onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-white p-1">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Attachment preview */}
       {(pendingAttachment || uploading) && (
@@ -333,6 +374,8 @@ export function ChatRoom({ conversationId }: Props) {
           </button>
         </div>
       </div>
+
+      {forwardMsg && <ForwardDialog message={forwardMsg} onClose={() => setForwardMsg(null)} />}
     </div>
   );
 }

@@ -8,6 +8,17 @@ export interface Attachment {
   url: string;
 }
 
+export interface ReplyTo {
+  id: string;
+  text: string | null;
+  senderName: string;
+}
+
+export interface ForwardedFrom {
+  originalSenderName: string;
+  originalText: string | null;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -16,6 +27,9 @@ export interface Message {
   type: string;
   text?: string | null;
   attachments?: Attachment[];
+  replyToId?: string | null;
+  replyTo?: ReplyTo | null;
+  forwardedFrom?: ForwardedFrom | null;
   encrypted?: boolean;
   status: string;
   createdAt: string;
@@ -38,6 +52,7 @@ interface ChatState {
   activeConversationId: string | null;
   typingUsers: Record<string, string[]>;
   onlineUsers: Set<string>;
+  replyingTo: { conversationId: string; messageId: string; text: string; senderName: string } | null;
 
   setConversations: (conversations: Conversation[]) => void;
   addConversation: (conversation: Conversation) => void;
@@ -49,6 +64,7 @@ interface ChatState {
   updateMessageStatus: (messageId: string, status: string) => void;
   incrementUnread: (conversationId: string) => void;
   clearUnread: (conversationId: string) => void;
+  setReplyingTo: (data: { conversationId: string; messageId: string; text: string; senderName: string } | null) => void;
   sortConversations: () => void;
   setUserOnline: (userId: string, online: boolean) => void;
   isUserOnline: (userId: string) => boolean;
@@ -61,6 +77,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeConversationId: sessionStorage.getItem('ek26_activeConv'),
   typingUsers: {},
   onlineUsers: new Set(),
+  replyingTo: null,
 
   setConversations: (conversations) => set({ conversations }),
 
@@ -136,6 +153,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ),
     })),
 
+  setReplyingTo: (data) => set({ replyingTo: data }),
+
   sortConversations: () =>
     set((state) => ({
       conversations: [...state.conversations].sort(
@@ -160,6 +179,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       activeConversationId: null,
       typingUsers: {},
       onlineUsers: new Set(),
+      replyingTo: null,
     });
   },
 }));

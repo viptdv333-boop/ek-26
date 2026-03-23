@@ -36,24 +36,49 @@ export async function messageRoutes(app: FastifyInstance) {
       .populate('senderId', 'displayName avatarUrl')
       .lean();
 
-    return messages.map((m) => ({
-      id: m._id.toString(),
-      conversationId: m.conversationId.toString(),
-      sender: {
-        id: (m.senderId as any)._id.toString(),
-        displayName: (m.senderId as any).displayName,
-        avatarUrl: (m.senderId as any).avatarUrl,
-      },
-      type: m.type,
-      text: m.text,
-      encrypted: !!m.encryptedPayload,
-      envelope: m.encryptedPayload ? m.encryptedPayload.toString('utf8') : null,
-      attachments: m.attachments,
-      replyToId: m.replyToId?.toString() || null,
-      status: m.status,
-      deliveredVia: m.deliveredVia,
-      createdAt: m.createdAt.toISOString(),
-    }));
+    // Collect replyToIds for batch lookup
+    const replyToIds = messages.filter(m => m.replyToId).map(m => m.replyToId);
+    const repliedMessages = replyToIds.length > 0
+      ? await Message.find({ _id: { $in: replyToIds } })
+          .populate('senderId', 'displayName')
+          .lean()
+      : [];
+    const replyMap = new Map(repliedMessages.map(m => [m._id.toString(), m]));
+
+    return messages.map((m) => {
+      let replyTo = null;
+      if (m.replyToId) {
+        const replied = replyMap.get(m.replyToId.toString());
+        if (replied) {
+          replyTo = {
+            id: replied._id.toString(),
+            text: replied.text,
+            senderName: (replied.senderId as any)?.displayName || '',
+          };
+        }
+      }
+
+      return {
+        id: m._id.toString(),
+        conversationId: m.conversationId.toString(),
+        sender: {
+          id: (m.senderId as any)._id.toString(),
+          displayName: (m.senderId as any).displayName,
+          avatarUrl: (m.senderId as any).avatarUrl,
+        },
+        type: m.type,
+        text: m.text,
+        encrypted: !!m.encryptedPayload,
+        envelope: m.encryptedPayload ? m.encryptedPayload.toString('utf8') : null,
+        attachments: m.attachments,
+        replyToId: m.replyToId?.toString() || null,
+        replyTo,
+        forwardedFrom: (m as any).forwardedFrom || null,
+        status: m.status,
+        deliveredVia: m.deliveredVia,
+        createdAt: m.createdAt.toISOString(),
+      };
+    });
   });
 
   // Send message via HTTP (fallback, primary path is WebSocket)

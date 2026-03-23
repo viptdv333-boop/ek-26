@@ -177,7 +177,7 @@ async function handleEvent(
 ) {
   switch (event) {
     case 'message:send': {
-      const { conversationId, text, type = 'text', replyToId, attachments } = data;
+      const { conversationId, text, type = 'text', replyToId, attachments, forwardedFrom } = data;
 
       const isEncrypted = !!(data.encrypted && data.envelope);
 
@@ -245,6 +245,7 @@ async function handleEvent(
           text: text?.trim() || null,
           attachments: hasAttachments ? attachments : [],
           replyToId: replyToId ? new mongoose.Types.ObjectId(replyToId) : null,
+          forwardedFrom: forwardedFrom || null,
           deliveredVia: 'ws',
         });
 
@@ -269,6 +270,7 @@ async function handleEvent(
           text: message.text,
           attachments: message.attachments || [],
           replyToId: message.replyToId?.toString() || null,
+          forwardedFrom: message.forwardedFrom || null,
           status: 'sent',
           createdAt: message.createdAt.toISOString(),
         };

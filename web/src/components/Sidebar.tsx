@@ -30,14 +30,26 @@ export function Sidebar() {
     setChatMenu({ x: e.clientX, y: e.clientY, convId });
   };
 
+  const longPressTriggered = useRef(false);
+
   const handleTouchStart = (convId: string, e: React.TouchEvent) => {
+    longPressTriggered.current = false;
+    const touch = e.touches[0];
     longPressTimer.current = setTimeout(() => {
-      const touch = e.touches[0];
+      longPressTriggered.current = true;
       setChatMenu({ x: touch.clientX, y: touch.clientY, convId });
     }, 500);
   };
 
   const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleTouchMove = () => {
+    // Cancel long press if user scrolls
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -58,7 +70,9 @@ export function Sidebar() {
 
   const handleDeleteChat = async (convId: string) => {
     setChatMenu(null);
-    if (!confirm('Удалить чат? История сообщений будет потеряна.')) return;
+    // Small delay to let menu close before confirm dialog
+    await new Promise(r => setTimeout(r, 100));
+    if (!window.confirm('Удалить чат? История сообщений будет потеряна.')) return;
     try {
       await conversationsApi.delete(convId);
       const updated = conversations.filter(c => c.id !== convId);
@@ -196,11 +210,11 @@ export function Sidebar() {
           return (
             <button
               key={conv.id}
-              onClick={() => setActive(conv.id)}
+              onClick={() => { if (!longPressTriggered.current) setActive(conv.id); }}
               onContextMenu={(e) => handleChatContextMenu(e, conv.id)}
               onTouchStart={(e) => handleTouchStart(conv.id, e)}
               onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchEnd}
+              onTouchMove={handleTouchMove}
               className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-dark-700 transition-colors text-left ${
                 isActive ? 'bg-dark-600' : ''
               }`}

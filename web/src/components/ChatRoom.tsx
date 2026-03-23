@@ -341,7 +341,17 @@ export function ChatRoom({ conversationId }: Props) {
 
       {/* Pinned message bar */}
       {conv?.pinnedMessage && (
-        <div className="px-4 py-2 border-b border-dark-600 bg-dark-800/80 flex items-center gap-3 cursor-pointer hover:bg-dark-700 transition-colors">
+        <div
+          className="px-4 py-2 border-b border-dark-600 bg-dark-800/80 flex items-center gap-3 cursor-pointer hover:bg-dark-700 transition-colors"
+          onClick={() => {
+            const el = document.getElementById(`msg-${conv.pinnedMessage!.id}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el.classList.add('ring-2', 'ring-accent', 'ring-opacity-50');
+              setTimeout(() => el.classList.remove('ring-2', 'ring-accent', 'ring-opacity-50'), 2000);
+            }
+          }}
+        >
           <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
           </svg>
@@ -349,7 +359,7 @@ export function ChatRoom({ conversationId }: Props) {
             <p className="text-[11px] text-accent font-medium">Закреплено</p>
             <p className="text-xs text-gray-300 truncate">{conv.pinnedMessage.text || 'Сообщение'}</p>
           </div>
-          <button onClick={handleUnpin} className="text-gray-400 hover:text-white p-1 flex-shrink-0" title="Открепить">
+          <button onClick={(e) => { e.stopPropagation(); handleUnpin(); }} className="text-gray-400 hover:text-white p-1 flex-shrink-0" title="Открепить">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -368,8 +378,8 @@ export function ChatRoom({ conversationId }: Props) {
           </div>
         )}
         {messages.map((msg) => (
+          <div key={msg.id} id={`msg-${msg.id}`} className="transition-all duration-300">
           <MessageBubble
-            key={msg.id}
             message={msg}
             isMine={msg.senderId === userId}
             showSender={conv?.type === 'group'}
@@ -381,6 +391,7 @@ export function ChatRoom({ conversationId }: Props) {
             onDelete={handleDelete}
             onPin={handlePin}
           />
+          </div>
         ))}
         <div ref={messagesEndRef} />
       </div>

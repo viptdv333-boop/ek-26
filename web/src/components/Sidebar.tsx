@@ -248,8 +248,8 @@ export function Sidebar() {
                   <p className="text-xs text-gray-400 truncate mt-0.5">{conv.lastMessage.text}</p>
                 )}
               </div>
-              {/* Pin icon + Unread badge */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              {/* Right side: menu button + pin + unread */}
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {isPinned && (
                   <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
@@ -260,6 +260,20 @@ export function Sidebar() {
                     <span className="text-[10px] text-white font-medium">{conv.unreadCount}</span>
                   </div>
                 )}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (e.target as HTMLElement).getBoundingClientRect();
+                    setChatMenu({ x: rect.left, y: rect.bottom, convId: conv.id });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-dark-500 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                </div>
               </div>
             </button>
           );

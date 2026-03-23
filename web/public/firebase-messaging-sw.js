@@ -13,16 +13,19 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {};
+  // Data-only messages — full control over notification
   const data = payload.data || {};
+  const title = data.title || 'FOMO Chat';
+  const body = data.body || 'Новое сообщение';
 
-  self.registration.showNotification(title || 'FOMO Chat', {
-    body: body || 'Новое сообщение',
+  self.registration.showNotification(title, {
+    body: body,
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     data: data,
     tag: data.conversationId || 'default',
     renotify: true,
+    vibrate: [200, 100, 200],
   });
 });
 

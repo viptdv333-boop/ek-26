@@ -9,6 +9,8 @@ class WebSocketTransport {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectDelay = 1000;
   private maxReconnectDelay = 30000;
+  private _visibilityHandler: (() => void) | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private handlers = new Map<string, Set<EventHandler>>();
   private _connected = false;
   private _pendingTexts = new Map<string, string>();
@@ -39,7 +41,33 @@ class WebSocketTransport {
       this._connected = true;
       this.reconnectDelay = 1000;
       this.emit('connection', { status: 'connected' });
+
+      // Start heartbeat to keep connection alive on mobile
+      this.startHeartbeat();
     };
+
+    // Reconnect when app returns to foreground (mobile)
+    if (!this._visibilityHandler) {
+      this._visibilityHandler = () => {
+        if (document.visibilityState === 'visible') {
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            this.ws = null;
+            this._connected = false;
+            this.connect();
+          }
+        }
+      };
+      document.addEventListener('visibilitychange', this._visibilityHandler);
+
+      // Also reconnect on network restore
+      window.addEventListener('online', () => {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+          this.ws = null;
+          this._connected = false;
+          this.connect();
+        }
+      });
+    }
 
     this.ws.onmessage = (event) => {
       try {
@@ -87,6 +115,15 @@ class WebSocketTransport {
 
   private emit(event: string, data: any) {
     this.handlers.get(event)?.forEach((h) => h(data));
+  }
+
+  private startHeartbeat() {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ event: 'ping' }));
+      }
+    }, 25000); // Every 25s to prevent mobile timeout
   }
 
   private scheduleReconnect() {

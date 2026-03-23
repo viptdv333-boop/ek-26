@@ -163,33 +163,34 @@ export async function conversationRoutes(app: FastifyInstance) {
 
   // Delete conversation (leave / remove)
   app.delete('/api/conversations/:id', { preHandler: [app.authenticate] }, async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const userId = new mongoose.Types.ObjectId(request.userId);
+    try {
+      const { id } = request.params as { id: string };
+      const userId = request.userId!;
 
-    const conv = await Conversation.findById(id);
-    if (!conv) {
-      return reply.code(404).send({ error: 'Conversation not found' });
-    }
+      const conv = await Conversation.findById(id);
+      if (!conv) {
+        return reply.code(404).send({ error: 'Conversation not found' });
+      }
 
-    const isParticipant = conv.participants.some((p: any) => p.toString() === request.userId);
-    if (!isParticipant) {
-      return reply.code(403).send({ error: 'Not a participant' });
-    }
+      const isParticipant = conv.participants.some((p: any) => {
+        const pid = p._id ? p._id.toString() : p.toString();
+        return pid === userId;
+      });
+      if (!isParticipant) {
+        return reply.code(403).send({ error: 'Not a participant' });
+      }
 
-    // Remove user from participants
-    await Conversation.findByIdAndUpdate(id, {
-      $pull: { participants: userId },
-    });
-
-    // If no participants left, delete conversation and messages
-    const updated = await Conversation.findById(id);
-    if (!updated || updated.participants.length === 0) {
+      // For direct chats — delete entirely for this user
+      // For now, delete conversation and all messages
       const { Message } = await import('../models/Message');
       await Message.deleteMany({ conversationId: new mongoose.Types.ObjectId(id) });
       await Conversation.findByIdAndDelete(id);
-    }
 
-    return { success: true };
+      return { success: true };
+    } catch (err) {
+      request.log.error(err, 'Delete conversation failed');
+      return reply.code(500).send({ error: 'Internal server error' });
+    }
   });
 
   // Update group (admin only)

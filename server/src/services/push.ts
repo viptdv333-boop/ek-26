@@ -58,14 +58,19 @@ export async function sendPushNotification(
   try {
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
-      notification: {
+      // Data-only message — lets service worker control the notification display
+      data: {
         title: payload.title,
         body: payload.body.slice(0, 200),
+        ...(payload.data || {}),
       },
-      data: payload.data || {},
+      // Android config for high priority delivery
+      android: {
+        priority: 'high',
+      },
       webpush: {
-        fcmOptions: {
-          link: '/',
+        headers: {
+          Urgency: 'high',
         },
       },
     });

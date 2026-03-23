@@ -71,7 +71,7 @@ export function MessageBubble({ message, isMine, showSender, onReply, onForward 
           {onForward && (
             <button onClick={() => onForward(message)} className="p-1 text-gray-500 hover:text-white" title="Переслать">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
               </svg>
             </button>
           )}
@@ -149,7 +149,7 @@ export function MessageBubble({ message, isMine, showSender, onReply, onForward 
           {onForward && (
             <button onClick={() => onForward(message)} className="p-1 text-gray-500 hover:text-white" title="Переслать">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
               </svg>
             </button>
           )}

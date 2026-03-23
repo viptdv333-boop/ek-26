@@ -15,7 +15,7 @@ export interface IMessage extends Document {
     fileName: string;
     mimeType: string;
     size: number;
-    encryptedUrl: string;
+    url: string;
   }>;
   replyToId: Types.ObjectId | null;
   forwardedFrom: {
@@ -44,7 +44,7 @@ const messageSchema = new Schema<IMessage>(
         fileName: String,
         mimeType: String,
         size: Number,
-        encryptedUrl: String,
+        url: String,
       },
     ],
     replyToId: { type: Schema.Types.ObjectId, ref: 'Message', default: null },

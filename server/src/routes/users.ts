@@ -13,6 +13,7 @@ export async function userRoutes(app: FastifyInstance) {
       phone: user.phone,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      email: user.email,
       status: user.status,
       lastSeen: user.lastSeen,
       createdAt: user.createdAt,
@@ -21,15 +22,17 @@ export async function userRoutes(app: FastifyInstance) {
 
   // Update profile
   app.patch('/api/users/me', { preHandler: [app.authenticate] }, async (request) => {
-    const { displayName, avatarUrl, status } = request.body as {
+    const { displayName, avatarUrl, email, status } = request.body as {
       displayName?: string;
       avatarUrl?: string | null;
+      email?: string | null;
       status?: string;
     };
 
     const update: Record<string, unknown> = {};
     if (displayName !== undefined) update.displayName = displayName;
     if (avatarUrl !== undefined) update.avatarUrl = avatarUrl;
+    if (email !== undefined) update.email = email;
     if (status !== undefined) update.status = status;
 
     const user = await User.findByIdAndUpdate(request.userId, update, { new: true })
@@ -39,6 +42,7 @@ export async function userRoutes(app: FastifyInstance) {
       phone: user!.phone,
       displayName: user!.displayName,
       avatarUrl: user!.avatarUrl,
+      email: (user as any).email,
       status: user!.status,
     };
   });

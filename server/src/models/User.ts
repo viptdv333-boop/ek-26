@@ -6,6 +6,7 @@ export interface IUser extends Document {
   telegramUsername: string | null;
   displayName: string;
   avatarUrl: string | null;
+  email: string | null;
   status: string;
   lastSeen: Date;
   fcmTokens: string[];
@@ -34,6 +35,7 @@ const userSchema = new Schema<IUser>(
     telegramUsername: { type: String },
     displayName: { type: String, required: true, default: '' },
     avatarUrl: { type: String, default: null },
+    email: { type: String, default: null },
     status: { type: String, default: '' },
     lastSeen: { type: Date, default: Date.now },
     fcmTokens: [{ type: String }],
@@ -59,6 +61,7 @@ const userSchema = new Schema<IUser>(
   { timestamps: true, autoIndex: false }
 );
 
+userSchema.index({ email: 1 }, { unique: true, partialFilterExpression: { email: { $type: 'string' } } });
 userSchema.index({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $type: 'string' } } });
 userSchema.index({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $type: 'number' } } });
 

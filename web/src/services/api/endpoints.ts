@@ -44,3 +44,11 @@ export const keysApi = {
     api.post<{ success: boolean; added: number }>('/keys/replenish', { oneTimePreKeys }),
   getCount: () => api.get<{ oneTimePreKeyCount: number; hasSignedPreKey: boolean }>('/keys/count'),
 };
+
+// Contacts
+export const contactsApi = {
+  list: () => api.get<any[]>('/contacts'),
+  add: (contactUserId: string, nickname?: string) =>
+    api.post<any>('/contacts', { contactUserId, nickname }),
+  remove: (contactUserId: string) => api.delete<{ success: boolean }>(`/contacts/${contactUserId}`),
+};

@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { NewChatDialog } from './NewChatDialog';
 import { PhoneLinkDialog } from './PhoneLinkDialog';
 import { SettingsModal } from './SettingsModal';
+import { ContactsPanel } from './ContactsPanel';
 
 export function Sidebar() {
   const conversations = useChatStore((s) => s.conversations);
@@ -16,6 +17,7 @@ export function Sidebar() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [showPhoneLink, setShowPhoneLink] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chats' | 'contacts'>('chats');
   const [search, setSearch] = useState('');
 
   const getConversationName = (conv: Conversation): string => {
@@ -81,6 +83,30 @@ export function Sidebar() {
       </div>
 
       {/* Search */}
+      {/* Tabs */}
+      <div className="flex border-b border-dark-600">
+        <button
+          onClick={() => setActiveTab('chats')}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            activeTab === 'chats' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Чаты
+        </button>
+        <button
+          onClick={() => setActiveTab('contacts')}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            activeTab === 'contacts' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Контакты
+        </button>
+      </div>
+
+      {activeTab === 'contacts' ? (
+        <ContactsPanel />
+      ) : (
+      <>
       <div className="p-3">
         <input
           type="text"
@@ -146,6 +172,8 @@ export function Sidebar() {
           );
         })}
       </div>
+      </>
+      )}
 
       {/* User info */}
       <div className="px-4 py-3 border-t border-dark-600">

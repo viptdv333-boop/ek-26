@@ -188,4 +188,99 @@ export async function messageRoutes(app: FastifyInstance) {
     await Message.findByIdAndUpdate(msgId, { status });
     return { success: true };
   });
+
+  // Edit message (only own messages)
+  app.patch('/api/messages/:msgId/edit', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { msgId } = request.params as { msgId: string };
+    const { text } = request.body as { text: string };
+
+    const message = await Message.findById(msgId);
+    if (!message) return reply.code(404).send({ error: 'Message not found' });
+    if (message.senderId.toString() !== request.userId) {
+      return reply.code(403).send({ error: 'Can only edit your own messages' });
+    }
+
+    message.text = text.trim();
+    message.editedAt = new Date();
+    await message.save();
+
+    // Broadcast edit to all participants
+    broadcastToConversation(message.conversationId.toString(), 'message:edited', {
+      messageId: msgId,
+      text: message.text,
+      editedAt: message.editedAt.toISOString(),
+    });
+
+    return { success: true, text: message.text, editedAt: message.editedAt.toISOString() };
+  });
+
+  // Delete message
+  app.delete('/api/messages/:msgId', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { msgId } = request.params as { msgId: string };
+
+    const message = await Message.findById(msgId);
+    if (!message) return reply.code(404).send({ error: 'Message not found' });
+
+    // Soft delete — mark as deleted
+    message.text = null;
+    message.attachments = [];
+    message.deletedAt = new Date();
+    await message.save();
+
+    broadcastToConversation(message.conversationId.toString(), 'message:deleted', {
+      messageId: msgId,
+      conversationId: message.conversationId.toString(),
+    });
+
+    return { success: true };
+  });
+
+  // Pin/unpin message
+  app.post('/api/conversations/:convId/pin', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { convId } = request.params as { convId: string };
+    const { messageId } = request.body as { messageId: string | null };
+
+    const conv = await Conversation.findById(convId);
+    if (!conv) return reply.code(404).send({ error: 'Conversation not found' });
+
+    if (messageId) {
+      const msg = await Message.findById(messageId).populate('senderId', 'displayName');
+      if (!msg) return reply.code(404).send({ error: 'Message not found' });
+
+      conv.pinnedMessageId = new mongoose.Types.ObjectId(messageId);
+      await conv.save();
+
+      broadcastToConversation(convId, 'message:pinned', {
+        conversationId: convId,
+        messageId,
+        text: msg.text,
+        senderName: (msg.senderId as any).displayName,
+      });
+    } else {
+      conv.pinnedMessageId = null;
+      await conv.save();
+
+      broadcastToConversation(convId, 'message:unpinned', { conversationId: convId });
+    }
+
+    return { success: true };
+  });
+
+  // Get pinned message
+  app.get('/api/conversations/:convId/pin', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { convId } = request.params as { convId: string };
+    const conv = await Conversation.findById(convId);
+    if (!conv || !conv.pinnedMessageId) return { pinned: null };
+
+    const msg = await Message.findById(conv.pinnedMessageId).populate('senderId', 'displayName');
+    if (!msg) return { pinned: null };
+
+    return {
+      pinned: {
+        id: msg._id.toString(),
+        text: msg.text,
+        senderName: (msg.senderId as any).displayName,
+      },
+    };
+  });
 }

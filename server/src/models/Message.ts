@@ -22,6 +22,8 @@ export interface IMessage extends Document {
     originalSenderName: string;
     originalText: string | null;
   } | null;
+  editedAt: Date | null;
+  deletedAt: Date | null;
   status: 'sent' | 'delivered' | 'read';
   deliveredVia: 'ws' | 'push' | 'rss' | 'mesh';
   createdAt: Date;
@@ -55,6 +57,8 @@ const messageSchema = new Schema<IMessage>(
       },
       default: null,
     },
+    editedAt: { type: Date, default: null },
+    deletedAt: { type: Date, default: null },
     status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },
     deliveredVia: { type: String, enum: ['ws', 'push', 'rss', 'mesh'], default: 'ws' },
   },

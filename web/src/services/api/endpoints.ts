@@ -45,6 +45,14 @@ export const keysApi = {
   getCount: () => api.get<{ oneTimePreKeyCount: number; hasSignedPreKey: boolean }>('/keys/count'),
 };
 
+// Message actions
+export const messageActionsApi = {
+  edit: (msgId: string, text: string) => api.patch<any>(`/messages/${msgId}/edit`, { text }),
+  delete: (msgId: string) => api.delete<any>(`/messages/${msgId}`),
+  pin: (convId: string, messageId: string | null) => api.post<any>(`/conversations/${convId}/pin`, { messageId }),
+  getPin: (convId: string) => api.get<any>(`/conversations/${convId}/pin`),
+};
+
 // Contacts
 export const contactsApi = {
   list: () => api.get<any[]>('/contacts'),

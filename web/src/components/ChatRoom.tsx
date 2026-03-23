@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
-import { messagesApi } from '../services/api/endpoints';
+import { messagesApi, messageActionsApi } from '../services/api/endpoints';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { MessageBubble } from './MessageBubble';
 import { sessionManager, messageCache } from '../services/crypto';
@@ -24,6 +24,11 @@ export function ChatRoom({ conversationId }: Props) {
   const [forwardMsg, setForwardMsg] = useState<any>(null);
   const replyingTo = useChatStore((s) => s.replyingTo);
   const setReplyingTo = useChatStore((s) => s.setReplyingTo);
+  const editingMessage = useChatStore((s) => s.editingMessage);
+  const setEditingMessage = useChatStore((s) => s.setEditingMessage);
+  const editMessage = useChatStore((s) => s.editMessage);
+  const deleteMessage = useChatStore((s) => s.deleteMessage);
+  const setPinnedMessage = useChatStore((s) => s.setPinnedMessage);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messages = useChatStore((s) => s.messages[conversationId]) || EMPTY_ARRAY;
@@ -114,7 +119,12 @@ export function ChatRoom({ conversationId }: Props) {
       const decrypted = normalized.filter(m => m.text !== null || (m.attachments && m.attachments.length > 0));
       setMessages(conversationId, decrypted.reverse());
     }).catch(() => {}).finally(() => setLoading(false));
-  }, [conversationId, setMessages]);
+
+    // Load pinned message
+    messageActionsApi.getPin(conversationId).then((res: any) => {
+      setPinnedMessage(conversationId, res?.pinned || null);
+    }).catch(() => {});
+  }, [conversationId, setMessages, setPinnedMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -166,6 +176,19 @@ export function ChatRoom({ conversationId }: Props) {
     const trimmed = text.trim();
     if (!trimmed && !pendingAttachment) return;
     setText('');
+
+    // Handle edit mode
+    if (editingMessage) {
+      const msgId = editingMessage.messageId;
+      setEditingMessage(null);
+      try {
+        const res = await messageActionsApi.edit(msgId, trimmed);
+        editMessage(msgId, res.text, res.editedAt);
+      } catch (err) {
+        console.error('Edit failed:', err);
+      }
+      return;
+    }
 
     const currentReplyToId = replyingTo?.conversationId === conversationId ? replyingTo?.messageId : null;
     if (replyingTo) setReplyingTo(null);
@@ -255,6 +278,44 @@ export function ChatRoom({ conversationId }: Props) {
     setForwardMsg(msg);
   };
 
+  const handleEdit = (msg: any) => {
+    setEditingMessage({ messageId: msg.id, text: msg.text || '' });
+    setText(msg.text || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+    setText('');
+  };
+
+  const handleDelete = async (msg: any) => {
+    if (!confirm('Удалить сообщение?')) return;
+    try {
+      await messageActionsApi.delete(msg.id);
+      deleteMessage(msg.id);
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
+
+  const handlePin = async (msg: any) => {
+    try {
+      await messageActionsApi.pin(conversationId, msg.id);
+      setPinnedMessage(conversationId, { id: msg.id, text: msg.text, senderName: msg.senderName || '' });
+    } catch (err) {
+      console.error('Pin failed:', err);
+    }
+  };
+
+  const handleUnpin = async () => {
+    try {
+      await messageActionsApi.pin(conversationId, null);
+      setPinnedMessage(conversationId, null);
+    } catch (err) {
+      console.error('Unpin failed:', err);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-dark-900">
       {/* Header */}
@@ -278,6 +339,24 @@ export function ChatRoom({ conversationId }: Props) {
         </div>
       </div>
 
+      {/* Pinned message bar */}
+      {conv?.pinnedMessage && (
+        <div className="px-4 py-2 border-b border-dark-600 bg-dark-800/80 flex items-center gap-3 cursor-pointer hover:bg-dark-700 transition-colors">
+          <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] text-accent font-medium">Закреплено</p>
+            <p className="text-xs text-gray-300 truncate">{conv.pinnedMessage.text || 'Сообщение'}</p>
+          </div>
+          <button onClick={handleUnpin} className="text-gray-400 hover:text-white p-1 flex-shrink-0" title="Открепить">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
         {loading && (
@@ -298,10 +377,31 @@ export function ChatRoom({ conversationId }: Props) {
             myAvatarUrl={myAvatarUrl}
             onReply={handleReply}
             onForward={handleForward}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onPin={handlePin}
           />
         ))}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Edit bar */}
+      {editingMessage && (
+        <div className="px-4 py-2 border-t border-dark-600 bg-dark-800 flex items-center gap-3">
+          <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-accent">Редактирование</p>
+            <p className="text-xs text-gray-400 truncate">{editingMessage.text}</p>
+          </div>
+          <button onClick={handleCancelEdit} className="text-gray-400 hover:text-white p-1">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Reply bar */}
       {replyingTo && replyingTo.conversationId === conversationId && (

@@ -194,6 +194,30 @@ class WebSocketTransport {
         break;
       }
 
+      case 'message:edited': {
+        store.editMessage(data.messageId, data.text, data.editedAt);
+        break;
+      }
+
+      case 'message:deleted': {
+        store.deleteMessage(data.messageId);
+        break;
+      }
+
+      case 'message:pinned': {
+        store.setPinnedMessage(data.conversationId, {
+          id: data.messageId,
+          text: data.text,
+          senderName: data.senderName,
+        });
+        break;
+      }
+
+      case 'message:unpinned': {
+        store.setPinnedMessage(data.conversationId, null);
+        break;
+      }
+
       case 'typing:start':
         store.setTyping(data.conversationId, [
           ...(store.typingUsers[data.conversationId] || []).filter((id: string) => id !== data.userId),

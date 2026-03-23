@@ -32,6 +32,7 @@ export interface Message {
   replyTo?: ReplyTo | null;
   forwardedFrom?: ForwardedFrom | null;
   encrypted?: boolean;
+  editedAt?: string;
   status: string;
   createdAt: string;
 }
@@ -43,6 +44,7 @@ export interface Conversation {
   groupMeta: { name: string; avatarUrl: string | null; admins: string[]; createdBy: string } | null;
   lastMessage: { text: string; senderId: string; createdAt: string } | null;
   unreadCount: number;
+  pinnedMessage?: { id: string; text: string | null; senderName: string } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -66,6 +68,11 @@ interface ChatState {
   incrementUnread: (conversationId: string) => void;
   clearUnread: (conversationId: string) => void;
   setReplyingTo: (data: { conversationId: string; messageId: string; text: string; senderName: string } | null) => void;
+  editMessage: (messageId: string, text: string, editedAt: string) => void;
+  deleteMessage: (messageId: string) => void;
+  setPinnedMessage: (conversationId: string, pinned: { id: string; text: string | null; senderName: string } | null) => void;
+  editingMessage: { messageId: string; text: string } | null;
+  setEditingMessage: (data: { messageId: string; text: string } | null) => void;
   sortConversations: () => void;
   setUserOnline: (userId: string, online: boolean) => void;
   isUserOnline: (userId: string) => boolean;
@@ -79,6 +86,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   typingUsers: {},
   onlineUsers: new Set(),
   replyingTo: null,
+  editingMessage: null,
 
   setConversations: (conversations) => set({ conversations }),
 
@@ -155,6 +163,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
     })),
 
   setReplyingTo: (data) => set({ replyingTo: data }),
+
+  setEditingMessage: (data) => set({ editingMessage: data }),
+
+  editMessage: (messageId, text, editedAt) =>
+    set((state) => {
+      const newMessages = { ...state.messages };
+      for (const convId of Object.keys(newMessages)) {
+        newMessages[convId] = newMessages[convId].map((m) =>
+          m.id === messageId ? { ...m, text, editedAt } : m
+        );
+      }
+      return { messages: newMessages };
+    }),
+
+  deleteMessage: (messageId) =>
+    set((state) => {
+      const newMessages = { ...state.messages };
+      for (const convId of Object.keys(newMessages)) {
+        newMessages[convId] = newMessages[convId].filter((m) => m.id !== messageId);
+      }
+      return { messages: newMessages };
+    }),
+
+  setPinnedMessage: (conversationId, pinned) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === conversationId ? { ...c, pinnedMessage: pinned } : c
+      ),
+    })),
 
   sortConversations: () =>
     set((state) => ({

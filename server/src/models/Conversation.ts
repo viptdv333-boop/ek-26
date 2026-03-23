@@ -14,6 +14,7 @@ export interface IConversation extends Document {
     senderName: string;
     timestamp: Date;
   } | null;
+  pinnedMessageId: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,6 +40,7 @@ const conversationSchema = new Schema<IConversation>(
       },
       default: null,
     },
+    pinnedMessageId: { type: Schema.Types.ObjectId, ref: 'Message', default: null },
   },
   { timestamps: true }
 );

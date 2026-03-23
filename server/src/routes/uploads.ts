@@ -49,10 +49,8 @@ export async function uploadRoutes(app: FastifyInstance) {
     };
   });
 
-  // Download file
-  app.get('/api/uploads/:fileId/:fileName', {
-    preHandler: authMiddleware,
-  }, async (request, reply) => {
+  // Download file (no auth — fileId is a random UUID, acts as a secret URL)
+  app.get('/api/uploads/:fileId/:fileName', async (request, reply) => {
     const { fileId, fileName } = request.params as { fileId: string; fileName: string };
     const filePath = path.join(config.UPLOADS_DIR, fileId, decodeURIComponent(fileName));
 

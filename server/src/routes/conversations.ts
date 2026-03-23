@@ -161,6 +161,37 @@ export async function conversationRoutes(app: FastifyInstance) {
     };
   });
 
+  // Delete conversation (leave / remove)
+  app.delete('/api/conversations/:id', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const userId = new mongoose.Types.ObjectId(request.userId);
+
+    const conv = await Conversation.findById(id);
+    if (!conv) {
+      return reply.code(404).send({ error: 'Conversation not found' });
+    }
+
+    const isParticipant = conv.participants.some((p: any) => p.toString() === request.userId);
+    if (!isParticipant) {
+      return reply.code(403).send({ error: 'Not a participant' });
+    }
+
+    // Remove user from participants
+    await Conversation.findByIdAndUpdate(id, {
+      $pull: { participants: userId },
+    });
+
+    // If no participants left, delete conversation and messages
+    const updated = await Conversation.findById(id);
+    if (!updated || updated.participants.length === 0) {
+      const { Message } = await import('../models/Message');
+      await Message.deleteMany({ conversationId: new mongoose.Types.ObjectId(id) });
+      await Conversation.findByIdAndDelete(id);
+    }
+
+    return { success: true };
+  });
+
   // Update group (admin only)
   app.patch('/api/conversations/:id', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = request.params as { id: string };

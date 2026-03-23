@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useChatStore, Conversation } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
+import { conversationsApi } from '../services/api/endpoints';
 import { NewChatDialog } from './NewChatDialog';
 import { PhoneLinkDialog } from './PhoneLinkDialog';
 import { SettingsModal } from './SettingsModal';
 import { ContactsPanel } from './ContactsPanel';
+import { MessageContextMenu } from './MessageContextMenu';
 
 export function Sidebar() {
   const conversations = useChatStore((s) => s.conversations);
@@ -19,6 +21,53 @@ export function Sidebar() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<'chats' | 'contacts'>('chats');
   const [search, setSearch] = useState('');
+  const [chatMenu, setChatMenu] = useState<{ x: number; y: number; convId: string } | null>(null);
+  const setConversations = useChatStore((s) => s.setConversations);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleChatContextMenu = (e: React.MouseEvent, convId: string) => {
+    e.preventDefault();
+    setChatMenu({ x: e.clientX, y: e.clientY, convId });
+  };
+
+  const handleTouchStart = (convId: string, e: React.TouchEvent) => {
+    longPressTimer.current = setTimeout(() => {
+      const touch = e.touches[0];
+      setChatMenu({ x: touch.clientX, y: touch.clientY, convId });
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handlePinChat = async (convId: string) => {
+    setChatMenu(null);
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    const isPinned = (conv as any).isPinned;
+    // Update locally
+    const updated = conversations.map(c =>
+      c.id === convId ? { ...c, isPinned: !isPinned, updatedAt: isPinned ? c.updatedAt : new Date().toISOString() } as any : c
+    );
+    setConversations(updated);
+  };
+
+  const handleDeleteChat = async (convId: string) => {
+    setChatMenu(null);
+    if (!confirm('Удалить чат? История сообщений будет потеряна.')) return;
+    try {
+      await conversationsApi.delete(convId);
+      const updated = conversations.filter(c => c.id !== convId);
+      setConversations(updated);
+      if (activeId === convId) setActive(null);
+    } catch (err) {
+      console.error('Delete chat failed:', err);
+    }
+  };
 
   const getConversationName = (conv: Conversation): string => {
     if (conv.groupMeta?.name) return conv.groupMeta.name;
@@ -56,9 +105,16 @@ export function Sidebar() {
     return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
   };
 
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const aPinned = (a as any).isPinned ? 1 : 0;
+    const bPinned = (b as any).isPinned ? 1 : 0;
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
   const filtered = search
-    ? conversations.filter((c) => getConversationName(c).toLowerCase().includes(search.toLowerCase()))
-    : conversations;
+    ? sortedConversations.filter((c) => getConversationName(c).toLowerCase().includes(search.toLowerCase()))
+    : sortedConversations;
 
   return (
     <div className="w-full md:w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
@@ -136,10 +192,15 @@ export function Sidebar() {
           const isOnline = otherUserId ? onlineUsers.has(otherUserId) : false;
           const isGroup = conv.type === 'group';
 
+          const isPinned = (conv as any).isPinned;
           return (
             <button
               key={conv.id}
               onClick={() => setActive(conv.id)}
+              onContextMenu={(e) => handleChatContextMenu(e, conv.id)}
+              onTouchStart={(e) => handleTouchStart(conv.id, e)}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchEnd}
               className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-dark-700 transition-colors text-left ${
                 isActive ? 'bg-dark-600' : ''
               }`}
@@ -173,12 +234,19 @@ export function Sidebar() {
                   <p className="text-xs text-gray-400 truncate mt-0.5">{conv.lastMessage.text}</p>
                 )}
               </div>
-              {/* Unread badge */}
-              {conv.unreadCount > 0 && (
-                <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                  <span className="text-[10px] text-white font-medium">{conv.unreadCount}</span>
-                </div>
-              )}
+              {/* Pin icon + Unread badge */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                {isPinned && (
+                  <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                  </svg>
+                )}
+                {conv.unreadCount > 0 && (
+                  <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
+                    <span className="text-[10px] text-white font-medium">{conv.unreadCount}</span>
+                  </div>
+                )}
+              </div>
             </button>
           );
         })}
@@ -225,6 +293,27 @@ export function Sidebar() {
       {showNewChat && <NewChatDialog onClose={() => setShowNewChat(false)} />}
       {showPhoneLink && <PhoneLinkDialog onClose={() => setShowPhoneLink(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+
+      {chatMenu && (
+        <MessageContextMenu
+          x={chatMenu.x}
+          y={chatMenu.y}
+          items={[
+            {
+              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isPinned ? 'Открепить' : 'Закрепить',
+              icon: 'pin',
+              onClick: () => handlePinChat(chatMenu.convId),
+            },
+            {
+              label: 'Удалить чат',
+              icon: 'delete',
+              onClick: () => handleDeleteChat(chatMenu.convId),
+              danger: true,
+            },
+          ]}
+          onClose={() => setChatMenu(null)}
+        />
+      )}
     </div>
   );
 }

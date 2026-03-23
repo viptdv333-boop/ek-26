@@ -27,6 +27,7 @@ export const conversationsApi = {
   create: (participantId: string) => api.post<any>('/conversations/direct', { participantId }),
   createGroup: (name: string, participantIds: string[]) => api.post<any>('/conversations/group', { name, participantIds }),
   getDetails: (id: string) => api.get<any>(`/conversations/${id}`),
+  delete: (id: string) => api.delete<any>(`/conversations/${id}`),
 };
 
 // Messages

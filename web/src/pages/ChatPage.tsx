@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { ChatRoom } from '../components/ChatRoom';
 import { EmptyState } from '../components/EmptyState';
@@ -10,7 +10,9 @@ import { keyManager } from '../services/crypto';
 
 export function ChatPage() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
+  const setActiveConversation = useChatStore((s) => s.setActiveConversation);
   const setConversations = useChatStore((s) => s.setConversations);
+  const prevActiveRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Load conversations
@@ -35,6 +37,26 @@ export function ChatPage() {
 
     return () => wsTransport.disconnect();
   }, [setConversations]);
+
+  // Handle Android back button via History API
+  useEffect(() => {
+    // When opening a chat, push a history entry
+    if (activeConversationId && !prevActiveRef.current) {
+      window.history.pushState({ chat: activeConversationId }, '');
+    }
+    prevActiveRef.current = activeConversationId;
+  }, [activeConversationId]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      // Android back button triggers popstate — go back to chat list
+      if (useChatStore.getState().activeConversationId) {
+        setActiveConversation(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [setActiveConversation]);
 
   return (
     <div className="h-screen flex bg-dark-900">

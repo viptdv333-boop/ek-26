@@ -39,12 +39,16 @@ class CallManager {
 
     // Get media
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        alert('Браузер не поддерживает звонки. Используйте Chrome.');
+        return;
+      }
       this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: type === 'video',
       });
-    } catch {
-      alert('Не удалось получить доступ к микрофону/камере');
+    } catch (err: any) {
+      alert('Не удалось получить доступ к микрофону/камере: ' + (err?.message || err));
       return;
     }
 
@@ -88,6 +92,9 @@ class CallManager {
 
     this.pc.oniceconnectionstatechange = () => {
       console.log('[Call] ICE state:', this.pc?.iceConnectionState);
+      if (this.pc?.iceConnectionState === 'failed') {
+        console.error('[Call] ICE FAILED — NAT traversal problem');
+      }
     };
 
     this.pc.onicegatheringstatechange = () => {

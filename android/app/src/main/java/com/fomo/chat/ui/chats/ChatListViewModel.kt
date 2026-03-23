@@ -2,19 +2,18 @@ package com.fomo.chat.ui.chats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fomo.chat.data.repository.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class Conversation(
+data class ConversationItem(
     val id: String,
     val name: String,
     val avatarUrl: String? = null,
@@ -23,21 +22,22 @@ data class Conversation(
     val unreadCount: Int = 0,
     val isOnline: Boolean = false,
     val isGroup: Boolean = false,
-    val isTyping: Boolean = false,
     val isPinned: Boolean = false
 )
 
 data class ChatListUiState(
-    val conversations: List<Conversation> = emptyList(),
+    val conversations: List<ConversationItem> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
-class ChatListViewModel @Inject constructor() : ViewModel() {
+class ChatListViewModel @Inject constructor(
+    private val chatRepository: ChatRepository
+) : ViewModel() {
 
-    private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
+    private val _conversations = MutableStateFlow<List<ConversationItem>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(false)
     private val _isRefreshing = MutableStateFlow(false)
@@ -61,7 +61,7 @@ class ChatListViewModel @Inject constructor() : ViewModel() {
             }
         }
         val sorted = filtered.sortedWith(
-            compareByDescending<Conversation> { it.isPinned }
+            compareByDescending<ConversationItem> { it.isPinned }
                 .thenByDescending { it.lastMessageTime }
         )
         ChatListUiState(
@@ -85,34 +85,25 @@ class ChatListViewModel @Inject constructor() : ViewModel() {
             _isLoading.value = true
             _error.value = null
             try {
-                // TODO: Replace with actual API call
-                // val result = chatRepository.getConversations()
-                delay(500)
-                _conversations.value = listOf(
-                    Conversation(
-                        id = "1",
-                        name = "Алексей Петров",
-                        lastMessage = "Привет! Как дела?",
-                        unreadCount = 3,
-                        isOnline = true
-                    ),
-                    Conversation(
-                        id = "2",
-                        name = "Команда разработки",
-                        lastMessage = "Деплой запланирован на завтра",
-                        unreadCount = 12,
-                        isGroup = true
-                    ),
-                    Conversation(
-                        id = "3",
-                        name = "Мария Иванова",
-                        lastMessage = "Спасибо за помощь!",
-                        isOnline = true,
-                        isPinned = true
+                val result = chatRepository.getConversations()
+                _conversations.value = result.map { conv ->
+                    ConversationItem(
+                        id = conv.id,
+                        name = conv.name ?: conv.participants?.firstOrNull()?.displayName ?: "Чат",
+                        avatarUrl = conv.avatarUrl ?: conv.participants?.firstOrNull()?.avatarUrl,
+                        lastMessage = conv.lastMessage?.text ?: "",
+                        lastMessageTime = try {
+                            java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+                                .parse(conv.updatedAt ?: "")?.time ?: System.currentTimeMillis()
+                        } catch (e: Exception) { System.currentTimeMillis() },
+                        unreadCount = conv.unreadCount ?: 0,
+                        isGroup = conv.type == "group",
+                        isPinned = false
                     )
-                )
+                }
             } catch (e: Exception) {
                 _error.value = e.message ?: "Ошибка загрузки"
+                _conversations.value = emptyList()
             } finally {
                 _isLoading.value = false
             }
@@ -123,8 +114,6 @@ class ChatListViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                // TODO: Replace with actual API call
-                delay(500)
                 loadConversations()
             } finally {
                 _isRefreshing.value = false

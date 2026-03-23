@@ -59,7 +59,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun FomoChatTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true, // Force dark theme by default (like web)
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme

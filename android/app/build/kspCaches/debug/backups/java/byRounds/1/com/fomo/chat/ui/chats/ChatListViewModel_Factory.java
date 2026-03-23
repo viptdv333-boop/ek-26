@@ -1,10 +1,12 @@
 package com.fomo.chat.ui.chats;
 
+import com.fomo.chat.data.repository.ChatRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
 import dagger.internal.ScopeMetadata;
 import javax.annotation.processing.Generated;
+import javax.inject.Provider;
 
 @ScopeMetadata
 @QualifierMetadata
@@ -23,20 +25,22 @@ import javax.annotation.processing.Generated;
     "nullness:initialization.field.uninitialized"
 })
 public final class ChatListViewModel_Factory implements Factory<ChatListViewModel> {
+  private final Provider<ChatRepository> chatRepositoryProvider;
+
+  public ChatListViewModel_Factory(Provider<ChatRepository> chatRepositoryProvider) {
+    this.chatRepositoryProvider = chatRepositoryProvider;
+  }
+
   @Override
   public ChatListViewModel get() {
-    return newInstance();
+    return newInstance(chatRepositoryProvider.get());
   }
 
-  public static ChatListViewModel_Factory create() {
-    return InstanceHolder.INSTANCE;
+  public static ChatListViewModel_Factory create(Provider<ChatRepository> chatRepositoryProvider) {
+    return new ChatListViewModel_Factory(chatRepositoryProvider);
   }
 
-  public static ChatListViewModel newInstance() {
-    return new ChatListViewModel();
-  }
-
-  private static final class InstanceHolder {
-    private static final ChatListViewModel_Factory INSTANCE = new ChatListViewModel_Factory();
+  public static ChatListViewModel newInstance(ChatRepository chatRepository) {
+    return new ChatListViewModel(chatRepository);
   }
 }

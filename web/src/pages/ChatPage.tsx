@@ -52,7 +52,22 @@ export function ChatPage() {
       }
     });
 
-    return () => wsTransport.disconnect();
+    // Reload conversations when app returns to foreground
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        // Reload conversation list to catch missed messages
+        conversationsApi.list().then((res) => {
+          const list = Array.isArray(res) ? res : res.conversations ?? [];
+          setConversations(list);
+        }).catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      wsTransport.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [setConversations]);
 
   // Handle Android back button via History API

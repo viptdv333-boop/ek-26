@@ -82,15 +82,14 @@ export function ChatRoom({ conversationId }: Props) {
   const title = getTitle();
   const subtitle = getSubtitle();
 
-  useEffect(() => {
-    setLoading(true);
-    messagesApi.list(conversationId).then(async (res) => {
+  const loadMessages = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    try {
+      const res = await messagesApi.list(conversationId);
       const list = Array.isArray(res) ? res : res.messages ?? [];
       const normalized = await Promise.all(list.map(async (m: any) => {
         let text = m.text;
         const encrypted = m.encrypted || false;
-        // If server has plaintext — use it directly (multi-device support)
-        // Only attempt decryption for old messages with text=null
         if (!text && encrypted && m.envelope) {
           try {
             const cached = await messageCache.get(m.id);
@@ -122,10 +121,24 @@ export function ChatRoom({ conversationId }: Props) {
           createdAt: m.createdAt,
         };
       }));
-      // Show all messages — text is always available now (server stores plaintext)
       const decrypted = normalized.filter(m => m.text || (m.attachments && m.attachments.length > 0));
       setMessages(conversationId, decrypted.reverse());
-    }).catch(() => {}).finally(() => setLoading(false));
+    } catch {} finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMessages();
+
+    // Reload messages when app returns from background (mobile)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadMessages(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
 
     // Load pinned messages
     messageActionsApi.getPins(conversationId).then((res: any) => {

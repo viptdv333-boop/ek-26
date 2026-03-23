@@ -58,19 +58,31 @@ export async function sendPushNotification(
   try {
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
-      // Data-only message — lets service worker control the notification display
+      // Include notification field for reliable Android delivery
+      notification: {
+        title: payload.title,
+        body: payload.body.slice(0, 200),
+      },
       data: {
         title: payload.title,
         body: payload.body.slice(0, 200),
         ...(payload.data || {}),
       },
-      // Android config for high priority delivery
       android: {
         priority: 'high',
       },
       webpush: {
         headers: {
           Urgency: 'high',
+        },
+        // Override browser notification to use our custom one
+        notification: {
+          title: payload.title,
+          body: payload.body.slice(0, 200),
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: payload.data?.conversationId || 'default',
+          renotify: true,
         },
       },
     });

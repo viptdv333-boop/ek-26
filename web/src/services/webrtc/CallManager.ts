@@ -5,6 +5,11 @@ const ICE_CONFIG: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
+    {
+      urls: 'turn:85.198.82.136:3478',
+      username: 'fomo',
+      credential: 'FomoTurn2024!',
+    },
   ],
 };
 

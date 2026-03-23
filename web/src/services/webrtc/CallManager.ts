@@ -23,6 +23,8 @@ class CallManager {
   private localVideoRef: HTMLVideoElement | null = null;
   private remoteVideoRef: HTMLVideoElement | null = null;
   private _ringtone: HTMLAudioElement | null = null;
+  private _disconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private _iceCandidateBuffer: RTCIceCandidateInit[] = [];
 
   setVideoRefs(local: HTMLVideoElement | null, remote: HTMLVideoElement | null) {
     this.localVideoRef = local;
@@ -81,19 +83,32 @@ class CallManager {
     };
 
     this.pc.onconnectionstatechange = () => {
-      console.log('[Call] Connection state:', this.pc?.connectionState);
-      if (this.pc?.connectionState === 'connected') {
+      const state = this.pc?.connectionState;
+      console.log('[Call] Connection state:', state);
+      if (state === 'connected') {
+        this.clearDisconnectTimer();
         useCallStore.getState().updateCallStatus('connected');
-      }
-      if (this.pc?.connectionState === 'failed' || this.pc?.connectionState === 'disconnected') {
+      } else if (state === 'failed') {
+        this.clearDisconnectTimer();
         this.endCall(targetUserId);
+      } else if (state === 'disconnected') {
+        // Mobile browsers often go disconnected briefly — give 5s to recover
+        console.warn('[Call] Disconnected — waiting 5s before ending');
+        this.clearDisconnectTimer();
+        this._disconnectTimer = setTimeout(() => {
+          if (this.pc?.connectionState === 'disconnected' || this.pc?.connectionState === 'failed') {
+            console.error('[Call] Connection did not recover, ending call');
+            this.endCall(targetUserId);
+          }
+        }, 5000);
       }
     };
 
     this.pc.oniceconnectionstatechange = () => {
-      console.log('[Call] ICE state:', this.pc?.iceConnectionState);
+      console.log('[Call] ICE connection state:', this.pc?.iceConnectionState);
       if (this.pc?.iceConnectionState === 'failed') {
-        console.error('[Call] ICE FAILED — NAT traversal problem');
+        console.error('[Call] ICE FAILED — attempting restart');
+        this.pc?.restartIce();
       }
     };
 
@@ -207,15 +222,40 @@ class CallManager {
     };
 
     this.pc.onconnectionstatechange = () => {
-      if (this.pc?.connectionState === 'connected') {
+      const state = this.pc?.connectionState;
+      console.log('[Call] Connection state (answer):', state);
+      if (state === 'connected') {
+        this.clearDisconnectTimer();
         useCallStore.getState().updateCallStatus('connected');
-      }
-      if (this.pc?.connectionState === 'failed' || this.pc?.connectionState === 'disconnected') {
+      } else if (state === 'failed') {
+        this.clearDisconnectTimer();
         this.endCall(call.peerId);
+      } else if (state === 'disconnected') {
+        console.warn('[Call] Disconnected (answer) — waiting 5s before ending');
+        this.clearDisconnectTimer();
+        this._disconnectTimer = setTimeout(() => {
+          if (this.pc?.connectionState === 'disconnected' || this.pc?.connectionState === 'failed') {
+            console.error('[Call] Connection did not recover, ending call');
+            this.endCall(call.peerId);
+          }
+        }, 5000);
       }
     };
 
+    this.pc.oniceconnectionstatechange = () => {
+      console.log('[Call] ICE connection state (answer):', this.pc?.iceConnectionState);
+      if (this.pc?.iceConnectionState === 'failed') {
+        console.error('[Call] ICE FAILED (answer) — attempting restart');
+        this.pc?.restartIce();
+      }
+    };
+
+    this.pc.onicegatheringstatechange = () => {
+      console.log('[Call] ICE gathering (answer):', this.pc?.iceGatheringState);
+    };
+
     await this.pc.setRemoteDescription(new RTCSessionDescription(call.offer));
+    await this.flushIceCandidates();
     const answer = await this.pc.createAnswer();
     await this.pc.setLocalDescription(answer);
 
@@ -232,15 +272,39 @@ class CallManager {
     console.log('[Call] Received answer');
     if (!this.pc) { console.warn('[Call] No PC for answer'); return; }
     await this.pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+    await this.flushIceCandidates();
     useCallStore.getState().updateCallStatus('connecting');
   }
 
   async handleIceCandidate(data: any) {
     console.log('[Call] Received ICE candidate');
-    if (!this.pc) { console.warn('[Call] No PC for ICE'); return; }
+    if (!this.pc || !this.pc.remoteDescription) {
+      // Buffer candidates that arrive before PC or remote description is set
+      console.log('[Call] Buffering ICE candidate (no PC or remote desc yet)');
+      this._iceCandidateBuffer.push(data.candidate);
+      return;
+    }
     try {
       await this.pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-    } catch (err) { console.error('[Call] ICE error:', err); }
+    } catch (err) { console.error('[Call] ICE add error:', err); }
+  }
+
+  private async flushIceCandidates() {
+    if (!this.pc || !this.pc.remoteDescription) return;
+    console.log(`[Call] Flushing ${this._iceCandidateBuffer.length} buffered ICE candidates`);
+    for (const candidate of this._iceCandidateBuffer) {
+      try {
+        await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) { console.error('[Call] Buffered ICE add error:', err); }
+    }
+    this._iceCandidateBuffer = [];
+  }
+
+  private clearDisconnectTimer() {
+    if (this._disconnectTimer) {
+      clearTimeout(this._disconnectTimer);
+      this._disconnectTimer = null;
+    }
   }
 
   declineCall() {
@@ -307,6 +371,8 @@ class CallManager {
   }
 
   private cleanup() {
+    this.clearDisconnectTimer();
+    this._iceCandidateBuffer = [];
     if (this.localStream) {
       this.localStream.getTracks().forEach((t) => t.stop());
       this.localStream = null;

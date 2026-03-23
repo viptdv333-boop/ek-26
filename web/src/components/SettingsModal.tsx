@@ -418,7 +418,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                   {([
                     { id: 'rounded', label: 'Скруглённые', radius: 'rounded-2xl', tail: 'M0 0 C0 6 3 10 8 12 L0 12 Z' },
                     { id: 'square', label: 'Квадратные', radius: 'rounded-lg', tail: 'M0 0 L0 12 L8 12 Z' },
-                    { id: 'cloud', label: 'Облачко', radius: 'rounded-[2rem]', tail: 'M0 0 Q0 8 7 12 Q3 8 0 12 Z' },
+                    { id: 'cloud', label: 'Облачко', radius: '', tail: 'M0 0 Q0 8 7 12 Q3 8 0 12 Z' },
                   ] as const).map((shape) => (
                     <button
                       key={shape.id}
@@ -430,7 +430,10 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                       <div className="relative pb-1">
                         <div
                           className={`px-3 py-1.5 text-xs text-white ${shape.radius}`}
-                          style={{ backgroundColor: bubbleColor }}
+                          style={{
+                            backgroundColor: bubbleColor,
+                            ...(shape.id === 'cloud' ? { borderRadius: '1.5rem 1.5rem 1.5rem 1.5rem / 50% 50% 50% 50%', padding: '6px 16px' } : {}),
+                          }}
                         >
                           Привет
                         </div>

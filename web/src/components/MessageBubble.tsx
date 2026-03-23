@@ -144,11 +144,14 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           </svg>
           <div
             className={`relative overflow-hidden ${
-              bubbleShape === 'square' ? 'rounded-lg' :
-              bubbleShape === 'cloud' ? 'rounded-[2rem]' :
+              bubbleShape === 'square' ? 'rounded-md' :
+              bubbleShape === 'cloud' ? '' :
               'rounded-2xl'
-            } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : 'px-3.5 py-2'}`}
-            style={{ backgroundColor: isMine ? bubbleColor : bubbleColorOther }}
+            } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : bubbleShape === 'cloud' ? 'px-5 py-2.5' : 'px-3.5 py-2'}`}
+            style={{
+              backgroundColor: isMine ? bubbleColor : bubbleColorOther,
+              ...(bubbleShape === 'cloud' ? { borderRadius: '1.5rem 1.5rem 1.5rem 1.5rem / 50% 50% 50% 50%' } : {}),
+            }}
           >
           {showSender && !isMine && message.senderName && (
             <p className="text-xs font-medium text-accent mb-0.5">{message.senderName}</p>

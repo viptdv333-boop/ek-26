@@ -107,6 +107,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   // Bubble style
   const [bubbleShape, setBubbleShape] = useState(() => localStorage.getItem('ek26_bubble_shape') || 'rounded');
   const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '#6366f1');
+  const [bubbleColorOther, setBubbleColorOther] = useState(() => localStorage.getItem('ek26_bubble_color_other') || '#22222f');
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
@@ -134,6 +135,12 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   const handleBubbleColorChange = (color: string) => {
     setBubbleColor(color);
     localStorage.setItem('ek26_bubble_color', color);
+    window.dispatchEvent(new Event('bubble-style-changed'));
+  };
+
+  const handleBubbleColorOtherChange = (color: string) => {
+    setBubbleColorOther(color);
+    localStorage.setItem('ek26_bubble_color_other', color);
     window.dispatchEvent(new Event('bubble-style-changed'));
   };
 
@@ -409,9 +416,9 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 <label className="block text-sm font-medium text-gray-400 mb-3">Форма сообщений</label>
                 <div className="flex gap-3">
                   {([
-                    { id: 'rounded', label: 'Скруглённые', cls: 'rounded-2xl rounded-br-md' },
-                    { id: 'square', label: 'Квадратные', cls: 'rounded-md' },
-                    { id: 'cloud', label: 'Облачко', cls: 'rounded-3xl' },
+                    { id: 'rounded', label: 'Скруглённые', radius: 'rounded-2xl' },
+                    { id: 'square', label: 'Квадратные', radius: 'rounded-lg' },
+                    { id: 'cloud', label: 'Облачко', radius: 'rounded-[2rem]' },
                   ] as const).map((shape) => (
                     <button
                       key={shape.id}
@@ -420,11 +427,20 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                         bubbleShape === shape.id ? 'border-accent bg-accent/10' : 'border-dark-500 hover:border-gray-400'
                       }`}
                     >
-                      <div
-                        className={`px-3 py-1.5 text-xs text-white ${shape.cls}`}
-                        style={{ backgroundColor: bubbleColor }}
-                      >
-                        Привет
+                      <div className="relative">
+                        <div
+                          className={`px-3 py-1.5 text-xs text-white ${shape.radius}`}
+                          style={{ backgroundColor: bubbleColor }}
+                        >
+                          Привет
+                        </div>
+                        <div
+                          className="absolute bottom-0 right-[-5px] w-2.5 h-2.5"
+                          style={{
+                            clipPath: 'polygon(0 0, 0% 100%, 100% 100%)',
+                            backgroundColor: bubbleColor,
+                          }}
+                        />
                       </div>
                       <span className="text-xs text-gray-400">{shape.label}</span>
                     </button>
@@ -432,10 +448,10 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 </div>
               </div>
 
-              {/* Bubble color */}
+              {/* Bubble color — own */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-3">Цвет сообщений</label>
-                <div className="flex items-center gap-3">
+                <label className="block text-sm font-medium text-gray-400 mb-3">Цвет ваших сообщений</label>
+                <div className="flex items-center gap-2 flex-wrap">
                   {['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'].map((color) => (
                     <button
                       key={color}
@@ -451,6 +467,36 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                       type="color"
                       value={bubbleColor}
                       onChange={(e) => handleBubbleColorChange(e.target.value)}
+                      className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
+                    />
+                    <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Bubble color — other */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-3">Цвет сообщений собеседника</label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {['#22222f', '#1e3a5f', '#2d1b3d', '#1a3327', '#3d2b1a', '#3b1a1a', '#1a2f3d', '#2a2a38'].map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleBubbleColorOtherChange(color)}
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        bubbleColorOther === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                  <label className="relative">
+                    <input
+                      type="color"
+                      value={bubbleColorOther}
+                      onChange={(e) => handleBubbleColorOtherChange(e.target.value)}
                       className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
                     />
                     <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">

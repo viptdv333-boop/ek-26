@@ -58,6 +58,7 @@ export function ChatRoom({ conversationId }: Props) {
   const [chatFontSize, setChatFontSize] = useState(() => fontSizeMap[(parseInt(localStorage.getItem('ek26_font_size') || '3') - 1)] || 14);
   const [bubbleShape, setBubbleShape] = useState(() => localStorage.getItem('ek26_bubble_shape') || 'rounded');
   const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '#6366f1');
+  const [bubbleColorOther, setBubbleColorOther] = useState(() => localStorage.getItem('ek26_bubble_color_other') || '#22222f');
 
   useEffect(() => {
     const wallpaperHandler = () => setCurrentWallpaper(localStorage.getItem('ek26_wallpaper') || 'default');
@@ -65,6 +66,7 @@ export function ChatRoom({ conversationId }: Props) {
     const bubbleHandler = () => {
       setBubbleShape(localStorage.getItem('ek26_bubble_shape') || 'rounded');
       setBubbleColor(localStorage.getItem('ek26_bubble_color') || '#6366f1');
+      setBubbleColorOther(localStorage.getItem('ek26_bubble_color_other') || '#22222f');
     };
     window.addEventListener('wallpaper-changed', wallpaperHandler);
     window.addEventListener('storage', wallpaperHandler);
@@ -546,6 +548,7 @@ export function ChatRoom({ conversationId }: Props) {
             fontSize={chatFontSize}
             bubbleShape={bubbleShape}
             bubbleColor={bubbleColor}
+            bubbleColorOther={bubbleColorOther}
           />
           </div>
         ))}

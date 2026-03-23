@@ -54,9 +54,10 @@ interface Props {
   fontSize?: number;
   bubbleShape?: string;
   bubbleColor?: string;
+  bubbleColorOther?: string;
 }
 
-export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'rounded', bubbleColor = '#6366f1' }: Props) {
+export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'rounded', bubbleColor = '#6366f1', bubbleColorOther = '#22222f' }: Props) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);
   const [showReactionBar, setShowReactionBar] = useState(false);
@@ -117,16 +118,26 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       >
         {!isMine && renderAvatar()}
 
-        <div
-          className={`max-w-[70%] overflow-hidden ${
-            bubbleShape === 'square' ? 'rounded-md' :
-            bubbleShape === 'cloud' ? 'rounded-3xl' :
-            isMine ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md'
-          } ${
-            isMine ? 'text-white' : 'bg-dark-600 text-gray-100'
-          } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : 'px-3.5 py-2'}`}
-          style={isMine ? { backgroundColor: bubbleColor } : undefined}
-        >
+        <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
+          {/* Tail */}
+          <div
+            className="absolute bottom-0 w-3 h-3"
+            style={{
+              [isMine ? 'right' : 'left']: '-6px',
+              clipPath: isMine
+                ? 'polygon(0 0, 0% 100%, 100% 100%)'
+                : 'polygon(100% 0, 0% 100%, 100% 100%)',
+              backgroundColor: isMine ? bubbleColor : bubbleColorOther,
+            }}
+          />
+          <div
+            className={`relative overflow-hidden ${
+              bubbleShape === 'square' ? 'rounded-lg' :
+              bubbleShape === 'cloud' ? 'rounded-[2rem]' :
+              'rounded-2xl'
+            } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : 'px-3.5 py-2'}`}
+            style={{ backgroundColor: isMine ? bubbleColor : bubbleColorOther }}
+          >
           {showSender && !isMine && message.senderName && (
             <p className="text-xs font-medium text-accent mb-0.5">{message.senderName}</p>
           )}
@@ -162,6 +173,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
             <span className="text-[10px]">{time}</span>
             {statusIcon()}
           </div>
+        </div>
         </div>
 
         {/* Reaction bar on hover */}

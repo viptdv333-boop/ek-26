@@ -416,9 +416,9 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 <label className="block text-sm font-medium text-gray-400 mb-3">Форма сообщений</label>
                 <div className="flex gap-3">
                   {([
-                    { id: 'rounded', label: 'Скруглённые', radius: 'rounded-2xl', tail: 'M0 0 C0 6 3 10 8 12 L0 12 Z' },
-                    { id: 'square', label: 'Квадратные', radius: 'rounded-lg', tail: 'M0 0 L0 12 L8 12 Z' },
-                    { id: 'cloud', label: 'Облачко', radius: '', tail: 'M0 0 Q0 8 7 12 Q3 8 0 12 Z' },
+                    { id: 'rounded', label: 'Скруглённые' },
+                    { id: 'square', label: 'Квадратные' },
+                    { id: 'cloud', label: 'Облачко' },
                   ] as const).map((shape) => (
                     <button
                       key={shape.id}
@@ -428,18 +428,30 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                       }`}
                     >
                       <div className="relative pb-1">
-                        <div
-                          className={`px-3 py-1.5 text-xs text-white ${shape.radius}`}
-                          style={{
-                            backgroundColor: bubbleColor,
-                            ...(shape.id === 'cloud' ? { borderRadius: '50%', padding: '8px 20px' } : {}),
-                          }}
-                        >
-                          Привет
-                        </div>
-                        <svg className="absolute bottom-0 right-[-6px]" width="8" height="12" viewBox="0 0 8 12">
-                          <path d={shape.tail} fill={bubbleColor} />
-                        </svg>
+                        {shape.id === 'cloud' ? (
+                          /* Cloud preview: oval speech bubble shape */
+                          <div
+                            className="px-4 py-2 text-xs text-white"
+                            style={{
+                              backgroundColor: bubbleColor,
+                              borderRadius: '48% 48% 42% 8% / 50% 50% 35% 25%',
+                            }}
+                          >
+                            Привет
+                          </div>
+                        ) : (
+                          <>
+                            <div
+                              className={`px-3 py-1.5 text-xs text-white ${shape.id === 'square' ? 'rounded-lg' : 'rounded-2xl'}`}
+                              style={{ backgroundColor: bubbleColor }}
+                            >
+                              Привет
+                            </div>
+                            <svg className="absolute bottom-0 right-[-6px]" width="8" height="12" viewBox="0 0 8 12">
+                              <path d={shape.id === 'square' ? 'M0 0 L0 12 L8 12 Z' : 'M0 0 C0 6 3 10 8 12 L0 12 Z'} fill={bubbleColor} />
+                            </svg>
+                          </>
+                        )}
                       </div>
                       <span className="text-xs text-gray-400">{shape.label}</span>
                     </button>

@@ -119,38 +119,36 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
         {!isMine && renderAvatar()}
 
         <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
-          {/* Tail SVG */}
-          <svg
-            className="absolute bottom-0"
-            style={{ [isMine ? 'right' : 'left']: '-8px' }}
-            width="12" height="16" viewBox="0 0 12 16"
-          >
-            {bubbleShape === 'square' ? (
-              // Square: sharp angular tail
-              isMine
-                ? <path d="M0 0 L0 16 L12 16 Z" fill={bubbleColor} />
-                : <path d="M12 0 L12 16 L0 16 Z" fill={bubbleColorOther} />
-            ) : bubbleShape === 'cloud' ? (
-              // Cloud: smooth curved tail
-              isMine
-                ? <path d="M0 0 Q0 12 10 16 Q4 12 0 16 Z" fill={bubbleColor} />
-                : <path d="M12 0 Q12 12 2 16 Q8 12 12 16 Z" fill={bubbleColorOther} />
-            ) : (
-              // Rounded: pointed tail
-              isMine
-                ? <path d="M0 0 C0 8 4 14 12 16 L0 16 Z" fill={bubbleColor} />
-                : <path d="M12 0 C12 8 8 14 0 16 L12 16 Z" fill={bubbleColorOther} />
-            )}
-          </svg>
+          {/* Tail SVG — only for rounded and square shapes */}
+          {bubbleShape !== 'cloud' && (
+            <svg
+              className="absolute bottom-0"
+              style={{ [isMine ? 'right' : 'left']: '-8px' }}
+              width="12" height="16" viewBox="0 0 12 16"
+            >
+              {bubbleShape === 'square' ? (
+                isMine
+                  ? <path d="M0 0 L0 16 L12 16 Z" fill={bubbleColor} />
+                  : <path d="M12 0 L12 16 L0 16 Z" fill={bubbleColorOther} />
+              ) : (
+                isMine
+                  ? <path d="M0 0 C0 8 4 14 12 16 L0 16 Z" fill={bubbleColor} />
+                  : <path d="M12 0 C12 8 8 14 0 16 L12 16 Z" fill={bubbleColorOther} />
+              )}
+            </svg>
+          )}
           <div
             className={`relative overflow-hidden ${
               bubbleShape === 'square' ? 'rounded-md' :
-              bubbleShape === 'cloud' ? '' :
+              bubbleShape === 'cloud' ? 'cloud-bubble' :
               'rounded-2xl'
-            } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : bubbleShape === 'cloud' ? 'px-8 py-3' : 'px-3.5 py-2'}`}
+            } ${hasAttachments && !message.text && !message.replyTo && !message.forwardedFrom ? '' : bubbleShape === 'cloud' ? 'px-5 py-3 pb-4' : 'px-3.5 py-2'}`}
             style={{
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-              ...(bubbleShape === 'cloud' ? { borderRadius: '50%' } : {}),
+              ...(bubbleShape === 'cloud' ? {
+                borderRadius: '48% 48% 42% 8% / 50% 50% 35% 25%',
+                ...(isMine ? {} : { borderRadius: '48% 48% 8% 42% / 50% 50% 25% 35%' }),
+              } : {}),
             }}
           >
           {showSender && !isMine && message.senderName && (

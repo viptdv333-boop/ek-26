@@ -53,6 +53,7 @@ interface ChatState {
   conversations: Conversation[];
   messages: Record<string, Message[]>;
   activeConversationId: string | null;
+  scrollToMessageId: string | null;
   typingUsers: Record<string, string[]>;
   onlineUsers: Set<string>;
   replyingTo: { conversationId: string; messageId: string; text: string; senderName: string } | null;
@@ -62,6 +63,7 @@ interface ChatState {
   setMessages: (conversationId: string, messages: Message[]) => void;
   addMessage: (conversationId: string, message: Message) => void;
   setActiveConversation: (id: string | null) => void;
+  setScrollToMessage: (messageId: string | null) => void;
   setTyping: (conversationId: string, userIds: string[]) => void;
   updateLastMessage: (conversationId: string, message: { text: string; senderId: string; createdAt: string }) => void;
   updateMessageStatus: (messageId: string, status: string) => void;
@@ -85,10 +87,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   messages: {},
   activeConversationId: sessionStorage.getItem('ek26_activeConv'),
+  scrollToMessageId: null,
   typingUsers: {},
   onlineUsers: new Set(),
   replyingTo: null,
   editingMessage: null,
+
+  setScrollToMessage: (messageId) => set({ scrollToMessageId: messageId }),
 
   setConversations: (conversations) => set({ conversations }),
 

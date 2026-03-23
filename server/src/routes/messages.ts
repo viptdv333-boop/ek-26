@@ -295,9 +295,21 @@ export async function messageRoutes(app: FastifyInstance) {
     const { q, limit = 30 } = request.query as { q?: string; limit?: number };
     if (!q || q.length < 2) return { results: [] };
 
-    // Get user's conversations
-    const convs = await Conversation.find({ participants: new mongoose.Types.ObjectId(request.userId) }).select('_id').lean();
+    // Get user's conversations with names
+    const convs = await Conversation.find({ participants: new mongoose.Types.ObjectId(request.userId) })
+      .select('_id type groupMeta participants')
+      .populate('participants', 'displayName')
+      .lean();
     const convIds = convs.map((c) => c._id);
+    const convMap = new Map<string, string>();
+    for (const c of convs) {
+      if (c.type === 'group' && (c as any).groupMeta?.name) {
+        convMap.set(c._id.toString(), (c as any).groupMeta.name);
+      } else {
+        const other = (c.participants as any[])?.find((p: any) => p._id?.toString() !== request.userId);
+        convMap.set(c._id.toString(), other?.displayName || 'Чат');
+      }
+    }
 
     const messages = await Message.find({
       conversationId: { $in: convIds },
@@ -313,6 +325,7 @@ export async function messageRoutes(app: FastifyInstance) {
       results: messages.map((m) => ({
         messageId: m._id.toString(),
         conversationId: m.conversationId.toString(),
+        conversationName: convMap.get(m.conversationId.toString()) || 'Чат',
         text: m.text,
         senderName: (m.senderId as any)?.displayName || 'Пользователь',
         createdAt: m.createdAt.toISOString(),

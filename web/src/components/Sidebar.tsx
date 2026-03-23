@@ -9,9 +9,10 @@ import { ContactsPanel } from './ContactsPanel';
 import { MessageContextMenu } from './MessageContextMenu';
 
 interface SearchResult {
+  messageId: string;
   conversationId: string;
   conversationName: string;
-  messageText: string;
+  text: string;
   senderName: string;
   createdAt: string;
 }
@@ -228,13 +229,19 @@ export function Sidebar() {
 
   const highlightMatch = (text: string, query: string) => {
     if (!query.trim()) return text;
-    const idx = text.toLowerCase().indexOf(query.toLowerCase());
-    if (idx === -1) return text;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    const parts = text.split(regex);
+    if (parts.length === 1) return text;
     return (
       <>
-        {text.slice(0, idx)}
-        <span className="bg-accent/30 text-white">{text.slice(idx, idx + query.length)}</span>
-        {text.slice(idx + query.length)}
+        {parts.map((part, i) =>
+          regex.test(part) ? (
+            <span key={i} className="bg-accent/30 text-white font-medium">{part}</span>
+          ) : (
+            part
+          )
+        )}
       </>
     );
   };
@@ -303,8 +310,9 @@ export function Sidebar() {
           )}
           {!searchLoading && searchResults.map((result, i) => (
             <button
-              key={`${result.conversationId}-${i}`}
+              key={`${result.messageId}-${i}`}
               onClick={() => {
+                useChatStore.getState().setScrollToMessage(result.messageId);
                 setActive(result.conversationId);
                 setSearch('');
                 setSearchResults(null);
@@ -316,8 +324,8 @@ export function Sidebar() {
                 <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatTime(result.createdAt)}</span>
               </div>
               <p className="text-xs text-gray-400">{result.senderName || 'Пользователь'}</p>
-              <p className="text-xs text-gray-300 truncate">
-                {highlightMatch(result.messageText || '', search)}
+              <p className="text-xs text-gray-300 line-clamp-2">
+                {highlightMatch(result.text || '', search)}
               </p>
             </button>
           ))}

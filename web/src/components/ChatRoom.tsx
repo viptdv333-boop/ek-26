@@ -189,7 +189,23 @@ export function ChatRoom({ conversationId }: Props) {
     }).catch(() => {});
   }, [conversationId, setMessages, setPinnedMessages]);
 
+  const scrollToMessageId = useChatStore((s) => s.scrollToMessageId);
+  const setScrollToMessage = useChatStore((s) => s.setScrollToMessage);
+
   useEffect(() => {
+    // If we have a target message to scroll to, do that instead of scrolling to bottom
+    if (scrollToMessageId) {
+      const el = document.getElementById(`msg-${scrollToMessageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-accent', 'rounded-lg', 'bg-accent/10');
+        setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-accent', 'rounded-lg', 'bg-accent/10');
+        }, 2000);
+        setScrollToMessage(null);
+        return;
+      }
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     if (messages.length > 0) {
       const unread = messages.filter(m => m.senderId !== userId && m.status !== 'read');
@@ -197,7 +213,7 @@ export function ChatRoom({ conversationId }: Props) {
         wsTransport.send('message:read', { messageId: m.id });
       }
     }
-  }, [messages, userId]);
+  }, [messages, userId, scrollToMessageId]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

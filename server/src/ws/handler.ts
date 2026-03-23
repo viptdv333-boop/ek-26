@@ -314,7 +314,7 @@ async function handleEvent(
       broadcastToConversation(conversationId, 'message:new', messageData, client.userId);
 
       // Send push notifications to offline participants
-      for (const p of conv.participants as any[]) {
+      for (const p of (conv?.participants || []) as any[]) {
         const pid = p._id ? p._id.toString() : p.toString();
         if (pid === client.userId) continue;
         if (!clients.has(pid)) {

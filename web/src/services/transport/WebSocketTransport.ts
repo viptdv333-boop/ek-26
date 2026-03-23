@@ -1,6 +1,7 @@
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
 import { sessionManager, messageCache, keyManager } from '../crypto';
+import { callManager } from '../webrtc/CallManager';
 
 type EventHandler = (data: any) => void;
 
@@ -296,6 +297,30 @@ class WebSocketTransport {
         if (Array.isArray(data.userIds)) {
           data.userIds.forEach((id: string) => store.setUserOnline(id, true));
         }
+        break;
+
+      case 'call:incoming':
+        callManager.handleIncomingCall(data);
+        break;
+
+      case 'call:answer':
+        callManager.handleAnswer(data);
+        break;
+
+      case 'call:ice':
+        callManager.handleIceCandidate(data);
+        break;
+
+      case 'call:end':
+        callManager.handleCallEnded();
+        break;
+
+      case 'call:decline':
+        callManager.handleCallDeclined();
+        break;
+
+      case 'call:busy':
+        callManager.handleCallBusy();
         break;
 
       case 'keys:low':

@@ -8,6 +8,7 @@ import { conversationsApi } from '../services/api/endpoints';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { keyManager } from '../services/crypto';
 import { requestNotificationPermission, onForegroundMessage } from '../services/firebase';
+import { CallOverlay } from '../components/CallOverlay';
 
 export function ChatPage() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
@@ -99,6 +100,7 @@ export function ChatPage() {
       <div className={`${activeConversationId ? 'flex' : 'hidden md:flex'} flex-1`}>
         {activeConversationId ? <ChatRoom conversationId={activeConversationId} /> : <EmptyState />}
       </div>
+      <CallOverlay />
     </div>
   );
 }

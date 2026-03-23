@@ -7,6 +7,7 @@ import { MessageBubble } from './MessageBubble';
 import { sessionManager, messageCache } from '../services/crypto';
 import { uploadFile, isImageFile } from '../services/api/upload';
 import { ForwardDialog } from './ForwardDialog';
+import { callManager } from '../services/webrtc/CallManager';
 import type { Attachment } from '../stores/chatStore';
 
 const EMPTY_ARRAY: string[] = [];
@@ -413,7 +414,10 @@ export function ChatRoom({ conversationId }: Props) {
         {/* Call buttons */}
         <div className="flex items-center gap-1 ml-2">
           <button
-            onClick={() => alert('Звонки в разработке')}
+            onClick={() => {
+              const other = getOther();
+              if (other) callManager.startCall(other.id, other.displayName, other.avatarUrl || null, 'audio');
+            }}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
             title="Аудиозвонок"
           >
@@ -422,7 +426,10 @@ export function ChatRoom({ conversationId }: Props) {
             </svg>
           </button>
           <button
-            onClick={() => alert('Звонки в разработке')}
+            onClick={() => {
+              const other = getOther();
+              if (other) callManager.startCall(other.id, other.displayName, other.avatarUrl || null, 'video');
+            }}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
             title="Видеозвонок"
           >

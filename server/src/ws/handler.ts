@@ -370,6 +370,50 @@ async function handleEvent(
       await User.findByIdAndUpdate(client.userId, { lastSeen: new Date() });
       break;
     }
+
+    case 'call:offer': {
+      const { targetUserId, callId, type, offer } = data;
+      const caller = await User.findById(client.userId).select('displayName avatarUrl').lean();
+      sendToUser(targetUserId, 'call:incoming', {
+        callId,
+        callerId: client.userId,
+        callerName: caller?.displayName || 'Пользователь',
+        callerAvatar: caller?.avatarUrl || null,
+        type,
+        offer,
+      });
+      break;
+    }
+
+    case 'call:answer': {
+      const { callerId, callId, answer } = data;
+      sendToUser(callerId, 'call:answer', { callId, answer });
+      break;
+    }
+
+    case 'call:ice': {
+      const { targetUserId, callId, candidate } = data;
+      sendToUser(targetUserId, 'call:ice', { callId, candidate });
+      break;
+    }
+
+    case 'call:end': {
+      const { targetUserId, callId, reason } = data;
+      sendToUser(targetUserId, 'call:end', { callId, reason: reason || 'ended' });
+      break;
+    }
+
+    case 'call:decline': {
+      const { callerId, callId } = data;
+      sendToUser(callerId, 'call:decline', { callId });
+      break;
+    }
+
+    case 'call:busy': {
+      const { callerId, callId } = data;
+      sendToUser(callerId, 'call:busy', { callId });
+      break;
+    }
   }
 }
 

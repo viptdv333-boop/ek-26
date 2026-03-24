@@ -3,12 +3,12 @@
     android:height="80dp"
     android:viewportWidth="512"
     android:viewportHeight="512">
-    <!-- Rounded rect background -->
+    <!-- Dark rounded rect background -->
     <path
-        android:fillColor="#6366f1"
+        android:fillColor="#0a0a0f"
         android:pathData="M0,112C0,50.1 50.1,0 112,0h288c61.9,0 112,50.1 112,112v288c0,61.9 -50.1,112 -112,112H112C50.1,512 0,461.9 0,400z"/>
-    <!-- Letter F -->
+    <!-- Red F letter (FOMO style) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M160,100h192v56H224v64h108v56H224v136H160V100z"/>
+        android:fillColor="#e81717"
+        android:pathData="M145,90h222v62H215v72h120v58H215v140H145V90z"/>
 </vector>

@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#0a0a0f"/>
-  <g transform="translate(130, 80)">
-    <!-- F vertical bar -->
-    <rect x="0" y="0" width="52" height="350" fill="#e81717"/>
+  <g transform="translate(130, 50)">
+    <!-- F vertical bar (candle body) -->
+    <rect x="0" y="0" width="52" height="330" fill="#e81717"/>
     <!-- F top horizontal bar -->
     <rect x="0" y="0" width="210" height="58" fill="#e81717"/>
     <!-- F middle horizontal bar -->
-    <rect x="0" y="135" width="160" height="52" fill="#e81717"/>
+    <rect x="0" y="130" width="160" height="52" fill="#e81717"/>
+    <!-- Candle wick (shadow) going DOWN from bottom of F -->
+    <rect x="18" y="330" width="8" height="80" fill="#e81717"/>
   </g>
 </svg>

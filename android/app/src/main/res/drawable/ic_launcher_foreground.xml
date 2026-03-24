@@ -3,10 +3,12 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- F vertical -->
-    <path android:fillColor="#e81717" android:pathData="M27,18h10v72h-10z"/>
+    <!-- F vertical (candle body) -->
+    <path android:fillColor="#e81717" android:pathData="M27,15h10v66h-10z"/>
     <!-- F top horizontal -->
-    <path android:fillColor="#e81717" android:pathData="M27,18h44v12H27z"/>
+    <path android:fillColor="#e81717" android:pathData="M27,15h44v12H27z"/>
     <!-- F middle horizontal -->
-    <path android:fillColor="#e81717" android:pathData="M27,46h34v10H27z"/>
+    <path android:fillColor="#e81717" android:pathData="M27,41h34v10H27z"/>
+    <!-- Candle wick DOWN -->
+    <path android:fillColor="#e81717" android:pathData="M30.5,81h2v16h-2z"/>
 </vector>

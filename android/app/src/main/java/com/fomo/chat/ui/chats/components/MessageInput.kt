@@ -41,12 +41,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.fomo.chat.ui.chats.Message
+import com.fomo.chat.ui.chats.ChatMessage
 import kotlinx.coroutines.delay
 
 @Composable
 fun MessageInput(
-    replyingTo: Message? = null,
+    replyingTo: ChatMessage? = null,
     onSendMessage: (String) -> Unit,
     onCancelReply: () -> Unit = {},
     onTyping: () -> Unit = {},

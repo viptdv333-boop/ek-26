@@ -59,6 +59,7 @@ import java.util.Locale
 @Composable
 fun ChatListScreen(
     onChatClick: (String) -> Unit,
+    onNewChat: () -> Unit = {},
     viewModel: ChatListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -81,7 +82,7 @@ fun ChatListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: New chat */ },
+                onClick = onNewChat,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape

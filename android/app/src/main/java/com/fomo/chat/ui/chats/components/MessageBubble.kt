@@ -48,9 +48,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.fomo.chat.ui.chats.Attachment
 import com.fomo.chat.ui.chats.AttachmentType
-import com.fomo.chat.ui.chats.Message
+import com.fomo.chat.ui.chats.ChatAttachment
+import com.fomo.chat.ui.chats.ChatMessage
+import com.fomo.chat.ui.chats.ChatReaction
 import com.fomo.chat.ui.chats.MessageStatus
 import com.fomo.chat.ui.theme.ErrorRed
 import com.fomo.chat.ui.theme.OtherBubble
@@ -62,7 +63,7 @@ import java.util.Locale
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun MessageBubble(
-    message: Message,
+    message: ChatMessage,
     showSenderName: Boolean = false,
     onReply: () -> Unit = {},
     onReaction: (String) -> Unit = {}
@@ -281,7 +282,7 @@ fun MessageBubble(
 }
 
 @Composable
-private fun AttachmentView(attachment: Attachment) {
+private fun AttachmentView(attachment: ChatAttachment) {
     when (attachment.type) {
         AttachmentType.IMAGE -> {
             AsyncImage(

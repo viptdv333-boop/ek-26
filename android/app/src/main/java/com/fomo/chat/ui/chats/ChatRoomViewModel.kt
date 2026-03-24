@@ -3,8 +3,10 @@ package com.fomo.chat.ui.chats
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fomo.chat.data.local.crypto.TokenManager
+import com.fomo.chat.data.repository.ChatRepository
+import com.fomo.chat.domain.model.Message as DomainMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class Message(
+data class ChatMessage(
     val id: String,
     val conversationId: String,
     val senderId: String,
@@ -20,9 +22,9 @@ data class Message(
     val text: String,
     val timestamp: Long = System.currentTimeMillis(),
     val status: MessageStatus = MessageStatus.SENT,
-    val replyTo: Message? = null,
-    val reactions: List<Reaction> = emptyList(),
-    val attachments: List<Attachment> = emptyList(),
+    val replyTo: ChatMessage? = null,
+    val reactions: List<ChatReaction> = emptyList(),
+    val attachments: List<ChatAttachment> = emptyList(),
     val isOwn: Boolean = false
 )
 
@@ -30,13 +32,13 @@ enum class MessageStatus {
     SENDING, SENT, DELIVERED, READ, FAILED
 }
 
-data class Reaction(
+data class ChatReaction(
     val emoji: String,
     val userId: String,
     val userName: String
 )
 
-data class Attachment(
+data class ChatAttachment(
     val id: String,
     val type: AttachmentType,
     val url: String,
@@ -55,113 +57,91 @@ data class ChatRoomUiState(
     val avatarUrl: String? = null,
     val isOnline: Boolean = false,
     val lastSeen: String = "",
-    val messages: List<Message> = emptyList(),
+    val messages: List<ChatMessage> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val isSending: Boolean = false,
     val error: String? = null,
-    val replyingTo: Message? = null,
+    val replyingTo: ChatMessage? = null,
     val isOtherTyping: Boolean = false
 )
 
 @HiltViewModel
 class ChatRoomViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val chatRepository: ChatRepository,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     private val conversationId: String = savedStateHandle["conversationId"] ?: ""
+    private val myUserId: String get() = tokenManager.getUserId() ?: ""
 
     private val _uiState = MutableStateFlow(ChatRoomUiState(conversationId = conversationId))
     val uiState: StateFlow<ChatRoomUiState> = _uiState.asStateFlow()
 
     init {
-        loadMessages()
         loadConversationInfo()
+        observeMessages()
+        refreshMessages()
     }
 
     private fun loadConversationInfo() {
         viewModelScope.launch {
-            // TODO: Replace with actual API call
-            _uiState.update {
-                it.copy(
-                    conversationName = "Алексей Петров",
-                    isOnline = true,
-                    lastSeen = "в сети"
-                )
+            val result = chatRepository.getConversation(conversationId)
+            result.onSuccess { conv ->
+                _uiState.update {
+                    it.copy(
+                        conversationName = conv.name ?: conv.participants.firstOrNull { p -> p.userId != myUserId }?.displayName ?: "Чат",
+                        avatarUrl = conv.avatarUrl,
+                        isOnline = false,
+                        lastSeen = ""
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeMessages() {
+        viewModelScope.launch {
+            chatRepository.observeMessages(conversationId).collect { domainMessages ->
+                val chatMessages = domainMessages.map { it.toChatMessage() }
+                _uiState.update { it.copy(messages = chatMessages, isLoading = false) }
+            }
+        }
+    }
+
+    private fun refreshMessages() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            val result = chatRepository.refreshMessages(conversationId)
+            result.onFailure { e ->
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
 
     fun loadMessages() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                // TODO: Replace with actual API call
-                delay(300)
-                val mockMessages = listOf(
-                    Message(
-                        id = "1",
-                        conversationId = conversationId,
-                        senderId = "other",
-                        senderName = "Алексей",
-                        text = "Привет! Как дела?",
-                        timestamp = System.currentTimeMillis() - 300000,
-                        status = MessageStatus.READ,
-                        isOwn = false
-                    ),
-                    Message(
-                        id = "2",
-                        conversationId = conversationId,
-                        senderId = "me",
-                        senderName = "Я",
-                        text = "Привет! Всё отлично, спасибо!",
-                        timestamp = System.currentTimeMillis() - 240000,
-                        status = MessageStatus.READ,
-                        isOwn = true
-                    ),
-                    Message(
-                        id = "3",
-                        conversationId = conversationId,
-                        senderId = "other",
-                        senderName = "Алексей",
-                        text = "Ты видел новый релиз?",
-                        timestamp = System.currentTimeMillis() - 60000,
-                        status = MessageStatus.DELIVERED,
-                        isOwn = false
-                    )
-                )
-                _uiState.update {
-                    it.copy(isLoading = false, messages = mockMessages)
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(isLoading = false, error = e.message)
-                }
-            }
-        }
+        refreshMessages()
     }
 
     fun loadOlderMessages() {
         if (_uiState.value.isLoadingMore) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMore = true) }
-            try {
-                // TODO: Replace with actual API call with pagination
-                delay(500)
-                _uiState.update { it.copy(isLoadingMore = false) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoadingMore = false) }
-            }
+            val oldestMessage = _uiState.value.messages.firstOrNull()
+            val result = chatRepository.refreshMessages(conversationId, cursor = oldestMessage?.id)
+            _uiState.update { it.copy(isLoadingMore = false) }
         }
     }
 
     fun sendMessage(text: String) {
         if (text.isBlank()) return
 
-        val message = Message(
+        // Optimistic UI - show message immediately
+        val localMessage = ChatMessage(
             id = "local_${System.currentTimeMillis()}",
             conversationId = conversationId,
-            senderId = "me",
+            senderId = myUserId,
             senderName = "Я",
             text = text.trim(),
             status = MessageStatus.SENDING,
@@ -171,52 +151,60 @@ class ChatRoomViewModel @Inject constructor(
 
         _uiState.update {
             it.copy(
-                messages = it.messages + message,
-                replyingTo = null
+                messages = it.messages + localMessage,
+                replyingTo = null,
+                isSending = true
             )
         }
 
         viewModelScope.launch {
-            try {
-                // TODO: Replace with actual API/WebSocket call
-                delay(300)
+            val result = chatRepository.sendMessage(
+                conversationId = conversationId,
+                text = text.trim(),
+                replyToId = _uiState.value.replyingTo?.id
+            )
+            result.onSuccess {
+                // Remove optimistic message - real one will come from observeMessages
                 _uiState.update { state ->
                     state.copy(
-                        messages = state.messages.map {
-                            if (it.id == message.id) it.copy(status = MessageStatus.SENT)
-                            else it
-                        }
+                        messages = state.messages.filter { it.id != localMessage.id },
+                        isSending = false
                     )
                 }
-            } catch (e: Exception) {
+            }
+            result.onFailure {
                 _uiState.update { state ->
                     state.copy(
                         messages = state.messages.map {
-                            if (it.id == message.id) it.copy(status = MessageStatus.FAILED)
+                            if (it.id == localMessage.id) it.copy(status = MessageStatus.FAILED)
                             else it
-                        }
+                        },
+                        isSending = false
                     )
                 }
             }
         }
     }
 
-    fun setReplyTo(message: Message?) {
+    fun setReplyTo(message: ChatMessage?) {
         _uiState.update { it.copy(replyingTo = message) }
     }
 
     fun addReaction(messageId: String, emoji: String) {
+        // Optimistic UI
         _uiState.update { state ->
             state.copy(
                 messages = state.messages.map { msg ->
                     if (msg.id == messageId) {
-                        val newReaction = Reaction(emoji = emoji, userId = "me", userName = "Я")
+                        val newReaction = ChatReaction(emoji = emoji, userId = myUserId, userName = "Я")
                         msg.copy(reactions = msg.reactions + newReaction)
                     } else msg
                 }
             )
         }
-        // TODO: Send reaction to API
+        viewModelScope.launch {
+            chatRepository.addReaction(messageId, emoji)
+        }
     }
 
     fun sendTypingIndicator() {
@@ -225,5 +213,39 @@ class ChatRoomViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    private fun DomainMessage.toChatMessage(): ChatMessage {
+        return ChatMessage(
+            id = id,
+            conversationId = conversationId,
+            senderId = senderId,
+            senderName = senderName ?: "",
+            text = text ?: "",
+            timestamp = try {
+                java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+                    .parse(createdAt ?: "")?.time ?: System.currentTimeMillis()
+            } catch (e: Exception) { System.currentTimeMillis() },
+            status = MessageStatus.SENT,
+            isOwn = senderId == myUserId,
+            reactions = reactions?.map {
+                ChatReaction(emoji = it.emoji, userId = it.userId, userName = "")
+            } ?: emptyList(),
+            attachments = attachments?.map {
+                ChatAttachment(
+                    id = it.fileId ?: "",
+                    type = when {
+                        it.mimeType?.startsWith("image") == true -> AttachmentType.IMAGE
+                        it.mimeType?.startsWith("video") == true -> AttachmentType.VIDEO
+                        it.mimeType?.startsWith("audio") == true -> AttachmentType.AUDIO
+                        else -> AttachmentType.FILE
+                    },
+                    url = it.url ?: "",
+                    name = it.fileName ?: "",
+                    size = it.size ?: 0,
+                    thumbnailUrl = it.thumbnailUrl
+                )
+            } ?: emptyList()
+        )
     }
 }

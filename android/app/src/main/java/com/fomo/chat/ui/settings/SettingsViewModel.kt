@@ -2,6 +2,7 @@ package com.fomo.chat.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fomo.chat.data.remote.api.UsersApi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +51,9 @@ data class SettingsUiState(
 )
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor() : ViewModel() {
+class SettingsViewModel @Inject constructor(
+    private val usersApi: UsersApi
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -64,18 +67,23 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // TODO: Replace with actual API/DataStore call
-                delay(300)
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        profile = UserProfile(
-                            id = "me",
-                            name = "Пользователь",
-                            phone = "+7 900 123 45 67",
-                            status = "Доступен"
+                val response = usersApi.getMe()
+                if (response.isSuccessful) {
+                    val user = response.body()!!
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            profile = UserProfile(
+                                id = user.id,
+                                name = user.displayName ?: "",
+                                phone = user.phone ?: "",
+                                avatarUrl = user.avatarUrl,
+                                status = if (user.isOnline == true) "В сети" else "Доступен"
+                            )
                         )
-                    )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, error = "Ошибка загрузки профиля") }
                 }
             } catch (e: Exception) {
                 _uiState.update {

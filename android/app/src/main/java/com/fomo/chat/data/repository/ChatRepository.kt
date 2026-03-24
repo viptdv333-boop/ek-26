@@ -38,8 +38,30 @@ class ChatRepository @Inject constructor(
     private val uploadApi: UploadApi,
     private val conversationDao: ConversationDao,
     private val messageDao: MessageDao,
-    private val gson: Gson
+    private val gson: Gson,
+    private val tokenManager: com.fomo.chat.data.local.crypto.TokenManager
 ) {
+
+    private fun resolveConversationName(dto: com.fomo.chat.data.remote.dto.ConversationDto): String? {
+        // For group chats, use the group name
+        if (dto.type == "group") return dto.name
+
+        // For direct chats, find the OTHER participant's name
+        if (dto.name != null) return dto.name
+        val myId = tokenManager.getUserId()
+        val otherParticipant = dto.participants?.firstOrNull { it.userId != myId }
+        return otherParticipant?.displayName ?: dto.participants?.firstOrNull()?.displayName
+    }
+
+    private fun resolveConversationAvatar(dto: com.fomo.chat.data.remote.dto.ConversationDto): String? {
+        if (dto.avatarUrl != null) return dto.avatarUrl
+        if (dto.type == "direct") {
+            val myId = tokenManager.getUserId()
+            val otherParticipant = dto.participants?.firstOrNull { it.userId != myId }
+            return otherParticipant?.avatarUrl
+        }
+        return null
+    }
 
     // --- Conversations ---
 
@@ -64,8 +86,8 @@ class ChatRepository @Inject constructor(
                     ConversationEntity(
                         id = dto.id,
                         type = dto.type,
-                        name = dto.name,
-                        avatarUrl = dto.avatarUrl,
+                        name = resolveConversationName(dto),
+                        avatarUrl = resolveConversationAvatar(dto),
                         lastMessageId = dto.lastMessage?.id,
                         lastMessageText = dto.lastMessage?.text,
                         lastMessageSenderId = dto.lastMessage?.senderId,
@@ -95,8 +117,8 @@ class ChatRepository @Inject constructor(
                 val entity = ConversationEntity(
                     id = dto.id,
                     type = dto.type,
-                    name = dto.name,
-                    avatarUrl = dto.avatarUrl,
+                    name = resolveConversationName(dto),
+                    avatarUrl = resolveConversationAvatar(dto),
                     lastMessageId = dto.lastMessage?.id,
                     lastMessageText = dto.lastMessage?.text,
                     lastMessageSenderId = dto.lastMessage?.senderId,

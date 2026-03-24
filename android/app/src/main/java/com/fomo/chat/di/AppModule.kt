@@ -57,9 +57,10 @@ object AppModule {
         uploadApi: UploadApi,
         conversationDao: ConversationDao,
         messageDao: MessageDao,
-        gson: Gson
+        gson: Gson,
+        tokenManager: com.fomo.chat.data.local.crypto.TokenManager
     ): ChatRepository {
-        return ChatRepository(conversationsApi, messagesApi, uploadApi, conversationDao, messageDao, gson)
+        return ChatRepository(conversationsApi, messagesApi, uploadApi, conversationDao, messageDao, gson, tokenManager)
     }
 
     @Provides

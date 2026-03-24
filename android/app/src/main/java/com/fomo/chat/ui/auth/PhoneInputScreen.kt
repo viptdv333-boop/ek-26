@@ -1,12 +1,10 @@
 package com.fomo.chat.ui.auth
 
-import android.annotation.SuppressLint
-import android.webkit.JavascriptInterface
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import androidx.compose.foundation.background
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,19 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -43,14 +37,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fomo.chat.R
 
 @Composable
 fun PhoneInputScreen(
@@ -88,20 +83,11 @@ fun PhoneInputScreen(
             verticalArrangement = Arrangement.Center
         ) {
             // Logo
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Chat,
-                    contentDescription = "FOMO Chat",
-                    modifier = Modifier.size(40.dp),
-                    tint = Color.White
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.logo_fomo),
+                contentDescription = "FOMO Chat",
+                modifier = Modifier.size(80.dp)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -221,72 +207,25 @@ fun PhoneInputScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Telegram Login Widget via WebView
-            TelegramLoginWidget(
-                botName = "chat_fomo_bot",
-                onAuth = { /* TODO: handle Telegram auth data */ }
-            )
+            // Telegram Login Button
+            val context = LocalContext.current
+            OutlinedButton(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/chat_fomo_bot?start=auth"))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
+                Text("Войти через Telegram", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-fun TelegramLoginWidget(
-    botName: String,
-    onAuth: (String) -> Unit
-) {
-    val html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                body {
-                    margin: 0;
-                    padding: 0;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    background: transparent;
-                }
-            </style>
-        </head>
-        <body>
-            <script async src="https://telegram.org/js/telegram-widget.js?22"
-                data-telegram-login="$botName"
-                data-size="large"
-                data-radius="12"
-                data-onauth="onTelegramAuth(user)"
-                data-request-access="write">
-            </script>
-            <script>
-                function onTelegramAuth(user) {
-                    Android.onTelegramAuth(JSON.stringify(user));
-                }
-            </script>
-        </body>
-        </html>
-    """.trimIndent()
-
-    AndroidView(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                webViewClient = WebViewClient()
-                setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                addJavascriptInterface(object {
-                    @JavascriptInterface
-                    fun onTelegramAuth(data: String) {
-                        onAuth(data)
-                    }
-                }, "Android")
-                loadDataWithBaseURL("https://telegram.org", html, "text/html", "UTF-8", null)
-            }
-        }
-    )
-}

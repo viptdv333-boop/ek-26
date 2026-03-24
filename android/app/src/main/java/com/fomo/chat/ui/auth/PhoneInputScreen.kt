@@ -211,7 +211,7 @@ fun PhoneInputScreen(
             val context = LocalContext.current
             OutlinedButton(
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/chat_fomo_bot?start=auth"))
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://ek26.fomo.broker/auth/telegram-mobile"))
                     context.startActivity(intent)
                 },
                 modifier = Modifier

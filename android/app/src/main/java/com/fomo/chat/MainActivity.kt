@@ -1,6 +1,8 @@
 package com.fomo.chat
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,6 +31,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Handle deep link from Telegram auth
+        handleDeepLink(intent)
+
         setContent {
             FomoChatTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -46,6 +52,28 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        val uri = intent?.data ?: return
+        if (uri.scheme == "fomochat" && uri.host == "auth") {
+            val token = uri.getQueryParameter("token") ?: return
+            val refreshToken = uri.getQueryParameter("refreshToken") ?: return
+            val userId = uri.getQueryParameter("userId") ?: return
+            val displayName = uri.getQueryParameter("displayName") ?: ""
+
+            Log.d("MainActivity", "Telegram auth deep link received for user: $userId")
+
+            // Save tokens via Hilt — we need to access TokenManager
+            // This will be picked up by MainViewModel on next checkAuth()
+            val app = application as FomoApp
+            app.handleTelegramAuth(token, refreshToken, userId, displayName)
         }
     }
 }
@@ -68,7 +96,7 @@ class MainViewModel @Inject constructor(
         checkAuth()
     }
 
-    private fun checkAuth() {
+    fun checkAuth() {
         viewModelScope.launch {
             val token = tokenManager.getAccessToken()
             _authState.value = if (token != null) {

@@ -187,6 +187,94 @@ export async function authRoutes(app: FastifyInstance) {
     }
   });
 
+  // Mobile Telegram Login page — opens in browser, redirects back to app with tokens
+  app.get('/auth/telegram-mobile', async (request, reply) => {
+    const { config } = await import('../config');
+    const botName = 'chat_fomo_bot';
+    const baseUrl = config.BASE_URL || `${request.protocol}://${request.hostname}`;
+
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FOMO Chat — Вход через Telegram</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f23;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    p { color: #888; margin-bottom: 24px; font-size: 14px; }
+    #tg-widget { min-height: 44px; }
+    .success {
+      background: #1a1a3e;
+      border: 1px solid #5b5bf0;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      max-width: 320px;
+    }
+    .success h2 { color: #7c7cff; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>FOMO Chat</h1>
+  <p>Нажмите кнопку для входа через Telegram</p>
+  <div id="tg-widget"></div>
+  <div id="result" style="display:none"></div>
+
+  <script>
+    function onTelegramAuth(user) {
+      document.getElementById('tg-widget').style.display = 'none';
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result').innerHTML = '<div class="success"><h2>Авторизация...</h2><p>Подождите</p></div>';
+
+      fetch('${baseUrl}/api/auth/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.accessToken) {
+          document.getElementById('result').innerHTML = '<div class="success"><h2>Успешно!</h2><p>Возвращаемся в приложение...</p></div>';
+          // Deep link back to FOMO Chat app with tokens
+          window.location.href = 'fomochat://auth?token=' + encodeURIComponent(data.accessToken)
+            + '&refreshToken=' + encodeURIComponent(data.refreshToken)
+            + '&userId=' + encodeURIComponent(data.user.id)
+            + '&displayName=' + encodeURIComponent(data.user.displayName || '')
+            + '&isNewUser=' + (data.user.isNewUser ? '1' : '0');
+        } else {
+          document.getElementById('result').innerHTML = '<div class="success"><h2>Ошибка</h2><p>' + (data.error || 'Неизвестная ошибка') + '</p></div>';
+        }
+      })
+      .catch(err => {
+        document.getElementById('result').innerHTML = '<div class="success"><h2>Ошибка</h2><p>' + err.message + '</p></div>';
+      });
+    }
+  </script>
+  <script async src="https://telegram.org/js/telegram-widget.js?22"
+    data-telegram-login="${botName}"
+    data-size="large"
+    data-radius="12"
+    data-onauth="onTelegramAuth(user)"
+    data-request-access="write">
+  </script>
+</body>
+</html>`;
+
+    reply.type('text/html').send(html);
+  });
+
   // Link phone number to existing account (request code)
   app.post('/api/auth/link-phone/request', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { phone } = request.body as { phone: string };

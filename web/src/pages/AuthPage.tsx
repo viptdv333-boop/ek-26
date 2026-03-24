@@ -1,14 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 
-const TELEGRAM_BOT_NAME = 'chat_fomo_bot';
-
 type Tab = 'login' | 'register';
-type Step = 'form' | 'code' | 'emailWait' | 'setPassword' | 'profile';
+type Step = 'form' | 'code' | 'profile';
 
 export function AuthPage() {
-  const [tab, setTab] = useState<Tab>('login');
+  const [tab, setTab] = useState<Tab>('register');
   const [step, setStep] = useState<Step>('form');
 
   // Form fields
@@ -23,63 +21,10 @@ export function AuthPage() {
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [countdown, setCountdown] = useState(0);
 
-  // Set password fields (separate from register password)
-  const [newPassword, setNewPassword] = useState('');
-  const [newConfirmPassword, setNewConfirmPassword] = useState('');
-
   // UI state
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const tgContainerRef = useRef<HTMLDivElement | null>(null);
   const login = useAuthStore((s) => s.login);
-
-  // ── Telegram auth ──────────────────────────────────────────────
-  const handleTelegramAuth = useCallback(
-    async (tgUser: Record<string, string | number>) => {
-      setError('');
-      setLoading(true);
-      try {
-        const res = await authApi.telegramLogin(tgUser);
-        if ((res as any).needsPassword) {
-          useAuthStore.getState().setTokens(res.accessToken, res.refreshToken);
-          setStep('setPassword');
-        } else if (res.isNewUser) {
-          useAuthStore.getState().setTokens(res.accessToken, res.refreshToken);
-          setStep('profile');
-        } else {
-          login(res.accessToken, res.refreshToken, res.user);
-        }
-      } catch (e: any) {
-        setError(e.message || 'Ошибка авторизации через Telegram');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [login],
-  );
-
-  // Mount Telegram Login Widget
-  useEffect(() => {
-    if (step !== 'form' || !tgContainerRef.current) return;
-
-    (window as any).onTelegramAuth = handleTelegramAuth;
-
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.async = true;
-    script.setAttribute('data-telegram-login', TELEGRAM_BOT_NAME);
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-radius', '12');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    script.setAttribute('data-request-access', 'write');
-
-    tgContainerRef.current.innerHTML = '';
-    tgContainerRef.current.appendChild(script);
-
-    return () => {
-      delete (window as any).onTelegramAuth;
-    };
-  }, [step, tab, handleTelegramAuth]);
 
   // Countdown timer
   useEffect(() => {
@@ -125,10 +70,6 @@ export function AuthPage() {
       setError('Введите номер в формате +7XXXXXXXXXX');
       return;
     }
-    if (!email) {
-      setError('Введите email');
-      return;
-    }
     if (!password || password.length < 6) {
       setError('Пароль минимум 6 символов');
       return;
@@ -140,7 +81,7 @@ export function AuthPage() {
     setError('');
     setLoading(true);
     try {
-      await authApi.register({ phone, email, password, confirmPassword });
+      await authApi.register({ phone, email: email || '', password, confirmPassword });
       setStep('code');
       setCountdown(60);
       setTimeout(() => codeRefs.current[0]?.focus(), 100);
@@ -206,48 +147,10 @@ export function AuthPage() {
     setError('');
     setLoading(true);
     try {
-      await authApi.register({ phone, email, password, confirmPassword });
+      await authApi.register({ phone, email: email || '', password, confirmPassword });
       setCountdown(60);
     } catch (e: any) {
       setError(e.message || 'Ошибка повторной отправки');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ── Email confirmed → login ────────────────────────────────────
-  const handleEmailConfirmed = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const res = await authApi.login(phone, password);
-      login(res.accessToken, res.refreshToken, res.user);
-    } catch (e: any) {
-      setError(e.message || 'Email ещё не подтверждён или неверные данные');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ── Set password ───────────────────────────────────────────────
-  const handleSetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setError('Пароль минимум 6 символов');
-      return;
-    }
-    if (newPassword !== newConfirmPassword) {
-      setError('Пароли не совпадают');
-      return;
-    }
-    setError('');
-    setLoading(true);
-    try {
-      await authApi.setPassword(newPassword, newConfirmPassword);
-      const profile = await usersApi.getProfile();
-      const { token, refreshToken } = useAuthStore.getState();
-      login(token!, refreshToken!, profile);
-    } catch (e: any) {
-      setError(e.message || 'Ошибка сохранения пароля');
     } finally {
       setLoading(false);
     }
@@ -279,18 +182,6 @@ export function AuthPage() {
   const btnClass =
     'w-full py-3 bg-accent hover:bg-accent-hover disabled:opacity-50 rounded-xl text-white font-medium transition-colors';
   const linkClass = 'text-accent text-sm hover:text-accent-hover cursor-pointer';
-
-  const renderDivider = () => (
-    <div className="flex items-center gap-3">
-      <div className="flex-1 h-px bg-dark-500" />
-      <span className="text-gray-500 text-sm">или</span>
-      <div className="flex-1 h-px bg-dark-500" />
-    </div>
-  );
-
-  const renderTelegram = () => (
-    <div ref={tgContainerRef} className="flex justify-center" />
-  );
 
   // ── Render ─────────────────────────────────────────────────────
   return (
@@ -358,9 +249,6 @@ export function AuthPage() {
                   {loading ? 'Вход...' : 'Войти'}
                 </button>
 
-                {renderDivider()}
-                {renderTelegram()}
-
                 <p className="text-center text-gray-500 text-sm">
                   Нет аккаунта?{' '}
                   <span onClick={() => switchTab('register')} className={linkClass}>
@@ -385,7 +273,7 @@ export function AuthPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Email</label>
+                  <label className="block text-sm text-gray-400 mb-2">Email <span className="text-gray-600">(необязательно)</span></label>
                   <input
                     type="email"
                     value={email}
@@ -418,9 +306,6 @@ export function AuthPage() {
                 <button onClick={handleRegister} disabled={loading} className={btnClass}>
                   {loading ? 'Отправка...' : 'Получить код'}
                 </button>
-
-                {renderDivider()}
-                {renderTelegram()}
 
                 <p className="text-center text-gray-500 text-sm">
                   Уже есть аккаунт?{' '}
@@ -477,67 +362,6 @@ export function AuthPage() {
               className="w-full text-center text-gray-500 text-sm hover:text-gray-300"
             >
               Изменить номер
-            </button>
-          </div>
-        )}
-
-        {/* ── EMAIL wait step ───────────────────────────────────── */}
-        {step === 'emailWait' && (
-          <div className="space-y-4">
-            <div className="text-center">
-              <div className="text-4xl mb-4">📧</div>
-              <p className="text-white text-lg font-medium mb-2">Проверьте почту</p>
-              <p className="text-gray-400 text-sm">
-                Мы отправили ссылку для подтверждения на{' '}
-                <span className="text-white">{email}</span>
-              </p>
-            </div>
-            <button onClick={handleEmailConfirmed} disabled={loading} className={btnClass}>
-              {loading ? 'Проверяем...' : 'Я подтвердил email'}
-            </button>
-            <button
-              onClick={() => {
-                setStep('form');
-                setTab('register');
-              }}
-              className="w-full text-center text-gray-500 text-sm hover:text-gray-300"
-            >
-              Назад
-            </button>
-          </div>
-        )}
-
-        {/* ── SET PASSWORD step ─────────────────────────────────── */}
-        {step === 'setPassword' && (
-          <div className="space-y-4">
-            <p className="text-center text-white text-lg font-medium mb-2">Задать пароль</p>
-            <p className="text-center text-gray-400 text-sm mb-4">
-              Придумайте пароль для входа
-            </p>
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">Пароль</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Минимум 6 символов"
-                className={inputClass}
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">Подтвердите пароль</label>
-              <input
-                type="password"
-                value={newConfirmPassword}
-                onChange={(e) => setNewConfirmPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSetPassword()}
-                placeholder="Ещё раз"
-                className={inputClass}
-              />
-            </div>
-            <button onClick={handleSetPassword} disabled={loading} className={btnClass}>
-              {loading ? 'Сохранение...' : 'Сохранить пароль'}
             </button>
           </div>
         )}

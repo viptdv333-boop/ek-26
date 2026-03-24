@@ -250,7 +250,10 @@ export function Sidebar() {
     <div className="w-full md:w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
-        <h1 className="text-lg font-semibold text-white">FOMO Chat</h1>
+        <div className="flex items-center gap-2">
+          <img src="/logo-f.svg" alt="F" className="h-7 w-7" />
+          <h1 className="text-lg font-semibold text-white">FOMO Chat</h1>
+        </div>
         <button
           onClick={() => setShowSettings('appearance')}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"

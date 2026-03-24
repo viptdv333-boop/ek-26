@@ -27,10 +27,15 @@ export const authResponseSchema = z.object({
 });
 
 // New auth flow schemas
+const strongPassword = z.string()
+  .min(6, 'Пароль минимум 6 символов')
+  .regex(/[A-ZА-ЯЁ]/, 'Пароль должен содержать заглавную букву')
+  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/, 'Пароль должен содержать спецсимвол');
+
 export const registerSchema = z.object({
   phone: phoneSchema,
   email: z.string().email('Некорректный email').optional().or(z.literal('')),
-  password: z.string().min(6, 'Пароль минимум 6 символов'),
+  password: strongPassword,
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
   message: 'Пароли не совпадают',
@@ -43,7 +48,7 @@ export const loginSchema = z.object({
 });
 
 export const setPasswordSchema = z.object({
-  password: z.string().min(6, 'Пароль минимум 6 символов'),
+  password: strongPassword,
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
   message: 'Пароли не совпадают',

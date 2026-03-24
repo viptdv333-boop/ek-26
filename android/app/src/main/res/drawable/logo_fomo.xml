@@ -1,17 +1,14 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="80dp"
-    android:height="80dp"
-    android:viewportWidth="512"
-    android:viewportHeight="512">
+    android:height="104dp"
+    android:viewportWidth="400"
+    android:viewportHeight="520">
+    <!-- F body -->
     <path
-        android:fillColor="#0a0a0f"
-        android:pathData="M0,112C0,50.1 50.1,0 112,0h288c61.9,0 112,50.1 112,112v288c0,61.9 -50.1,112 -112,112H112C50.1,512 0,461.9 0,400z"/>
-    <!-- F vertical (candle body) -->
-    <path android:fillColor="#e81717" android:pathData="M130,50h52v330h-52z"/>
-    <!-- F top horizontal -->
-    <path android:fillColor="#e81717" android:pathData="M130,50h210v58H130z"/>
-    <!-- F middle horizontal -->
-    <path android:fillColor="#e81717" android:pathData="M130,180h160v52H130z"/>
-    <!-- Candle wick DOWN -->
-    <path android:fillColor="#e81717" android:pathData="M148,380h8v80h-8z"/>
+        android:fillColor="#ef1717"
+        android:pathData="M60,20 L320,20 L320,120 L170,120 L170,200 L280,200 L280,300 L170,300 L170,420 L60,420 Z"/>
+    <!-- Candle wick down -->
+    <path
+        android:fillColor="#ef1717"
+        android:pathData="M100,420 L112,420 L112,500 L100,500 Z"/>
 </vector>

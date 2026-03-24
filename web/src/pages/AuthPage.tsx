@@ -380,7 +380,7 @@ export function AuthPage() {
       <div className="w-full max-w-sm px-6">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo-f.svg" alt="FOMO" className="h-20 mx-auto mb-4 rounded-2xl" />
+          <img src="/logo-f.png" alt="FOMO" className="h-20 mx-auto mb-4 rounded-2xl" />
         </div>
 
         {/* ── FORM step (Login / Register tabs) ─────────────────── */}

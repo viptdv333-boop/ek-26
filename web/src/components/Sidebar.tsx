@@ -251,7 +251,7 @@ export function Sidebar() {
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
         <div className="flex items-center gap-2">
-          <img src="/logo-f.svg" alt="F" className="h-7 w-7" />
+          <img src="/logo-f.png" alt="F" className="h-7 w-7" />
           <h1 className="text-lg font-semibold text-white">FOMO Chat</h1>
         </div>
         <button

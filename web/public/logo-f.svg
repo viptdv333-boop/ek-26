@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
-  <!-- Red bold F letter (matching FOMO font) -->
-  <text x="30" y="310" font-family="Arial Black, Impact, Helvetica, sans-serif" font-weight="900" font-size="380" fill="#e81717" letter-spacing="-5">F</text>
-  <!-- Candle wick shadow going down from bottom-left of F -->
-  <rect x="56" y="320" width="7" height="60" fill="#e81717"/>
-</svg>

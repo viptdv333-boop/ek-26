@@ -2,6 +2,8 @@ package com.fomo.chat.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fomo.chat.data.repository.AuthRepository
+import com.fomo.chat.data.repository.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +23,9 @@ data class AuthUiState(
 )
 
 @HiltViewModel
-class AuthViewModel @Inject constructor() : ViewModel() {
+class AuthViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -35,22 +39,32 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                // TODO: Replace with actual API call
-                // val response = authRepository.requestCode(phone)
-                delay(1000) // Simulate network
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        codeSent = true,
-                        resendTimer = 60
-                    )
+                val result = authRepository.requestCode(phone)
+                when (result) {
+                    is AuthResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                codeSent = true,
+                                resendTimer = 60
+                            )
+                        }
+                        startResendTimer()
+                    }
+                    is AuthResult.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = result.message
+                            )
+                        }
+                    }
                 }
-                startResendTimer()
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = e.message ?: "Ошибка отправки кода"
+                        error = e.message ?: "Ошибка звонка"
                     )
                 }
             }
@@ -66,16 +80,26 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                // TODO: Replace with actual API call
-                // val response = authRepository.verifyCode(phone, code)
-                // tokenManager.saveTokens(response.accessToken, response.refreshToken)
-                delay(1000) // Simulate network
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        authenticated = true,
-                        isNewUser = false // TODO: from API response
-                    )
+                val result = authRepository.verifyCode(phone, code)
+                when (result) {
+                    is AuthResult.Success -> {
+                        // Tokens already saved inside AuthRepository.verifyCode()
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                authenticated = true,
+                                isNewUser = false
+                            )
+                        }
+                    }
+                    is AuthResult.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = result.message
+                            )
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -97,9 +121,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                // TODO: Replace with actual API call
-                // authRepository.updateProfile(displayName)
-                delay(500)
+                // TODO: call usersApi.updateProfile when available
                 _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update {

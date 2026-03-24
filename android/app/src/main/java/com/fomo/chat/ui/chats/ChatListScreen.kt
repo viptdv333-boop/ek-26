@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,7 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.fomo.chat.ui.theme.OnlineGreen
+import com.fomo.chat.domain.model.Conversation
+import com.fomo.chat.domain.model.ConversationType
 import com.fomo.chat.ui.theme.UnreadBadge
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -183,7 +183,7 @@ fun ChatListScreen(
                                 items = uiState.conversations,
                                 key = { it.id }
                             ) { conversation ->
-                                ConversationItem(
+                                ConversationRow(
                                     conversation = conversation,
                                     onClick = { onChatClick(conversation.id) }
                                 )
@@ -197,10 +197,12 @@ fun ChatListScreen(
 }
 
 @Composable
-private fun ConversationItem(
+private fun ConversationRow(
     conversation: Conversation,
     onClick: () -> Unit
 ) {
+    val isGroup = conversation.type == ConversationType.GROUP
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -208,35 +210,20 @@ private fun ConversationItem(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar with online indicator
-        Box {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (conversation.isGroup) Icons.Default.Group else Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (conversation.isOnline && !conversation.isGroup) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(14.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .background(OnlineGreen)
-                )
-            }
+        // Avatar
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isGroup) Icons.Default.Group else Icons.Default.Person,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -248,38 +235,28 @@ private fun ConversationItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Text(
+                    text = conversation.name ?: "Чат",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (conversation.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
-                ) {
-                    if (conversation.isPinned) {
-                        Icon(
-                            imageVector = Icons.Default.PushPin,
-                            contentDescription = "Закреплён",
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
+                )
+
+                val timeText = conversation.lastMessage?.createdAt?.let { formatTimeString(it) } ?: ""
+                if (timeText.isNotEmpty()) {
                     Text(
-                        text = conversation.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = if (conversation.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        text = timeText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (conversation.unreadCount > 0) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
-
-                Text(
-                    text = formatTime(conversation.lastMessageTime),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (conversation.unreadCount > 0) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -290,13 +267,9 @@ private fun ConversationItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (conversation.isTyping) "печатает..." else conversation.lastMessage,
+                    text = conversation.lastMessage?.text ?: "",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (conversation.isTyping) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -324,13 +297,19 @@ private fun ConversationItem(
     }
 }
 
-private fun formatTime(timestamp: Long): String {
-    val now = System.currentTimeMillis()
-    val diff = now - timestamp
-    val sdf = when {
-        diff < 24 * 60 * 60 * 1000 -> SimpleDateFormat("HH:mm", Locale.getDefault())
-        diff < 7 * 24 * 60 * 60 * 1000 -> SimpleDateFormat("EEE", Locale.getDefault())
-        else -> SimpleDateFormat("dd.MM.yy", Locale.getDefault())
+private fun formatTimeString(isoTime: String): String {
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+        val date = parser.parse(isoTime) ?: return ""
+        val now = System.currentTimeMillis()
+        val diff = now - date.time
+        val sdf = when {
+            diff < 24 * 60 * 60 * 1000 -> SimpleDateFormat("HH:mm", Locale.getDefault())
+            diff < 7 * 24 * 60 * 60 * 1000 -> SimpleDateFormat("EEE", Locale.getDefault())
+            else -> SimpleDateFormat("dd.MM.yy", Locale.getDefault())
+        }
+        sdf.format(date)
+    } catch (_: Exception) {
+        ""
     }
-    return sdf.format(Date(timestamp))
 }

@@ -3,6 +3,7 @@ package com.fomo.chat.ui.chats
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fomo.chat.data.repository.ChatRepository
+import com.fomo.chat.domain.model.Conversation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,20 +14,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class ConversationItem(
-    val id: String,
-    val name: String,
-    val avatarUrl: String? = null,
-    val lastMessage: String = "",
-    val lastMessageTime: Long = System.currentTimeMillis(),
-    val unreadCount: Int = 0,
-    val isOnline: Boolean = false,
-    val isGroup: Boolean = false,
-    val isPinned: Boolean = false
-)
-
 data class ChatListUiState(
-    val conversations: List<ConversationItem> = emptyList(),
+    val conversations: List<Conversation> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null
@@ -37,7 +26,6 @@ class ChatListViewModel @Inject constructor(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
-    private val _conversations = MutableStateFlow<List<ConversationItem>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(false)
     private val _isRefreshing = MutableStateFlow(false)
@@ -46,7 +34,7 @@ class ChatListViewModel @Inject constructor(
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     val uiState: StateFlow<ChatListUiState> = combine(
-        _conversations,
+        chatRepository.observeConversations(),
         _searchQuery,
         _isLoading,
         _isRefreshing,
@@ -56,14 +44,11 @@ class ChatListViewModel @Inject constructor(
             conversations
         } else {
             conversations.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.lastMessage.contains(query, ignoreCase = true)
+                (it.name ?: "").contains(query, ignoreCase = true) ||
+                        (it.lastMessage?.text ?: "").contains(query, ignoreCase = true)
             }
         }
-        val sorted = filtered.sortedWith(
-            compareByDescending<ConversationItem> { it.isPinned }
-                .thenByDescending { it.lastMessageTime }
-        )
+        val sorted = filtered.sortedByDescending { it.updatedAt }
         ChatListUiState(
             conversations = sorted,
             isLoading = loading,
@@ -84,40 +69,19 @@ class ChatListViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            try {
-                val result = chatRepository.getConversations()
-                _conversations.value = result.map { conv ->
-                    ConversationItem(
-                        id = conv.id,
-                        name = conv.name ?: conv.participants?.firstOrNull()?.displayName ?: "Чат",
-                        avatarUrl = conv.avatarUrl ?: conv.participants?.firstOrNull()?.avatarUrl,
-                        lastMessage = conv.lastMessage?.text ?: "",
-                        lastMessageTime = try {
-                            java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
-                                .parse(conv.updatedAt ?: "")?.time ?: System.currentTimeMillis()
-                        } catch (e: Exception) { System.currentTimeMillis() },
-                        unreadCount = conv.unreadCount ?: 0,
-                        isGroup = conv.type == "group",
-                        isPinned = false
-                    )
-                }
-            } catch (e: Exception) {
+            val result = chatRepository.refreshConversations()
+            result.onFailure { e ->
                 _error.value = e.message ?: "Ошибка загрузки"
-                _conversations.value = emptyList()
-            } finally {
-                _isLoading.value = false
             }
+            _isLoading.value = false
         }
     }
 
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            try {
-                loadConversations()
-            } finally {
-                _isRefreshing.value = false
-            }
+            chatRepository.refreshConversations()
+            _isRefreshing.value = false
         }
     }
 

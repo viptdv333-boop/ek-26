@@ -13,6 +13,11 @@ const envSchema = z.object({
   OTP_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
   FIREBASE_SERVICE_ACCOUNT: z.string().default(''),
   BASE_URL: z.string().default('http://localhost:3000'),
+  SMTP_HOST: z.string().default('mail.fomo.broker'),
+  SMTP_PORT: z.coerce.number().default(465),
+  SMTP_USER: z.string().default('noreply@fomo.broker'),
+  SMTP_PASS: z.string().default(''),
+  SMTP_FROM: z.string().default('FOMO Chat <noreply@fomo.broker>'),
   CORS_ORIGIN: z.string().default('*'),
   UPLOADS_DIR: z.string().default('/app/uploads'),
   MAX_FILE_SIZE: z.coerce.number().default(15_728_640), // 15MB

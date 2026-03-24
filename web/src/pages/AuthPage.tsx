@@ -186,8 +186,13 @@ export function AuthPage() {
     setError('');
     setLoading(true);
     try {
-      await authApi.registerVerifyPhone(phone, fullCode);
-      setStep('emailWait');
+      const res = await authApi.registerVerifyPhone(phone, fullCode);
+      if (res.isNewUser) {
+        useAuthStore.getState().setTokens(res.accessToken, res.refreshToken);
+        setStep('profile');
+      } else {
+        login(res.accessToken, res.refreshToken, res.user);
+      }
     } catch (e: any) {
       setError('Неверный код');
       setCode(['', '', '', '']);

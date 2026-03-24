@@ -392,19 +392,21 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(409).send({ error: 'Этот номер телефона уже зарегистрирован' });
     }
 
-    // Check if email already taken
-    const existingEmail = await User.findOne({ email: body.email });
-    if (existingEmail) {
-      return reply.code(409).send({ error: 'Этот email уже зарегистрирован' });
+    // Check if email already taken (only if provided)
+    if (body.email) {
+      const existingEmail = await User.findOne({ email: body.email });
+      if (existingEmail) {
+        return reply.code(409).send({ error: 'Этот email уже зарегистрирован' });
+      }
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(body.password, 12);
 
-    // Create user (not yet verified)
+    // Create user
     await User.create({
       phone: body.phone,
-      email: body.email,
+      email: body.email || null,
       passwordHash,
       emailVerified: false,
       displayName: body.phone,
@@ -465,13 +467,36 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(404).send({ error: 'User not found' });
     }
 
-    // Send verification email
-    if (user.email) {
-      const emailToken = await signEmailVerificationToken(user._id.toString());
-      await sendVerificationEmail(user.email, emailToken);
+    // Send verification email in background (doesn't block login)
+    if (user.email && !user.emailVerified) {
+      signEmailVerificationToken(user._id.toString())
+        .then(emailToken => sendVerificationEmail(user.email!, emailToken))
+        .catch(err => app.log.error({ err, msg: 'Failed to send verification email' }));
     }
 
-    return { success: true, message: 'Email verification sent' };
+    // Issue tokens immediately — email verification is optional
+    const userId = user._id.toString();
+    const accessToken = await signAccessToken(userId, user.phone || '');
+    const refreshToken = await signRefreshToken(userId);
+
+    await Session.create({
+      userId: user._id,
+      deviceId: crypto.randomUUID(),
+      refreshTokenHash: hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: userId,
+        phone: user.phone,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        isNewUser: !user.displayName || user.displayName === user.phone,
+      },
+    };
   });
 
   // ─── Verify email (GET — user clicks link from email) ──────────────
@@ -562,10 +587,6 @@ export async function authRoutes(app: FastifyInstance) {
     const passwordValid = await bcrypt.compare(body.password, user.passwordHash);
     if (!passwordValid) {
       return reply.code(401).send({ error: 'Неверный номер телефона или пароль' });
-    }
-
-    if (!user.emailVerified) {
-      return reply.code(403).send({ error: 'Email не подтверждён' });
     }
 
     // Issue tokens

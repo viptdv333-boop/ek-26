@@ -29,7 +29,7 @@ export const authResponseSchema = z.object({
 // New auth flow schemas
 export const registerSchema = z.object({
   phone: phoneSchema,
-  email: z.string().email('Некорректный email'),
+  email: z.string().email('Некорректный email').optional().or(z.literal('')),
   password: z.string().min(6, 'Пароль минимум 6 символов'),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {

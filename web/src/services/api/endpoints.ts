@@ -16,7 +16,7 @@ export const authApi = {
   register: (data: { phone: string; email: string; password: string; confirmPassword: string }) =>
     api.post<{ success: boolean; message: string }>('/auth/register', data),
   registerVerifyPhone: (phone: string, code: string) =>
-    api.post<{ success: boolean; message: string }>('/auth/register/verify-phone', { phone, code }),
+    api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser?: boolean }>('/auth/register/verify-phone', { phone, code }),
   login: (phone: string, password: string) =>
     api.post<{ accessToken: string; refreshToken: string; user: any }>('/auth/login', { phone, password }),
   setPassword: (password: string, confirmPassword: string) =>

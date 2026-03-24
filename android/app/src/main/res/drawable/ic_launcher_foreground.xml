@@ -3,8 +3,20 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Red F letter (FOMO style) -->
+    <!-- Candle wick -->
     <path
         android:fillColor="#e81717"
-        android:pathData="M30,20h48v14H44v16h26v12H44v30H30V20z"/>
+        android:pathData="M31.5,12h2v12h-2z"/>
+    <!-- F vertical bar -->
+    <path
+        android:fillColor="#e81717"
+        android:pathData="M27,24h10v66h-10z"/>
+    <!-- F top horizontal bar -->
+    <path
+        android:fillColor="#e81717"
+        android:pathData="M27,24h42v11H27z"/>
+    <!-- F middle horizontal bar -->
+    <path
+        android:fillColor="#e81717"
+        android:pathData="M27,49h33v10H27z"/>
 </vector>

@@ -95,7 +95,7 @@ export function AuthPage() {
       return;
     }
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
-      setError('Пароль должен содержать спецсимвол (!@#$%^&* и т.д.)');
+      setError('Пароль должен содержать один из символов: !@#$%^&*_-');
       return;
     }
     if (password !== confirmPassword) {
@@ -360,8 +360,8 @@ export function AuthPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Пароль</label>
-                  {passwordInput(password, setPassword, 'Заглавная + спецсимвол, мин. 6', showPassword, () => setShowPassword(!showPassword))}
-                  <p className="text-xs text-gray-500 mt-1">Минимум 6 символов, заглавная буква и спецсимвол</p>
+                  {passwordInput(password, setPassword, 'Aa + !@#$%, мин. 6', showPassword, () => setShowPassword(!showPassword))}
+                  <p className="text-xs text-gray-500 mt-1">Минимум 6 символов, заглавная буква и один из: !@#$%^&*</p>
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Подтвердите пароль</label>

@@ -30,7 +30,7 @@ export const authResponseSchema = z.object({
 const strongPassword = z.string()
   .min(6, 'Пароль минимум 6 символов')
   .regex(/[A-ZА-ЯЁ]/, 'Пароль должен содержать заглавную букву')
-  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/, 'Пароль должен содержать спецсимвол');
+  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/, 'Пароль должен содержать один из: !@#$%^&*_-');
 
 export const registerSchema = z.object({
   phone: phoneSchema,

@@ -3,6 +3,7 @@ local
 color ic_launcher_background
 drawable ic_launcher_foreground
 drawable ic_notification
+drawable logo_fomo
 mipmap ic_launcher
 string gcm_defaultSenderId
 string google_api_key

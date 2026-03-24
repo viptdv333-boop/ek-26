@@ -7,15 +7,35 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 import com.fomo.chat.data.local.crypto.TokenManager;
+import com.fomo.chat.data.local.db.FomoDatabase;
+import com.fomo.chat.data.local.db.dao.ContactDao;
+import com.fomo.chat.data.local.db.dao.ConversationDao;
+import com.fomo.chat.data.local.db.dao.MessageDao;
 import com.fomo.chat.data.remote.WebSocketClient;
+import com.fomo.chat.data.remote.api.ContactsApi;
+import com.fomo.chat.data.remote.api.ConversationsApi;
+import com.fomo.chat.data.remote.api.MessagesApi;
+import com.fomo.chat.data.remote.api.UploadApi;
 import com.fomo.chat.data.remote.api.UsersApi;
+import com.fomo.chat.data.repository.ChatRepository;
+import com.fomo.chat.data.repository.ContactRepository;
+import com.fomo.chat.di.AppModule_ProvideChatRepositoryFactory;
+import com.fomo.chat.di.AppModule_ProvideContactRepositoryFactory;
 import com.fomo.chat.di.AppModule_ProvideTokenManagerFactory;
 import com.fomo.chat.di.AppModule_ProvideWebSocketClientFactory;
+import com.fomo.chat.di.DatabaseModule_ProvideContactDaoFactory;
+import com.fomo.chat.di.DatabaseModule_ProvideConversationDaoFactory;
+import com.fomo.chat.di.DatabaseModule_ProvideDatabaseFactory;
+import com.fomo.chat.di.DatabaseModule_ProvideMessageDaoFactory;
 import com.fomo.chat.di.NetworkModule_ProvideAuthInterceptorFactory;
+import com.fomo.chat.di.NetworkModule_ProvideContactsApiFactory;
+import com.fomo.chat.di.NetworkModule_ProvideConversationsApiFactory;
 import com.fomo.chat.di.NetworkModule_ProvideGsonFactory;
 import com.fomo.chat.di.NetworkModule_ProvideLoggingInterceptorFactory;
+import com.fomo.chat.di.NetworkModule_ProvideMessagesApiFactory;
 import com.fomo.chat.di.NetworkModule_ProvideOkHttpClientFactory;
 import com.fomo.chat.di.NetworkModule_ProvideRetrofitFactory;
+import com.fomo.chat.di.NetworkModule_ProvideUploadApiFactory;
 import com.fomo.chat.di.NetworkModule_ProvideUsersApiFactory;
 import com.fomo.chat.service.CallService;
 import com.fomo.chat.service.FcmService;
@@ -514,13 +534,13 @@ public final class DaggerFomoApp_HiltComponents_SingletonC {
           return (T) new CallViewModel(viewModelCImpl.savedStateHandle);
 
           case 2: // com.fomo.chat.ui.chats.ChatListViewModel 
-          return (T) new ChatListViewModel();
+          return (T) new ChatListViewModel(singletonCImpl.provideChatRepositoryProvider.get());
 
           case 3: // com.fomo.chat.ui.chats.ChatRoomViewModel 
-          return (T) new ChatRoomViewModel(viewModelCImpl.savedStateHandle);
+          return (T) new ChatRoomViewModel(viewModelCImpl.savedStateHandle, singletonCImpl.provideChatRepositoryProvider.get(), singletonCImpl.provideTokenManagerProvider.get());
 
           case 4: // com.fomo.chat.ui.contacts.ContactsViewModel 
-          return (T) new ContactsViewModel();
+          return (T) new ContactsViewModel(singletonCImpl.provideContactRepositoryProvider.get());
 
           case 5: // com.fomo.chat.MainViewModel 
           return (T) new MainViewModel(singletonCImpl.provideTokenManagerProvider.get());
@@ -647,6 +667,26 @@ public final class DaggerFomoApp_HiltComponents_SingletonC {
 
     private Provider<Retrofit> provideRetrofitProvider;
 
+    private Provider<ConversationsApi> provideConversationsApiProvider;
+
+    private Provider<MessagesApi> provideMessagesApiProvider;
+
+    private Provider<UploadApi> provideUploadApiProvider;
+
+    private Provider<FomoDatabase> provideDatabaseProvider;
+
+    private Provider<ConversationDao> provideConversationDaoProvider;
+
+    private Provider<MessageDao> provideMessageDaoProvider;
+
+    private Provider<ChatRepository> provideChatRepositoryProvider;
+
+    private Provider<ContactsApi> provideContactsApiProvider;
+
+    private Provider<ContactDao> provideContactDaoProvider;
+
+    private Provider<ContactRepository> provideContactRepositoryProvider;
+
     private Provider<UsersApi> provideUsersApiProvider;
 
     private Provider<WebSocketClient> provideWebSocketClientProvider;
@@ -660,17 +700,28 @@ public final class DaggerFomoApp_HiltComponents_SingletonC {
     @SuppressWarnings("unchecked")
     private void initialize(final ApplicationContextModule applicationContextModuleParam) {
       this.provideTokenManagerProvider = DoubleCheck.provider(new SwitchingProvider<TokenManager>(singletonCImpl, 0));
-      this.provideAuthInterceptorProvider = DoubleCheck.provider(new SwitchingProvider<Interceptor>(singletonCImpl, 4));
-      this.provideLoggingInterceptorProvider = DoubleCheck.provider(new SwitchingProvider<HttpLoggingInterceptor>(singletonCImpl, 5));
-      this.provideOkHttpClientProvider = DoubleCheck.provider(new SwitchingProvider<OkHttpClient>(singletonCImpl, 3));
-      this.provideGsonProvider = DoubleCheck.provider(new SwitchingProvider<Gson>(singletonCImpl, 6));
-      this.provideRetrofitProvider = DoubleCheck.provider(new SwitchingProvider<Retrofit>(singletonCImpl, 2));
-      this.provideUsersApiProvider = DoubleCheck.provider(new SwitchingProvider<UsersApi>(singletonCImpl, 1));
-      this.provideWebSocketClientProvider = DoubleCheck.provider(new SwitchingProvider<WebSocketClient>(singletonCImpl, 7));
+      this.provideAuthInterceptorProvider = DoubleCheck.provider(new SwitchingProvider<Interceptor>(singletonCImpl, 5));
+      this.provideLoggingInterceptorProvider = DoubleCheck.provider(new SwitchingProvider<HttpLoggingInterceptor>(singletonCImpl, 6));
+      this.provideOkHttpClientProvider = DoubleCheck.provider(new SwitchingProvider<OkHttpClient>(singletonCImpl, 4));
+      this.provideGsonProvider = DoubleCheck.provider(new SwitchingProvider<Gson>(singletonCImpl, 7));
+      this.provideRetrofitProvider = DoubleCheck.provider(new SwitchingProvider<Retrofit>(singletonCImpl, 3));
+      this.provideConversationsApiProvider = DoubleCheck.provider(new SwitchingProvider<ConversationsApi>(singletonCImpl, 2));
+      this.provideMessagesApiProvider = DoubleCheck.provider(new SwitchingProvider<MessagesApi>(singletonCImpl, 8));
+      this.provideUploadApiProvider = DoubleCheck.provider(new SwitchingProvider<UploadApi>(singletonCImpl, 9));
+      this.provideDatabaseProvider = DoubleCheck.provider(new SwitchingProvider<FomoDatabase>(singletonCImpl, 11));
+      this.provideConversationDaoProvider = DoubleCheck.provider(new SwitchingProvider<ConversationDao>(singletonCImpl, 10));
+      this.provideMessageDaoProvider = DoubleCheck.provider(new SwitchingProvider<MessageDao>(singletonCImpl, 12));
+      this.provideChatRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<ChatRepository>(singletonCImpl, 1));
+      this.provideContactsApiProvider = DoubleCheck.provider(new SwitchingProvider<ContactsApi>(singletonCImpl, 14));
+      this.provideContactDaoProvider = DoubleCheck.provider(new SwitchingProvider<ContactDao>(singletonCImpl, 15));
+      this.provideContactRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<ContactRepository>(singletonCImpl, 13));
+      this.provideUsersApiProvider = DoubleCheck.provider(new SwitchingProvider<UsersApi>(singletonCImpl, 16));
+      this.provideWebSocketClientProvider = DoubleCheck.provider(new SwitchingProvider<WebSocketClient>(singletonCImpl, 17));
     }
 
     @Override
     public void injectFomoApp(FomoApp fomoApp) {
+      injectFomoApp2(fomoApp);
     }
 
     @Override
@@ -686,6 +737,12 @@ public final class DaggerFomoApp_HiltComponents_SingletonC {
     @Override
     public ServiceComponentBuilder serviceComponentBuilder() {
       return new ServiceCBuilder(singletonCImpl);
+    }
+
+    @CanIgnoreReturnValue
+    private FomoApp injectFomoApp2(FomoApp instance) {
+      FomoApp_MembersInjector.injectTokenManager(instance, provideTokenManagerProvider.get());
+      return instance;
     }
 
     private static final class SwitchingProvider<T> implements Provider<T> {
@@ -705,25 +762,55 @@ public final class DaggerFomoApp_HiltComponents_SingletonC {
           case 0: // com.fomo.chat.data.local.crypto.TokenManager 
           return (T) AppModule_ProvideTokenManagerFactory.provideTokenManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
-          case 1: // com.fomo.chat.data.remote.api.UsersApi 
-          return (T) NetworkModule_ProvideUsersApiFactory.provideUsersApi(singletonCImpl.provideRetrofitProvider.get());
+          case 1: // com.fomo.chat.data.repository.ChatRepository 
+          return (T) AppModule_ProvideChatRepositoryFactory.provideChatRepository(singletonCImpl.provideConversationsApiProvider.get(), singletonCImpl.provideMessagesApiProvider.get(), singletonCImpl.provideUploadApiProvider.get(), singletonCImpl.provideConversationDaoProvider.get(), singletonCImpl.provideMessageDaoProvider.get(), singletonCImpl.provideGsonProvider.get());
 
-          case 2: // retrofit2.Retrofit 
+          case 2: // com.fomo.chat.data.remote.api.ConversationsApi 
+          return (T) NetworkModule_ProvideConversationsApiFactory.provideConversationsApi(singletonCImpl.provideRetrofitProvider.get());
+
+          case 3: // retrofit2.Retrofit 
           return (T) NetworkModule_ProvideRetrofitFactory.provideRetrofit(singletonCImpl.provideOkHttpClientProvider.get(), singletonCImpl.provideGsonProvider.get());
 
-          case 3: // okhttp3.OkHttpClient 
+          case 4: // okhttp3.OkHttpClient 
           return (T) NetworkModule_ProvideOkHttpClientFactory.provideOkHttpClient(singletonCImpl.provideAuthInterceptorProvider.get(), singletonCImpl.provideLoggingInterceptorProvider.get());
 
-          case 4: // okhttp3.Interceptor 
+          case 5: // okhttp3.Interceptor 
           return (T) NetworkModule_ProvideAuthInterceptorFactory.provideAuthInterceptor(singletonCImpl.provideTokenManagerProvider.get());
 
-          case 5: // okhttp3.logging.HttpLoggingInterceptor 
+          case 6: // okhttp3.logging.HttpLoggingInterceptor 
           return (T) NetworkModule_ProvideLoggingInterceptorFactory.provideLoggingInterceptor();
 
-          case 6: // com.google.gson.Gson 
+          case 7: // com.google.gson.Gson 
           return (T) NetworkModule_ProvideGsonFactory.provideGson();
 
-          case 7: // com.fomo.chat.data.remote.WebSocketClient 
+          case 8: // com.fomo.chat.data.remote.api.MessagesApi 
+          return (T) NetworkModule_ProvideMessagesApiFactory.provideMessagesApi(singletonCImpl.provideRetrofitProvider.get());
+
+          case 9: // com.fomo.chat.data.remote.api.UploadApi 
+          return (T) NetworkModule_ProvideUploadApiFactory.provideUploadApi(singletonCImpl.provideRetrofitProvider.get());
+
+          case 10: // com.fomo.chat.data.local.db.dao.ConversationDao 
+          return (T) DatabaseModule_ProvideConversationDaoFactory.provideConversationDao(singletonCImpl.provideDatabaseProvider.get());
+
+          case 11: // com.fomo.chat.data.local.db.FomoDatabase 
+          return (T) DatabaseModule_ProvideDatabaseFactory.provideDatabase(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
+
+          case 12: // com.fomo.chat.data.local.db.dao.MessageDao 
+          return (T) DatabaseModule_ProvideMessageDaoFactory.provideMessageDao(singletonCImpl.provideDatabaseProvider.get());
+
+          case 13: // com.fomo.chat.data.repository.ContactRepository 
+          return (T) AppModule_ProvideContactRepositoryFactory.provideContactRepository(singletonCImpl.provideContactsApiProvider.get(), singletonCImpl.provideContactDaoProvider.get());
+
+          case 14: // com.fomo.chat.data.remote.api.ContactsApi 
+          return (T) NetworkModule_ProvideContactsApiFactory.provideContactsApi(singletonCImpl.provideRetrofitProvider.get());
+
+          case 15: // com.fomo.chat.data.local.db.dao.ContactDao 
+          return (T) DatabaseModule_ProvideContactDaoFactory.provideContactDao(singletonCImpl.provideDatabaseProvider.get());
+
+          case 16: // com.fomo.chat.data.remote.api.UsersApi 
+          return (T) NetworkModule_ProvideUsersApiFactory.provideUsersApi(singletonCImpl.provideRetrofitProvider.get());
+
+          case 17: // com.fomo.chat.data.remote.WebSocketClient 
           return (T) AppModule_ProvideWebSocketClientFactory.provideWebSocketClient(singletonCImpl.provideOkHttpClientProvider.get(), singletonCImpl.provideTokenManagerProvider.get(), singletonCImpl.provideGsonProvider.get());
 
           default: throw new AssertionError(id);

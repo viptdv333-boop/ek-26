@@ -1,6 +1,18 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
+
+function generateCaptcha() {
+  const ops = ['+', '-', '×'] as const;
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a: number, b: number, answer: number;
+  switch (op) {
+    case '+': a = Math.floor(Math.random() * 20) + 1; b = Math.floor(Math.random() * 20) + 1; answer = a + b; break;
+    case '-': a = Math.floor(Math.random() * 20) + 5; b = Math.floor(Math.random() * a) + 1; answer = a - b; break;
+    case '×': a = Math.floor(Math.random() * 9) + 2; b = Math.floor(Math.random() * 9) + 2; answer = a * b; break;
+  }
+  return { question: `${a} ${op} ${b} = ?`, answer };
+}
 
 const COUNTRIES = [
   { code: '+7', flag: '🇷🇺', name: 'Россия' },
@@ -76,6 +88,47 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Captcha
+  const [captcha, setCaptcha] = useState(generateCaptcha);
+  const [captchaInput, setCaptchaInput] = useState('');
+  const captchaCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const drawCaptcha = useCallback(() => {
+    const canvas = captchaCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Background
+    ctx.fillStyle = theme === 'dark' ? '#1a1a25' : '#f3f4f6';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Noise lines
+    for (let i = 0; i < 5; i++) {
+      ctx.strokeStyle = `rgba(${Math.random()*150},${Math.random()*150},${Math.random()*150},0.4)`;
+      ctx.beginPath();
+      ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+      ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+      ctx.stroke();
+    }
+    // Text with slight rotation
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((Math.random() - 0.5) * 0.15);
+    ctx.font = 'bold 28px monospace';
+    ctx.fillStyle = theme === 'dark' ? '#e5e7eb' : '#374151';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(captcha.question, 0, 0);
+    ctx.restore();
+  }, [captcha, theme]);
+
+  useEffect(() => { drawCaptcha(); }, [drawCaptcha]);
+
+  const refreshCaptcha = () => {
+    setCaptcha(generateCaptcha());
+    setCaptchaInput('');
+  };
+
   // UI state
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -132,6 +185,11 @@ export function AuthPage() {
 
   // ── Register ───────────────────────────────────────────────────
   const handleRegister = async () => {
+    if (parseInt(captchaInput) !== captcha.answer) {
+      setError('Неверный ответ на задачу');
+      refreshCaptcha();
+      return;
+    }
     if (phoneNumber.replace(/\D/g, '').length < 6) {
       setError('Введите номер телефона');
       return;
@@ -460,6 +518,27 @@ export function AuthPage() {
                   <label className="block text-sm text-gray-400 mb-2">Подтвердите пароль</label>
                   {passwordInput(confirmPassword, setConfirmPassword, 'Ещё раз', showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleRegister())}
                 </div>
+                {/* Captcha */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <canvas ref={captchaCanvasRef} width={200} height={50} className="rounded-lg border border-dark-500" />
+                    <button type="button" onClick={refreshCaptcha} className="text-gray-400 hover:text-white transition-colors p-1" title="Обновить">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992" />
+                      </svg>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={captchaInput}
+                    onChange={(e) => setCaptchaInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+                    placeholder="Введите ответ"
+                    className={inputClass + ' text-center'}
+                  />
+                </div>
+
                 <button onClick={handleRegister} disabled={loading} className={btnClass}>
                   {loading ? 'Отправка...' : 'Получить код'}
                 </button>

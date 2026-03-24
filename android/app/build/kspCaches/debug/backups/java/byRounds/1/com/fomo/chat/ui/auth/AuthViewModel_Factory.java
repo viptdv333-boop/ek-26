@@ -1,10 +1,12 @@
 package com.fomo.chat.ui.auth;
 
+import com.fomo.chat.data.repository.AuthRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
 import dagger.internal.ScopeMetadata;
 import javax.annotation.processing.Generated;
+import javax.inject.Provider;
 
 @ScopeMetadata
 @QualifierMetadata
@@ -23,20 +25,22 @@ import javax.annotation.processing.Generated;
     "nullness:initialization.field.uninitialized"
 })
 public final class AuthViewModel_Factory implements Factory<AuthViewModel> {
+  private final Provider<AuthRepository> authRepositoryProvider;
+
+  public AuthViewModel_Factory(Provider<AuthRepository> authRepositoryProvider) {
+    this.authRepositoryProvider = authRepositoryProvider;
+  }
+
   @Override
   public AuthViewModel get() {
-    return newInstance();
+    return newInstance(authRepositoryProvider.get());
   }
 
-  public static AuthViewModel_Factory create() {
-    return InstanceHolder.INSTANCE;
+  public static AuthViewModel_Factory create(Provider<AuthRepository> authRepositoryProvider) {
+    return new AuthViewModel_Factory(authRepositoryProvider);
   }
 
-  public static AuthViewModel newInstance() {
-    return new AuthViewModel();
-  }
-
-  private static final class InstanceHolder {
-    private static final AuthViewModel_Factory INSTANCE = new AuthViewModel_Factory();
+  public static AuthViewModel newInstance(AuthRepository authRepository) {
+    return new AuthViewModel(authRepository);
   }
 }

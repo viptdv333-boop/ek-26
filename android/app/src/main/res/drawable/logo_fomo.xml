@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <!-- Rounded rect background -->
+    <path
+        android:fillColor="#6366f1"
+        android:pathData="M0,112C0,50.1 50.1,0 112,0h288c61.9,0 112,50.1 112,112v288c0,61.9 -50.1,112 -112,112H112C50.1,512 0,461.9 0,400z"/>
+    <!-- Letter F -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M160,100h192v56H224v64h108v56H224v136H160V100z"/>
+</vector>

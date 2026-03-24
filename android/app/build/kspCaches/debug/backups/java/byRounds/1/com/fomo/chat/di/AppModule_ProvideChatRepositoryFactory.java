@@ -1,5 +1,6 @@
 package com.fomo.chat.di;
 
+import com.fomo.chat.data.local.crypto.TokenManager;
 import com.fomo.chat.data.local.db.dao.ConversationDao;
 import com.fomo.chat.data.local.db.dao.MessageDao;
 import com.fomo.chat.data.remote.api.ConversationsApi;
@@ -44,34 +45,37 @@ public final class AppModule_ProvideChatRepositoryFactory implements Factory<Cha
 
   private final Provider<Gson> gsonProvider;
 
+  private final Provider<TokenManager> tokenManagerProvider;
+
   public AppModule_ProvideChatRepositoryFactory(Provider<ConversationsApi> conversationsApiProvider,
       Provider<MessagesApi> messagesApiProvider, Provider<UploadApi> uploadApiProvider,
       Provider<ConversationDao> conversationDaoProvider, Provider<MessageDao> messageDaoProvider,
-      Provider<Gson> gsonProvider) {
+      Provider<Gson> gsonProvider, Provider<TokenManager> tokenManagerProvider) {
     this.conversationsApiProvider = conversationsApiProvider;
     this.messagesApiProvider = messagesApiProvider;
     this.uploadApiProvider = uploadApiProvider;
     this.conversationDaoProvider = conversationDaoProvider;
     this.messageDaoProvider = messageDaoProvider;
     this.gsonProvider = gsonProvider;
+    this.tokenManagerProvider = tokenManagerProvider;
   }
 
   @Override
   public ChatRepository get() {
-    return provideChatRepository(conversationsApiProvider.get(), messagesApiProvider.get(), uploadApiProvider.get(), conversationDaoProvider.get(), messageDaoProvider.get(), gsonProvider.get());
+    return provideChatRepository(conversationsApiProvider.get(), messagesApiProvider.get(), uploadApiProvider.get(), conversationDaoProvider.get(), messageDaoProvider.get(), gsonProvider.get(), tokenManagerProvider.get());
   }
 
   public static AppModule_ProvideChatRepositoryFactory create(
       Provider<ConversationsApi> conversationsApiProvider,
       Provider<MessagesApi> messagesApiProvider, Provider<UploadApi> uploadApiProvider,
       Provider<ConversationDao> conversationDaoProvider, Provider<MessageDao> messageDaoProvider,
-      Provider<Gson> gsonProvider) {
-    return new AppModule_ProvideChatRepositoryFactory(conversationsApiProvider, messagesApiProvider, uploadApiProvider, conversationDaoProvider, messageDaoProvider, gsonProvider);
+      Provider<Gson> gsonProvider, Provider<TokenManager> tokenManagerProvider) {
+    return new AppModule_ProvideChatRepositoryFactory(conversationsApiProvider, messagesApiProvider, uploadApiProvider, conversationDaoProvider, messageDaoProvider, gsonProvider, tokenManagerProvider);
   }
 
   public static ChatRepository provideChatRepository(ConversationsApi conversationsApi,
       MessagesApi messagesApi, UploadApi uploadApi, ConversationDao conversationDao,
-      MessageDao messageDao, Gson gson) {
-    return Preconditions.checkNotNullFromProvides(AppModule.INSTANCE.provideChatRepository(conversationsApi, messagesApi, uploadApi, conversationDao, messageDao, gson));
+      MessageDao messageDao, Gson gson, TokenManager tokenManager) {
+    return Preconditions.checkNotNullFromProvides(AppModule.INSTANCE.provideChatRepository(conversationsApi, messagesApi, uploadApi, conversationDao, messageDao, gson, tokenManager));
   }
 }

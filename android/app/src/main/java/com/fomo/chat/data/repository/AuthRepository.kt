@@ -4,7 +4,11 @@ import com.fomo.chat.data.local.crypto.TokenManager
 import com.fomo.chat.data.remote.api.AuthApi
 import com.fomo.chat.data.remote.dto.AuthRequestCodeRequest
 import com.fomo.chat.data.remote.dto.AuthVerifyCodeRequest
+import com.fomo.chat.data.remote.dto.LoginRequest
 import com.fomo.chat.data.remote.dto.RefreshTokenRequest
+import com.fomo.chat.data.remote.dto.RegisterRequest
+import com.fomo.chat.data.remote.dto.SetPasswordRequest
+import com.fomo.chat.data.remote.dto.VerifyCodeRequest
 import com.fomo.chat.domain.model.User
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -66,6 +70,90 @@ class AuthRepository @Inject constructor(
             } else {
                 AuthResult.Error(
                     message = "Invalid verification code",
+                    code = response.code()
+                )
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(message = e.message ?: "Network error")
+        }
+    }
+
+    suspend fun register(
+        phone: String,
+        email: String,
+        password: String,
+        confirmPassword: String
+    ): AuthResult<Boolean> {
+        return try {
+            val response = authApi.register(
+                RegisterRequest(phone, email, password, confirmPassword)
+            )
+            if (response.isSuccessful && response.body()?.success == true) {
+                AuthResult.Success(true)
+            } else {
+                AuthResult.Error(
+                    message = response.body()?.message ?: "Registration failed",
+                    code = response.code()
+                )
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(message = e.message ?: "Network error")
+        }
+    }
+
+    suspend fun registerVerifyPhone(phone: String, code: String): AuthResult<Boolean> {
+        return try {
+            val response = authApi.registerVerifyPhone(VerifyCodeRequest(phone, code))
+            if (response.isSuccessful && response.body()?.success == true) {
+                AuthResult.Success(true)
+            } else {
+                AuthResult.Error(
+                    message = response.body()?.message ?: "Verification failed",
+                    code = response.code()
+                )
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(message = e.message ?: "Network error")
+        }
+    }
+
+    suspend fun login(phone: String, password: String): AuthResult<User> {
+        return try {
+            val response = authApi.login(LoginRequest(phone, password))
+            if (response.isSuccessful) {
+                val body = response.body()!!
+                tokenManager.saveTokens(
+                    accessToken = body.accessToken,
+                    refreshToken = body.refreshToken,
+                    userId = body.user.id
+                )
+                AuthResult.Success(
+                    User(
+                        id = body.user.id,
+                        phone = body.user.phone,
+                        displayName = body.user.displayName,
+                        avatarUrl = body.user.avatarUrl
+                    )
+                )
+            } else {
+                AuthResult.Error(
+                    message = "Invalid phone or password",
+                    code = response.code()
+                )
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(message = e.message ?: "Network error")
+        }
+    }
+
+    suspend fun setPassword(password: String, confirmPassword: String): AuthResult<Boolean> {
+        return try {
+            val response = authApi.setPassword(SetPasswordRequest(password, confirmPassword))
+            if (response.isSuccessful && response.body()?.success == true) {
+                AuthResult.Success(true)
+            } else {
+                AuthResult.Error(
+                    message = "Failed to set password",
                     code = response.code()
                 )
             }

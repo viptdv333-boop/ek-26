@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -51,7 +50,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun CodeVerifyScreen(
     phone: String,
+    isRegisterFlow: Boolean = false,
     onVerified: (isNewUser: Boolean) -> Unit,
+    onRegisterCodeVerified: () -> Unit = {},
     onBack: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -64,9 +65,17 @@ fun CodeVerifyScreen(
         focusRequester.requestFocus()
     }
 
+    // Old flow: authenticated after verifyCode
     LaunchedEffect(uiState.authenticated) {
-        if (uiState.authenticated) {
+        if (uiState.authenticated && !isRegisterFlow) {
             onVerified(uiState.isNewUser)
+        }
+    }
+
+    // Register flow: code verified, go to email wait
+    LaunchedEffect(uiState.registerCodeVerified) {
+        if (uiState.registerCodeVerified && isRegisterFlow) {
+            onRegisterCodeVerified()
         }
     }
 
@@ -80,7 +89,11 @@ fun CodeVerifyScreen(
     // Auto-submit when code is complete
     LaunchedEffect(code) {
         if (code.length == 4) {
-            viewModel.verifyCode(phone, code)
+            if (isRegisterFlow) {
+                viewModel.registerVerifyCode(phone, code)
+            } else {
+                viewModel.verifyCode(phone, code)
+            }
         }
     }
 

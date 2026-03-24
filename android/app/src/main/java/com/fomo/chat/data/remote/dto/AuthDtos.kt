@@ -44,3 +44,36 @@ data class PushTokenRequest(
     @SerializedName("token") val token: String,
     @SerializedName("platform") val platform: String = "android"
 )
+
+// --- Register / Login DTOs ---
+
+data class RegisterRequest(
+    @SerializedName("phone") val phone: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("confirmPassword") val confirmPassword: String
+)
+
+data class LoginRequest(
+    @SerializedName("phone") val phone: String,
+    @SerializedName("password") val password: String
+)
+
+data class SetPasswordRequest(
+    @SerializedName("password") val password: String,
+    @SerializedName("confirmPassword") val confirmPassword: String
+)
+
+data class VerifyCodeRequest(
+    @SerializedName("phone") val phone: String,
+    @SerializedName("code") val code: String
+)
+
+data class RegisterResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String?
+)
+
+data class SetPasswordResponse(
+    @SerializedName("success") val success: Boolean
+)

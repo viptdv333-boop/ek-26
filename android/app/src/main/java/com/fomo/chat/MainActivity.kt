@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                             AppNavigation(startDestination = Routes.MAIN)
                         }
                         is AuthState.Unauthenticated -> {
-                            AppNavigation(startDestination = Routes.AUTH_PHONE)
+                            AppNavigation(startDestination = Routes.AUTH)
                         }
                     }
                 }

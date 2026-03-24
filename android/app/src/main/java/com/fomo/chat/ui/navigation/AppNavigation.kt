@@ -33,9 +33,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.fomo.chat.ui.auth.AuthScreen
 import com.fomo.chat.ui.auth.CodeVerifyScreen
-import com.fomo.chat.ui.auth.PhoneInputScreen
+import com.fomo.chat.ui.auth.EmailWaitScreen
 import com.fomo.chat.ui.auth.ProfileSetupScreen
+import com.fomo.chat.ui.auth.SetPasswordScreen
 import com.fomo.chat.ui.calls.CallScreen
 import com.fomo.chat.ui.chats.ChatListScreen
 import com.fomo.chat.ui.chats.ChatRoomScreen
@@ -43,14 +45,19 @@ import com.fomo.chat.ui.contacts.ContactsScreen
 import com.fomo.chat.ui.settings.SettingsScreen
 
 object Routes {
-    const val AUTH_PHONE = "auth/phone"
+    const val AUTH = "auth"
+    const val AUTH_PHONE = "auth/phone" // kept for backward compat
     const val AUTH_CODE = "auth/code/{phone}"
+    const val AUTH_REGISTER_CODE = "auth/register-code/{phone}"
+    const val AUTH_EMAIL_WAIT = "auth/email-wait"
     const val AUTH_PROFILE = "auth/profile"
+    const val SET_PASSWORD = "auth/set-password"
     const val MAIN = "main"
     const val CHAT_ROOM = "chat/{conversationId}"
     const val CALL = "call/{callId}"
 
     fun authCode(phone: String) = "auth/code/$phone"
+    fun authRegisterCode(phone: String) = "auth/register-code/$phone"
     fun chatRoom(conversationId: String) = "chat/$conversationId"
     fun call(callId: String) = "call/$callId"
 }
@@ -74,7 +81,7 @@ private val bottomNavTabs = listOf(
 
 @Composable
 fun AppNavigation(
-    startDestination: String = Routes.AUTH_PHONE,
+    startDestination: String = Routes.AUTH,
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(
@@ -93,15 +100,35 @@ fun AppNavigation(
             slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) + fadeOut(tween(300))
         }
     ) {
-        // Auth flow
-        composable(Routes.AUTH_PHONE) {
-            PhoneInputScreen(
-                onCodeSent = { phone ->
-                    navController.navigate(Routes.authCode(phone))
+        // New auth screen with Login/Register tabs
+        composable(Routes.AUTH) {
+            AuthScreen(
+                onLoginSuccess = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.AUTH) { inclusive = true }
+                    }
+                },
+                onRegisterCodeSent = { phone ->
+                    navController.navigate(Routes.authRegisterCode(phone))
                 }
             )
         }
 
+        // Old phone input route (redirects to new auth screen for backward compat)
+        composable(Routes.AUTH_PHONE) {
+            AuthScreen(
+                onLoginSuccess = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.AUTH_PHONE) { inclusive = true }
+                    }
+                },
+                onRegisterCodeSent = { phone ->
+                    navController.navigate(Routes.authRegisterCode(phone))
+                }
+            )
+        }
+
+        // Old flash-call code verify (kept for backward compat)
         composable(
             route = Routes.AUTH_CODE,
             arguments = listOf(navArgument("phone") { type = NavType.StringType })
@@ -109,15 +136,59 @@ fun AppNavigation(
             val phone = backStackEntry.arguments?.getString("phone") ?: ""
             CodeVerifyScreen(
                 phone = phone,
+                isRegisterFlow = false,
                 onVerified = { isNewUser ->
                     if (isNewUser) {
                         navController.navigate(Routes.AUTH_PROFILE) {
-                            popUpTo(Routes.AUTH_PHONE) { inclusive = true }
+                            popUpTo(Routes.AUTH) { inclusive = true }
                         }
                     } else {
                         navController.navigate(Routes.MAIN) {
-                            popUpTo(Routes.AUTH_PHONE) { inclusive = true }
+                            popUpTo(Routes.AUTH) { inclusive = true }
                         }
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Register code verify
+        composable(
+            route = Routes.AUTH_REGISTER_CODE,
+            arguments = listOf(navArgument("phone") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val phone = backStackEntry.arguments?.getString("phone") ?: ""
+            CodeVerifyScreen(
+                phone = phone,
+                isRegisterFlow = true,
+                onVerified = { /* not used in register flow */ },
+                onRegisterCodeVerified = {
+                    navController.navigate(Routes.AUTH_EMAIL_WAIT) {
+                        popUpTo(Routes.AUTH) { inclusive = false }
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Email wait screen
+        composable(Routes.AUTH_EMAIL_WAIT) {
+            EmailWaitScreen(
+                onBackToLogin = {
+                    navController.navigate(Routes.AUTH) {
+                        popUpTo(Routes.AUTH) { inclusive = true }
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Set password
+        composable(Routes.SET_PASSWORD) {
+            SetPasswordScreen(
+                onComplete = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.AUTH) { inclusive = true }
                     }
                 },
                 onBack = { navController.popBackStack() }

@@ -7,6 +7,8 @@ export interface IUser extends Document {
   displayName: string;
   avatarUrl: string | null;
   email: string | null;
+  emailVerified: boolean;
+  passwordHash: string | null;
   status: string;
   lastSeen: Date;
   fcmTokens: string[];
@@ -37,6 +39,8 @@ const userSchema = new Schema<IUser>(
     displayName: { type: String, required: true, default: '' },
     avatarUrl: { type: String, default: null },
     email: { type: String, default: null },
+    emailVerified: { type: Boolean, default: false },
+    passwordHash: { type: String, default: null },
     status: { type: String, default: '' },
     lastSeen: { type: Date, default: Date.now },
     fcmTokens: [{ type: String }],

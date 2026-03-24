@@ -12,6 +12,7 @@ const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().default(''),
   OTP_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
   FIREBASE_SERVICE_ACCOUNT: z.string().default(''),
+  BASE_URL: z.string().default('http://localhost:3000'),
   CORS_ORIGIN: z.string().default('*'),
   UPLOADS_DIR: z.string().default('/app/uploads'),
   MAX_FILE_SIZE: z.coerce.number().default(15_728_640), // 15MB

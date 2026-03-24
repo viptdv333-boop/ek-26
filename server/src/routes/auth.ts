@@ -1,10 +1,12 @@
 import { FastifyInstance } from 'fastify';
-import { requestCodeSchema, verifyCodeSchema } from '@ek-26/shared';
+import { requestCodeSchema, verifyCodeSchema, registerSchema, loginSchema, setPasswordSchema } from '@ek-26/shared';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { SmsCode } from '../models/SmsCode';
 import { Session } from '../models/Session';
 import { generateOtp, hashOtp, sendCode } from '../services/sms';
 import { signAccessToken, signRefreshToken, hashToken, verifyToken } from '../services/jwt';
+import { signEmailVerificationToken, sendVerificationEmail } from '../services/email';
 import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
 import crypto from 'crypto';
@@ -96,6 +98,8 @@ export async function authRoutes(app: FastifyInstance) {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000), // 30 days
     });
 
+    const needsPassword = !user.passwordHash;
+
     return {
       accessToken,
       refreshToken,
@@ -106,6 +110,7 @@ export async function authRoutes(app: FastifyInstance) {
         avatarUrl: user.avatarUrl,
         isNewUser,
       },
+      ...(needsPassword && { needsPassword: true }),
     };
   });
 
@@ -375,6 +380,227 @@ export async function authRoutes(app: FastifyInstance) {
         avatarUrl: user!.avatarUrl,
       },
     };
+  });
+
+  // ─── Register (phone + email + password) ────────────────────────────
+  app.post('/api/auth/register', async (request, reply) => {
+    const body = registerSchema.parse(request.body);
+
+    // Check if phone already taken
+    const existingPhone = await User.findOne({ phone: body.phone });
+    if (existingPhone) {
+      return reply.code(409).send({ error: 'Этот номер телефона уже зарегистрирован' });
+    }
+
+    // Check if email already taken
+    const existingEmail = await User.findOne({ email: body.email });
+    if (existingEmail) {
+      return reply.code(409).send({ error: 'Этот email уже зарегистрирован' });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(body.password, 12);
+
+    // Create user (not yet verified)
+    await User.create({
+      phone: body.phone,
+      email: body.email,
+      passwordHash,
+      emailVerified: false,
+      displayName: body.phone,
+      rssFeedId: crypto.randomUUID(),
+    });
+
+    // Send uCaller flash call for phone verification
+    await SmsCode.deleteMany({ phone: body.phone });
+
+    const code = generateOtp();
+    await SmsCode.create({
+      phone: body.phone,
+      codeHash: hashOtp(code),
+      expiresAt: new Date(Date.now() + 5 * 60_000),
+    });
+
+    try {
+      await sendCode(body.phone, code);
+    } catch (err: any) {
+      app.log.error({ err, msg: 'SMS send failed (register)' });
+      return reply.code(502).send({ error: 'Не удалось отправить код. Попробуйте позже.' });
+    }
+
+    return { success: true, message: 'Code sent' };
+  });
+
+  // ─── Verify phone after registration ───────────────────────────────
+  app.post('/api/auth/register/verify-phone', async (request, reply) => {
+    const body = verifyCodeSchema.parse(request.body);
+
+    const smsCode = await SmsCode.findOne({ phone: body.phone });
+    if (!smsCode) {
+      return reply.code(400).send({ error: 'No code requested for this phone' });
+    }
+
+    if (smsCode.attempts >= 5) {
+      await SmsCode.deleteOne({ _id: smsCode._id });
+      return reply.code(429).send({ error: 'Too many attempts. Request a new code.' });
+    }
+
+    if (smsCode.expiresAt < new Date()) {
+      await SmsCode.deleteOne({ _id: smsCode._id });
+      return reply.code(400).send({ error: 'Code expired' });
+    }
+
+    if (smsCode.codeHash !== hashOtp(body.code)) {
+      smsCode.attempts += 1;
+      await smsCode.save();
+      return reply.code(400).send({ error: 'Invalid code' });
+    }
+
+    // Code is valid — delete it
+    await SmsCode.deleteOne({ _id: smsCode._id });
+
+    // Find user by phone
+    const user = await User.findOne({ phone: body.phone });
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    // Send verification email
+    if (user.email) {
+      const emailToken = await signEmailVerificationToken(user._id.toString());
+      await sendVerificationEmail(user.email, emailToken);
+    }
+
+    return { success: true, message: 'Email verification sent' };
+  });
+
+  // ─── Verify email (GET — user clicks link from email) ──────────────
+  app.get('/auth/verify-email', async (request, reply) => {
+    const { token } = request.query as { token?: string };
+    if (!token) {
+      return reply.code(400).type('text/html').send('<h1>Неверная ссылка</h1>');
+    }
+
+    try {
+      const { payload } = await verifyToken(token);
+      if (payload.purpose !== 'email-verify') {
+        throw new Error('invalid token purpose');
+      }
+
+      const userId = payload.sub as string;
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.code(404).type('text/html').send('<h1>Пользователь не найден</h1>');
+      }
+
+      user.emailVerified = true;
+      await user.save();
+
+      // Issue tokens so the user is logged in
+      const accessToken = await signAccessToken(userId, user.phone || '');
+      const refreshToken = await signRefreshToken(userId);
+
+      await Session.create({
+        userId: user._id,
+        deviceId: crypto.randomUUID(),
+        refreshTokenHash: hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
+      });
+
+      const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email подтверждён — FOMO Chat</title>
+  <style>
+    body {
+      background: #0f0f23; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    }
+    .card {
+      background: #1a1a3e; border: 1px solid #5b5bf0; border-radius: 12px;
+      padding: 32px; text-align: center; max-width: 360px;
+    }
+    h1 { color: #7c7cff; margin-bottom: 8px; }
+    p { color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Email подтверждён!</h1>
+    <p>Вы можете вернуться в приложение.</p>
+  </div>
+  <script>
+    // Try deep-linking back to the app
+    window.location.href = 'fomochat://auth?token=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}&userId=${encodeURIComponent(userId)}&displayName=${encodeURIComponent(user.displayName || '')}';
+  </script>
+</body>
+</html>`;
+
+      return reply.type('text/html').send(html);
+    } catch (err: any) {
+      app.log.error({ err, msg: 'Email verification failed' });
+      return reply.code(400).type('text/html').send('<h1>Ссылка недействительна или истекла</h1>');
+    }
+  });
+
+  // ─── Login with phone + password ───────────────────────────────────
+  app.post('/api/auth/login', async (request, reply) => {
+    const body = loginSchema.parse(request.body);
+
+    const user = await User.findOne({ phone: body.phone });
+    if (!user) {
+      return reply.code(401).send({ error: 'Неверный номер телефона или пароль' });
+    }
+
+    if (!user.passwordHash) {
+      return reply.code(400).send({ error: 'Пароль не задан, войдите через код и задайте пароль' });
+    }
+
+    const passwordValid = await bcrypt.compare(body.password, user.passwordHash);
+    if (!passwordValid) {
+      return reply.code(401).send({ error: 'Неверный номер телефона или пароль' });
+    }
+
+    if (!user.emailVerified) {
+      return reply.code(403).send({ error: 'Email не подтверждён' });
+    }
+
+    // Issue tokens
+    const userId = user._id.toString();
+    const accessToken = await signAccessToken(userId, user.phone || '');
+    const refreshToken = await signRefreshToken(userId);
+
+    await Session.create({
+      userId: user._id,
+      deviceId: crypto.randomUUID(),
+      refreshTokenHash: hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: userId,
+        phone: user.phone,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        isNewUser: false,
+      },
+    };
+  });
+
+  // ─── Set password (authenticated) ──────────────────────────────────
+  app.post('/api/auth/set-password', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const body = setPasswordSchema.parse(request.body);
+
+    const passwordHash = await bcrypt.hash(body.password, 12);
+    await User.findByIdAndUpdate(request.userId, { passwordHash });
+
+    return { success: true };
   });
 
   // Refresh access token

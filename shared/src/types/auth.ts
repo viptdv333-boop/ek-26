@@ -26,7 +26,34 @@ export const authResponseSchema = z.object({
   }),
 });
 
+// New auth flow schemas
+export const registerSchema = z.object({
+  phone: phoneSchema,
+  email: z.string().email('Некорректный email'),
+  password: z.string().min(6, 'Пароль минимум 6 символов'),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Пароли не совпадают',
+  path: ['confirmPassword'],
+});
+
+export const loginSchema = z.object({
+  phone: phoneSchema,
+  password: z.string().min(1, 'Введите пароль'),
+});
+
+export const setPasswordSchema = z.object({
+  password: z.string().min(6, 'Пароль минимум 6 символов'),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Пароли не совпадают',
+  path: ['confirmPassword'],
+});
+
 export type RequestCode = z.infer<typeof requestCodeSchema>;
 export type VerifyCode = z.infer<typeof verifyCodeSchema>;
 export type RefreshToken = z.infer<typeof refreshTokenSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
+export type Register = z.infer<typeof registerSchema>;
+export type Login = z.infer<typeof loginSchema>;
+export type SetPassword = z.infer<typeof setPasswordSchema>;

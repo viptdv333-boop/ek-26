@@ -2,14 +2,25 @@ import { api } from './client';
 
 // Auth
 export const authApi = {
+  // Legacy phone+code flow
   requestCode: (phone: string) => api.post<{ message: string }>('/auth/request-code', { phone }),
   verifyCode: (phone: string, code: string) =>
-    api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean }>('/auth/verify-code', { phone, code }),
+    api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean; needsPassword?: boolean }>('/auth/verify-code', { phone, code }),
   telegramLogin: (data: Record<string, string | number>) =>
     api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean }>('/auth/telegram', data),
   linkPhoneRequest: (phone: string) => api.post<{ message: string }>('/auth/link-phone/request', { phone }),
   linkPhoneVerify: (phone: string, code: string) =>
     api.post<{ success: boolean; user: any }>('/auth/link-phone/verify', { phone, code }),
+
+  // New auth flow
+  register: (data: { phone: string; email: string; password: string; confirmPassword: string }) =>
+    api.post<{ success: boolean; message: string }>('/auth/register', data),
+  registerVerifyPhone: (phone: string, code: string) =>
+    api.post<{ success: boolean; message: string }>('/auth/register/verify-phone', { phone, code }),
+  login: (phone: string, password: string) =>
+    api.post<{ accessToken: string; refreshToken: string; user: any }>('/auth/login', { phone, password }),
+  setPassword: (password: string, confirmPassword: string) =>
+    api.post<{ success: boolean }>('/auth/set-password', { password, confirmPassword }),
 };
 
 // Users

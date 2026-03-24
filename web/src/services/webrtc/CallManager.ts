@@ -46,15 +46,26 @@ class CallManager {
         return;
       }
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === 'video',
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 1,
+        },
+        video: type === 'video' ? {
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 30, max: 60 },
+          facingMode: 'user',
+        } : false,
       });
     } catch (err: any) {
       alert('Не удалось получить доступ к микрофону/камере: ' + (err?.message || err));
       return;
     }
 
-    // Create peer connection
+    // Create peer connection with high quality settings
     this.pc = new RTCPeerConnection(ICE_CONFIG);
     this.remoteStream = new MediaStream();
 
@@ -116,8 +127,16 @@ class CallManager {
       console.log('[Call] ICE gathering:', this.pc?.iceGatheringState);
     };
 
+    // Set high bitrate for senders
+    this.applyHighQuality(this.pc);
+
     // Create offer
     const offer = await this.pc.createOffer();
+    // Boost audio bitrate in SDP
+    if (offer.sdp) {
+      offer.sdp = this.setMediaBitrate(offer.sdp, 'audio', 128);
+      offer.sdp = this.setMediaBitrate(offer.sdp, 'video', 2500);
+    }
     await this.pc.setLocalDescription(offer);
 
     // Set store
@@ -188,8 +207,19 @@ class CallManager {
 
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: call.type === 'video',
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 1,
+        },
+        video: call.type === 'video' ? {
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 30, max: 60 },
+          facingMode: 'user',
+        } : false,
       });
     } catch {
       alert('Не удалось получить доступ к микрофону/камере');
@@ -256,7 +286,12 @@ class CallManager {
 
     await this.pc.setRemoteDescription(new RTCSessionDescription(call.offer));
     await this.flushIceCandidates();
+    this.applyHighQuality(this.pc);
     const answer = await this.pc.createAnswer();
+    if (answer.sdp) {
+      answer.sdp = this.setMediaBitrate(answer.sdp, 'audio', 128);
+      answer.sdp = this.setMediaBitrate(answer.sdp, 'video', 2500);
+    }
     await this.pc.setLocalDescription(answer);
 
     wsTransport.send('call:answer', {
@@ -392,6 +427,42 @@ class CallManager {
 
   getLocalStream() { return this.localStream; }
   getRemoteStream() { return this.remoteStream; }
+
+  // Set high bitrate for active senders
+  private applyHighQuality(pc: RTCPeerConnection) {
+    for (const sender of pc.getSenders()) {
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) {
+        params.encodings = [{}];
+      }
+      if (sender.track?.kind === 'audio') {
+        params.encodings[0].maxBitrate = 128_000; // 128 kbps audio
+      } else if (sender.track?.kind === 'video') {
+        params.encodings[0].maxBitrate = 2_500_000; // 2.5 Mbps video
+        params.encodings[0].scaleResolutionDownBy = 1.0; // no downscale
+      }
+      sender.setParameters(params).catch(() => {});
+    }
+  }
+
+  // Modify SDP to set bitrate limits
+  private setMediaBitrate(sdp: string, media: 'audio' | 'video', bitrate: number): string {
+    const lines = sdp.split('\n');
+    let inSection = false;
+    const result: string[] = [];
+    for (const line of lines) {
+      result.push(line);
+      if (line.startsWith(`m=${media}`)) {
+        inSection = true;
+      } else if (line.startsWith('m=') && !line.startsWith(`m=${media}`)) {
+        inSection = false;
+      }
+      if (inSection && line.startsWith('c=')) {
+        result.push(`b=AS:${bitrate}`);
+      }
+    }
+    return result.join('\n');
+  }
 }
 
 export const callManager = new CallManager();

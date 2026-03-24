@@ -2,6 +2,40 @@ import { useState, useRef, useEffect } from 'react';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 
+const COUNTRIES = [
+  { code: '+7', flag: '🇷🇺', name: 'Россия' },
+  { code: '+7', flag: '🇰🇿', name: 'Казахстан' },
+  { code: '+375', flag: '🇧🇾', name: 'Беларусь' },
+  { code: '+380', flag: '🇺🇦', name: 'Украина' },
+  { code: '+998', flag: '🇺🇿', name: 'Узбекистан' },
+  { code: '+996', flag: '🇰🇬', name: 'Кыргызстан' },
+  { code: '+992', flag: '🇹🇯', name: 'Таджикистан' },
+  { code: '+993', flag: '🇹🇲', name: 'Туркменистан' },
+  { code: '+374', flag: '🇦🇲', name: 'Армения' },
+  { code: '+995', flag: '🇬🇪', name: 'Грузия' },
+  { code: '+994', flag: '🇦🇿', name: 'Азербайджан' },
+  { code: '+373', flag: '🇲🇩', name: 'Молдова' },
+  { code: '+370', flag: '🇱🇹', name: 'Литва' },
+  { code: '+371', flag: '🇱🇻', name: 'Латвия' },
+  { code: '+372', flag: '🇪🇪', name: 'Эстония' },
+  { code: '+1', flag: '🇺🇸', name: 'США' },
+  { code: '+44', flag: '🇬🇧', name: 'Великобритания' },
+  { code: '+49', flag: '🇩🇪', name: 'Германия' },
+  { code: '+33', flag: '🇫🇷', name: 'Франция' },
+  { code: '+39', flag: '🇮🇹', name: 'Италия' },
+  { code: '+34', flag: '🇪🇸', name: 'Испания' },
+  { code: '+90', flag: '🇹🇷', name: 'Турция' },
+  { code: '+971', flag: '🇦🇪', name: 'ОАЭ' },
+  { code: '+972', flag: '🇮🇱', name: 'Израиль' },
+  { code: '+86', flag: '🇨🇳', name: 'Китай' },
+  { code: '+82', flag: '🇰🇷', name: 'Южная Корея' },
+  { code: '+81', flag: '🇯🇵', name: 'Япония' },
+  { code: '+91', flag: '🇮🇳', name: 'Индия' },
+  { code: '+55', flag: '🇧🇷', name: 'Бразилия' },
+  { code: '+52', flag: '🇲🇽', name: 'Мексика' },
+  { code: '+61', flag: '🇦🇺', name: 'Австралия' },
+];
+
 type Tab = 'login' | 'register';
 type Step = 'form' | 'code' | 'profile';
 
@@ -22,8 +56,13 @@ export function AuthPage() {
   };
 
   // Form fields
-  const [phone, setPhone] = useState('+7');
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const countryPickerRef = useRef<HTMLDivElement | null>(null);
   const [email, setEmail] = useState('');
+  const phone = selectedCountry.code + phoneNumber.replace(/\D/g, '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -41,6 +80,17 @@ export function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
+
+  // Close country picker on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (countryPickerRef.current && !countryPickerRef.current.contains(e.target as Node)) {
+        setShowCountryPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   // Countdown timer
   useEffect(() => {
@@ -60,8 +110,8 @@ export function AuthPage() {
 
   // ── Login ──────────────────────────────────────────────────────
   const handleLogin = async () => {
-    if (phone.length < 12) {
-      setError('Введите номер в формате +7XXXXXXXXXX');
+    if (phoneNumber.replace(/\D/g, '').length < 6) {
+      setError('Введите номер телефона');
       return;
     }
     if (!password) {
@@ -82,8 +132,8 @@ export function AuthPage() {
 
   // ── Register ───────────────────────────────────────────────────
   const handleRegister = async () => {
-    if (phone.length < 12) {
-      setError('Введите номер в формате +7XXXXXXXXXX');
+    if (phoneNumber.replace(/\D/g, '').length < 6) {
+      setError('Введите номер телефона');
       return;
     }
     if (!password || password.length < 6) {
@@ -200,6 +250,64 @@ export function AuthPage() {
     }
   };
 
+  const filteredCountries = countrySearch
+    ? COUNTRIES.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.includes(countrySearch))
+    : COUNTRIES;
+
+  const phoneInput = (autoFocus?: boolean, onEnter?: () => void) => (
+    <div className="relative" ref={countryPickerRef}>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => { setShowCountryPicker(!showCountryPicker); setCountrySearch(''); }}
+          className="flex items-center gap-1 px-3 py-3 bg-dark-700 border border-dark-500 rounded-xl text-white hover:border-accent transition-colors shrink-0"
+        >
+          <span className="text-lg">{selectedCountry.flag}</span>
+          <span className="text-sm text-gray-400">{selectedCountry.code}</span>
+          <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+        </button>
+        <input
+          type="tel"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s\-()]/g, ''))}
+          onKeyDown={onEnter ? (e) => e.key === 'Enter' && onEnter() : undefined}
+          placeholder="999 123 45 67"
+          className={inputClass + ' text-lg tracking-wider flex-1'}
+          autoFocus={autoFocus}
+        />
+      </div>
+      {showCountryPicker && (
+        <div className="absolute top-full left-0 mt-1 w-72 bg-dark-700 border border-dark-500 rounded-xl shadow-xl z-50 max-h-64 overflow-hidden flex flex-col">
+          <div className="p-2 border-b border-dark-500">
+            <input
+              type="text"
+              value={countrySearch}
+              onChange={(e) => setCountrySearch(e.target.value)}
+              placeholder="Поиск страны..."
+              className="w-full px-3 py-2 bg-dark-600 border border-dark-500 rounded-lg text-white text-sm focus:outline-none focus:border-accent"
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto">
+            {filteredCountries.map((c, i) => (
+              <button
+                key={`${c.code}-${c.name}-${i}`}
+                onClick={() => { setSelectedCountry(c); setShowCountryPicker(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 transition-colors text-left ${
+                  c.code === selectedCountry.code && c.name === selectedCountry.name ? 'bg-dark-600' : ''
+                }`}
+              >
+                <span className="text-lg">{c.flag}</span>
+                <span className="text-white text-sm flex-1">{c.name}</span>
+                <span className="text-gray-400 text-sm">{c.code}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   // ── Shared UI pieces ──────────────────────────────────────────
   const inputClass =
     'w-full px-4 py-3 bg-dark-700 border border-dark-500 rounded-xl text-white focus:outline-none focus:border-accent transition-colors';
@@ -307,15 +415,7 @@ export function AuthPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Номер телефона</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                    placeholder="+7 999 123 45 67"
-                    className={inputClass + ' text-lg tracking-wider'}
-                    autoFocus
-                  />
+                  {phoneInput(true, handleLogin)}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Пароль</label>
@@ -339,14 +439,7 @@ export function AuthPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Номер телефона</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+7 999 123 45 67"
-                    className={inputClass + ' text-lg tracking-wider'}
-                    autoFocus
-                  />
+                  {phoneInput(true)}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Email <span className="text-gray-600">(необязательно)</span></label>

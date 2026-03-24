@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-62:12
-INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-62:12
-INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-62:12
-INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-62:12
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-63:12
+INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-63:12
+INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-63:12
+INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:2:1-63:12
 MERGED from [androidx.hilt:hilt-navigation-compose:1.2.0] C:\Users\viptd\.gradle\caches\9.0.0\transforms\594a9059415cded237a2d04e6e05b5e2\transformed\hilt-navigation-compose-1.2.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.hilt:hilt-navigation:1.2.0] C:\Users\viptd\.gradle\caches\9.0.0\transforms\7f69db2a483d476fbe617a34cc17ef84\transformed\hilt-navigation-1.2.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.navigation:navigation-common:2.8.5] C:\Users\viptd\.gradle\caches\9.0.0\transforms\a6d3342e06799403fda075dca530375f\transformed\navigation-common-2.8.5\AndroidManifest.xml:17:1-22:12
@@ -187,8 +187,8 @@ MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] C:\Use
 	android:name
 		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:14:22-65
 application
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:16:5-61:19
-INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:16:5-61:19
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:16:5-62:19
+INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:16:5-62:19
 MERGED from [com.google.firebase:firebase-messaging-ktx:24.1.0] C:\Users\viptd\.gradle\caches\9.0.0\transforms\7b1d21021ca3ab329b8c2b9a455dbb78\transformed\firebase-messaging-ktx-24.1.0\AndroidManifest.xml:22:5-30:19
 MERGED from [com.google.firebase:firebase-messaging-ktx:24.1.0] C:\Users\viptd\.gradle\caches\9.0.0\transforms\7b1d21021ca3ab329b8c2b9a455dbb78\transformed\firebase-messaging-ktx-24.1.0\AndroidManifest.xml:22:5-30:19
 MERGED from [com.google.firebase:firebase-messaging:24.1.0] C:\Users\viptd\.gradle\caches\9.0.0\transforms\56177860e11badbbdfe8f720da6c17d1\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:28:5-64:19
@@ -238,85 +238,87 @@ MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.15.0] C:\Users\viptd\.gradle\caches\9.0.0\transforms\1b15da8849aaa1eeb0a6f350b2c5a35e\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:21:9-35
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:22:9-35
 	android:label
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:20:9-34
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:21:9-34
+	android:roundIcon
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:20:9-54
 	android:icon
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:19:9-56
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:19:9-43
 	android:allowBackup
 		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:18:9-35
 	android:theme
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:22:9-46
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:23:9-46
 	android:usesCleartextTraffic
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:23:9-44
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:24:9-44
 	android:name
 		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:17:9-32
 activity#com.fomo.chat.MainActivity
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:25:9-41:20
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:26:9-42:20
 	android:windowSoftInputMode
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:28:13-55
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:29:13-55
 	android:exported
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:27:13-36
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:28:13-36
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:26:13-41
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:27:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:29:13-32:29
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:30:13-33:29
 action#android.intent.action.MAIN
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:30:17-69
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:31:17-69
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:30:25-66
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:31:25-66
 category#android.intent.category.LAUNCHER
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:31:17-77
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:32:17-77
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:31:27-74
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:32:27-74
 intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:auth+data:scheme:fomochat
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:35:13-40:29
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:36:13-41:29
 action#android.intent.action.VIEW
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:36:17-69
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:37:17-69
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:36:25-66
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:37:25-66
 category#android.intent.category.DEFAULT
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:37:17-76
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:38:17-76
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:37:27-73
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:38:27-73
 category#android.intent.category.BROWSABLE
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:38:17-78
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:39:17-78
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:38:27-75
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:39:27-75
 data
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:39:17-71
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:40:17-71
 	android:host
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:39:49-68
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:40:49-68
 	android:scheme
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:39:23-48
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:40:23-48
 service#com.fomo.chat.service.FcmService
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:43:9-49:19
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:44:9-50:19
 	android:exported
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:45:13-37
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:46:13-37
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:44:13-47
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:45:13-47
 intent-filter#action:name:com.google.firebase.MESSAGING_EVENT
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:46:13-48:29
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:47:13-49:29
 action#com.google.firebase.MESSAGING_EVENT
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:47:17-78
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:48:17-78
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:47:25-75
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:48:25-75
 service#com.fomo.chat.service.CallService
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:51:9-54:57
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:52:9-55:57
 	android:exported
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:53:13-37
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:54:13-37
 	android:foregroundServiceType
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:54:13-54
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:55:13-54
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:52:13-48
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:53:13-48
 service#com.fomo.chat.service.WebSocketService
-ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:56:9-59:56
+ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:57:9-60:56
 	android:exported
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:58:13-37
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:59:13-37
 	android:foregroundServiceType
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:59:13-53
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:60:13-53
 	android:name
-		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:57:13-53
+		ADDED from Z:\EK-26\android\app\src\main\AndroidManifest.xml:58:13-53
 uses-sdk
 INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from Z:\EK-26\android\app\src\main\AndroidManifest.xml

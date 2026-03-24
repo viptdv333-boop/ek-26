@@ -1,22 +1,54 @@
 [
     {
-        "merged": "C:\\Users\\viptd\\.gradle\\daemon\\9.0.0\\com.fomo.chat.app-debug-73:\\drawable_ic_notification.xml.flat",
-        "source": "C:\\Users\\viptd\\.gradle\\daemon\\9.0.0\\com.fomo.chat.app-main-75:\\drawable\\ic_notification.xml"
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "C:\\Users\\viptd\\.gradle\\daemon\\9.0.0\\com.fomo.chat.app-debug-73:\\mipmap-hdpi_ic_launcher.xml.flat",
-        "source": "C:\\Users\\viptd\\.gradle\\daemon\\9.0.0\\com.fomo.chat.app-main-75:\\mipmap-hdpi\\ic_launcher.xml"
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "C:\\Users\\viptd\\.gradle\\daemon\\9.0.0\\com.fomo.chat.app-debug-73:\\drawable_ic_launcher_foreground.xml.flat",
-        "source": "C:\\Users\\viptd\\.gradle\\daemon\\9.0.0\\com.fomo.chat.app-main-75:\\drawable\\ic_launcher_foreground.xml"
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-hdpi/ic_launcher.png"
     },
     {
         "merged": "com.fomo.chat.app-debug-73:/drawable-xxhdpi_logo_fomo.png.flat",
         "source": "com.fomo.chat.app-main-75:/drawable-xxhdpi/logo_fomo.png"
     },
     {
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
         "merged": "com.fomo.chat.app-debug-73:/drawable-xxhdpi_ic_launcher_foreground.png.flat",
         "source": "com.fomo.chat.app-main-75:/drawable-xxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.fomo.chat.app-debug-73:/drawable_ic_notification.xml.flat",
+        "source": "com.fomo.chat.app-main-75:/drawable/ic_notification.xml"
+    },
+    {
+        "merged": "com.fomo.chat.app-debug-73:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.fomo.chat.app-main-75:/mipmap-mdpi/ic_launcher_round.png"
     }
 ]

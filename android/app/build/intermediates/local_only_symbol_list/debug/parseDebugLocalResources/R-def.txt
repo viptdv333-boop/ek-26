@@ -5,6 +5,7 @@ drawable ic_launcher_foreground
 drawable ic_notification
 drawable logo_fomo
 mipmap ic_launcher
+mipmap ic_launcher_round
 string gcm_defaultSenderId
 string google_api_key
 string google_app_id

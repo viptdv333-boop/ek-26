@@ -10,7 +10,7 @@ public final class BuildConfig {
   public static final int VERSION_CODE = 1;
   public static final String VERSION_NAME = "1.0.0";
   // Field from default config.
-  public static final String API_BASE_URL = "https://ek26.fomo.broker/api";
+  public static final String API_BASE_URL = "https://chat.fomo.broker/api";
   // Field from default config.
-  public static final String WS_URL = "wss://ek26.fomo.broker/ws";
+  public static final String WS_URL = "wss://chat.fomo.broker/ws";
 }

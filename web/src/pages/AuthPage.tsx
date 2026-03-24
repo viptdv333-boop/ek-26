@@ -198,16 +198,6 @@ export function AuthPage() {
             {/* Tabs */}
             <div className="flex mb-6 bg-dark-700 rounded-xl p-1">
               <button
-                onClick={() => switchTab('login')}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  tab === 'login'
-                    ? 'bg-accent text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Вход
-              </button>
-              <button
                 onClick={() => switchTab('register')}
                 className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                   tab === 'register'
@@ -216,6 +206,16 @@ export function AuthPage() {
                 }`}
               >
                 Регистрация
+              </button>
+              <button
+                onClick={() => switchTab('login')}
+                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  tab === 'login'
+                    ? 'bg-accent text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Вход
               </button>
             </div>
 

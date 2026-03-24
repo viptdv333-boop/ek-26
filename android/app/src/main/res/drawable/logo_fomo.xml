@@ -3,24 +3,13 @@
     android:height="80dp"
     android:viewportWidth="512"
     android:viewportHeight="512">
-    <!-- Dark rounded rect background -->
     <path
         android:fillColor="#0a0a0f"
         android:pathData="M0,112C0,50.1 50.1,0 112,0h288c61.9,0 112,50.1 112,112v288c0,61.9 -50.1,112 -112,112H112C50.1,512 0,461.9 0,400z"/>
-    <!-- Candle wick -->
-    <path
-        android:fillColor="#e81717"
-        android:pathData="M148,60h8v60h-8z"/>
-    <!-- F vertical bar -->
-    <path
-        android:fillColor="#e81717"
-        android:pathData="M130,120h50v330h-50z"/>
+    <!-- F vertical -->
+    <path android:fillColor="#e81717" android:pathData="M130,80h52v350h-52z"/>
     <!-- F top horizontal -->
-    <path
-        android:fillColor="#e81717"
-        android:pathData="M130,120h200v55H130z"/>
+    <path android:fillColor="#e81717" android:pathData="M130,80h210v58H130z"/>
     <!-- F middle horizontal -->
-    <path
-        android:fillColor="#e81717"
-        android:pathData="M130,245h155v50H130z"/>
+    <path android:fillColor="#e81717" android:pathData="M130,215h160v52H130z"/>
 </vector>

@@ -323,6 +323,16 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 </button>
               </div>
 
+              {/* Logout */}
+              <div className="pt-4 border-t border-dark-500">
+                <button
+                  onClick={() => { authLogout(); onClose(); }}
+                  className="w-full py-2.5 bg-dark-600 hover:bg-dark-500 text-white font-medium rounded-xl transition-colors text-sm border border-dark-400"
+                >
+                  Выйти из аккаунта
+                </button>
+              </div>
+
               {/* Delete account */}
               <div className="pt-4 border-t border-dark-500">
                 {!showDeleteConfirm ? (

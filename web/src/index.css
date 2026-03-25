@@ -70,6 +70,7 @@
   .light .text-gray-100 { color: #374151 !important; }
   .light .text-gray-300 { color: #4b5563 !important; }
   .light .text-gray-400 { color: var(--color-text-secondary) !important; }
+  .light .text-gray-200 { color: #374151 !important; }
   .light .text-gray-500 { color: var(--color-text-muted) !important; }
   .light .border-dark-500 { border-color: var(--color-border) !important; }
   .light .border-dark-600 { border-color: var(--color-border) !important; }

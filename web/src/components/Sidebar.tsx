@@ -160,6 +160,23 @@ export function Sidebar() {
     }
   };
 
+  const handleLeaveGroup = async (convId: string) => {
+    setChatMenu(null);
+    await new Promise(r => setTimeout(r, 100));
+    if (!window.confirm('Покинуть группу?')) return;
+    try {
+      const userId = useAuthStore.getState().user?.id;
+      if (userId) {
+        await conversationsApi.removeMember(convId, userId);
+        const updated = conversations.filter(c => c.id !== convId);
+        setConversations(updated);
+        if (activeId === convId) setActive(null);
+      }
+    } catch (err) {
+      console.error('Leave group failed:', err);
+    }
+  };
+
   const handleDeleteChat = async (convId: string) => {
     setChatMenu(null);
     // Small delay to let menu close before confirm dialog
@@ -565,7 +582,12 @@ export function Sidebar() {
               label: 'Заблокировать',
               icon: 'block',
               onClick: () => handleBlockUser(chatMenu.convId),
-            }] : []),
+            }] : [{
+              label: 'Покинуть группу',
+              icon: 'delete',
+              onClick: () => handleLeaveGroup(chatMenu.convId),
+              danger: true,
+            }]),
             {
               label: 'Удалить чат',
               icon: 'delete',

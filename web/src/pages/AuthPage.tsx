@@ -3,16 +3,8 @@ import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 import { useTranslation } from '../i18n';
 
-function generateCaptcha() {
-  const ops = ['+', '-', '×'] as const;
-  const op = ops[Math.floor(Math.random() * ops.length)];
-  let a: number, b: number, answer: number;
-  switch (op) {
-    case '+': a = Math.floor(Math.random() * 20) + 1; b = Math.floor(Math.random() * 20) + 1; answer = a + b; break;
-    case '-': a = Math.floor(Math.random() * 20) + 5; b = Math.floor(Math.random() * a) + 1; answer = a - b; break;
-    case '×': a = Math.floor(Math.random() * 9) + 2; b = Math.floor(Math.random() * 9) + 2; answer = a * b; break;
-  }
-  return { question: `${a} ${op} ${b} = ?`, answer };
+function generateSliderTarget() {
+  return Math.floor(Math.random() * 60) + 20; // 20-80%
 }
 
 const COUNTRIES = [
@@ -90,45 +82,21 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Captcha
-  const [captcha, setCaptcha] = useState(generateCaptcha);
-  const [captchaInput, setCaptchaInput] = useState('');
-  const captchaCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Slider captcha
+  const [sliderTarget, setSliderTarget] = useState(generateSliderTarget);
+  const [sliderValue, setSliderValue] = useState(0);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
-  const drawCaptcha = useCallback(() => {
-    const canvas = captchaCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Background
-    ctx.fillStyle = theme === 'dark' ? '#1a1a25' : '#f3f4f6';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Noise lines
-    for (let i = 0; i < 5; i++) {
-      ctx.strokeStyle = `rgba(${Math.random()*150},${Math.random()*150},${Math.random()*150},0.4)`;
-      ctx.beginPath();
-      ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
-      ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
-      ctx.stroke();
-    }
-    // Text with slight rotation
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((Math.random() - 0.5) * 0.15);
-    ctx.font = 'bold 28px monospace';
-    ctx.fillStyle = theme === 'dark' ? '#e5e7eb' : '#374151';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(captcha.question, 0, 0);
-    ctx.restore();
-  }, [captcha, theme]);
-
-  useEffect(() => { drawCaptcha(); }, [drawCaptcha]);
+  const checkSlider = (val: number) => {
+    setSliderValue(val);
+    const diff = Math.abs(val - sliderTarget);
+    setCaptchaVerified(diff <= 3); // tolerance ±3%
+  };
 
   const refreshCaptcha = () => {
-    setCaptcha(generateCaptcha());
-    setCaptchaInput('');
+    setSliderTarget(generateSliderTarget());
+    setSliderValue(0);
+    setCaptchaVerified(false);
   };
 
   // UI state
@@ -187,9 +155,8 @@ export function AuthPage() {
 
   // ── Register ───────────────────────────────────────────────────
   const handleRegister = async () => {
-    if (parseInt(captchaInput) !== captcha.answer) {
+    if (!captchaVerified) {
       setError(t('auth.wrongCaptcha'));
-      refreshCaptcha();
       return;
     }
     if (phoneNumber.replace(/\D/g, '').length < 6) {
@@ -420,22 +387,39 @@ export function AuthPage() {
   // ── Render ─────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark-900 relative">
-      {/* Theme toggle */}
-      <button
-        onClick={toggleTheme}
-        className="absolute top-6 right-6 p-2 rounded-full bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
-        title={theme === 'dark' ? t('auth.lightTheme') : t('auth.darkTheme')}
-      >
-        {theme === 'dark' ? (
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-          </svg>
-        )}
-      </button>
+      {/* Top bar: language + theme */}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        {/* Language selector */}
+        {(['ru', 'en', 'zh'] as const).map((l) => (
+          <button
+            key={l}
+            onClick={() => setLang(l)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+              lang === l
+                ? 'bg-accent text-white'
+                : 'bg-dark-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            {l === 'ru' ? '🇷🇺' : l === 'en' ? '🇬🇧' : '🇨🇳'}
+          </button>
+        ))}
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-full bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
+          title={theme === 'dark' ? t('auth.lightTheme') : t('auth.darkTheme')}
+        >
+          {theme === 'dark' ? (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+          )}
+        </button>
+      </div>
 
       <div className="w-full max-w-sm px-6">
         {/* Logo */}
@@ -520,25 +504,29 @@ export function AuthPage() {
                   <label className="block text-sm text-gray-400 mb-2">{t('auth.confirmPassword')}</label>
                   {passwordInput(confirmPassword, setConfirmPassword, t('auth.confirmPlaceholder'), showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleRegister())}
                 </div>
-                {/* Captcha */}
+                {/* Slider captcha */}
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <canvas ref={captchaCanvasRef} width={200} height={50} className="rounded-lg border border-dark-500" />
-                    <button type="button" onClick={refreshCaptcha} className="text-gray-400 hover:text-white transition-colors p-1" title={t('auth.captchaRefresh')}>
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992" />
-                      </svg>
-                    </button>
+                  <p className="text-sm text-gray-400 mb-2">{t('auth.slideCaptcha')}</p>
+                  <div className="relative">
+                    {/* Target marker */}
+                    <div
+                      className="absolute top-0 h-full w-0.5 bg-accent z-10 pointer-events-none"
+                      style={{ left: `${sliderTarget}%` }}
+                    >
+                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs text-accent">▼</div>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={sliderValue}
+                      onChange={(e) => checkSlider(Number(e.target.value))}
+                      className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${captchaVerified ? 'accent-green-500' : 'accent-gray-400'}`}
+                    />
                   </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={captchaInput}
-                    onChange={(e) => setCaptchaInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
-                    placeholder={t('auth.captchaPlaceholder')}
-                    className={inputClass + ' text-center'}
-                  />
+                  <p className={`text-xs mt-1 ${captchaVerified ? 'text-green-500' : 'text-gray-500'}`}>
+                    {captchaVerified ? '✓ ' + (t('auth.captchaOk') || 'Подтверждено') : t('auth.slideHint') || 'Передвиньте на отметку'}
+                  </p>
                 </div>
 
                 <button onClick={handleRegister} disabled={loading} className={btnClass}>

@@ -395,7 +395,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                         lang === item.code ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
                       }`}
                     >
-                      {item.flag} {item.name}
+                      {item.flag}
                     </button>
                   ))}
                 </div>

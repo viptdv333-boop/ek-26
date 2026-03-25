@@ -45,6 +45,9 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('ek26_wallpaper') || 'default');
   const [wallpaperUploading, setWallpaperUploading] = useState(false);
 
+  // Auto-translate
+  const [autoTranslate, setAutoTranslate] = useState(() => localStorage.getItem('ek26_auto_translate') === 'true');
+
   // Delete account
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
@@ -425,18 +428,19 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 <button
                   onClick={() => {
                     const current = localStorage.getItem('ek26_auto_translate') === 'true';
-                    localStorage.setItem('ek26_auto_translate', current ? 'false' : 'true');
+                    const next = !current;
+                    localStorage.setItem('ek26_auto_translate', String(next));
                     window.dispatchEvent(new Event('auto-translate-changed'));
-                    // Force re-render
-                    setTheme(prev => prev);
+                    setAutoTranslate(next);
                   }}
                   className={`relative w-11 h-6 rounded-full transition-colors ${
-                    localStorage.getItem('ek26_auto_translate') === 'true' ? 'bg-accent' : 'bg-dark-500'
+                    autoTranslate ? 'bg-accent' : 'bg-dark-500'
                   }`}
                 >
-                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                    localStorage.getItem('ek26_auto_translate') === 'true' ? 'translate-x-5.5 left-[1.375rem]' : 'left-0.5'
-                  }`} />
+                  <div
+                    className="absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all"
+                    style={{ left: autoTranslate ? '1.375rem' : '0.125rem' }}
+                  />
                 </button>
               </div>
 

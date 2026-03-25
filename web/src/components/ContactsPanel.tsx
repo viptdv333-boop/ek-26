@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useContactsStore, Contact } from '../stores/contactsStore';
 import { useChatStore } from '../stores/chatStore';
 import { conversationsApi, usersApi, contactsApi, chatActionsApi } from '../services/api/endpoints';
@@ -32,11 +32,37 @@ export function ContactsPanel() {
   const [syncResults, setSyncResults] = useState<SyncResult[] | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
+  const [searchResults, setSearchResults] = useState<{ id: string; displayName: string; phone: string | null; avatarUrl: string | null }[]>([]);
+  const [searchingPhone, setSearchingPhone] = useState(false);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
   const hasContactPicker = 'contacts' in navigator && 'ContactsManager' in window;
 
   useEffect(() => {
     fetchContacts();
   }, [fetchContacts]);
+
+  // Live search as user types phone/name
+  useEffect(() => {
+    const q = phone.replace(/^\+$/, '');
+    if (q.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchingPhone(true);
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const users = await usersApi.search(q);
+        setSearchResults(Array.isArray(users) ? users : []);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchingPhone(false);
+      }
+    }, 400);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [phone]);
 
   const handleAddByPhone = async () => {
     if (phone.replace(/[^\d]/g, '').length < 10) {
@@ -193,6 +219,47 @@ export function ContactsPanel() {
           </button>
         </div>
         {addError && <p className="text-xs text-red-400 mt-1">{addError}</p>}
+        {/* Live search results */}
+        {searchResults.length > 0 && (
+          <div className="mt-2 bg-dark-700 border border-dark-500 rounded-xl overflow-hidden">
+            {searchResults.map((user) => {
+              const alreadyAdded = contacts.some(c => c.userId === user.id);
+              return (
+                <div key={user.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 transition-colors">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                      <span className="text-accent text-xs font-medium">{user.displayName[0]?.toUpperCase()}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white truncate">{user.displayName}</p>
+                    {user.phone && <p className="text-xs text-gray-500 truncate">{user.phone}</p>}
+                  </div>
+                  {alreadyAdded ? (
+                    <span className="text-xs text-green-400">{t('contacts.added')} &#10003;</span>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await contactsApi.add(user.id);
+                          await fetchContacts();
+                          setSearchResults(prev => prev.filter(u => u.id !== user.id));
+                          setPhone('+');
+                        } catch {}
+                      }}
+                      className="px-3 py-1 bg-accent hover:bg-accent-hover text-white text-xs rounded-lg transition-colors"
+                    >
+                      {t('contacts.add')}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {searchingPhone && <p className="text-xs text-gray-500 mt-1">{t('contacts.searching')}</p>}
       </div>
 
       {hasContactPicker && (

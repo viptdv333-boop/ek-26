@@ -9,7 +9,9 @@ import { uploadFile, isImageFile } from '../services/api/upload';
 import { ForwardDialog } from './ForwardDialog';
 import { EmojiPicker } from './EmojiPicker';
 import { VoiceRecorder } from './VoiceRecorder';
+import { GroupInfoPanel } from './GroupInfoPanel';
 import { callManager } from '../services/webrtc/CallManager';
+import { conversationsApi } from '../services/api/endpoints';
 import type { Attachment } from '../stores/chatStore';
 
 const EMPTY_ARRAY: string[] = [];
@@ -27,6 +29,7 @@ export function ChatRoom({ conversationId }: Props) {
   const [forwardMsg, setForwardMsg] = useState<any>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const replyingTo = useChatStore((s) => s.replyingTo);
   const setReplyingTo = useChatStore((s) => s.setReplyingTo);
@@ -442,7 +445,10 @@ export function ChatRoom({ conversationId }: Props) {
             </span>
           </div>
         )}
-        <div className="flex-1">
+        <div
+          className={`flex-1 ${conv?.type === 'group' ? 'cursor-pointer' : ''}`}
+          onClick={() => { if (conv?.type === 'group') setShowGroupInfo(true); }}
+        >
           <h2 className="text-sm font-medium text-white">{title}</h2>
           {subtitle && (
             <span className={`text-xs ${typingUsers.length > 0 ? 'text-accent' : 'text-gray-400'}`}>
@@ -724,6 +730,28 @@ export function ChatRoom({ conversationId }: Props) {
       </div>
 
       {forwardMsg && <ForwardDialog message={forwardMsg} onClose={() => setForwardMsg(null)} />}
+
+      {showGroupInfo && conv?.type === 'group' && (
+        <GroupInfoPanel
+          conversation={conv as any}
+          currentUserId={userId || ''}
+          onClose={() => setShowGroupInfo(false)}
+          onUpdated={async () => {
+            try {
+              const updated = await conversationsApi.getDetails(conversationId);
+              if (updated) {
+                const convs = useChatStore.getState().conversations;
+                const idx = convs.findIndex((c) => c.id === conversationId);
+                if (idx >= 0) {
+                  const next = [...convs];
+                  next[idx] = { ...next[idx], ...updated };
+                  useChatStore.setState({ conversations: next });
+                }
+              }
+            } catch {}
+          }}
+        />
+      )}
     </div>
   );
 }

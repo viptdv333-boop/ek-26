@@ -40,6 +40,9 @@ export const conversationsApi = {
   createGroup: (name: string, participantIds: string[]) => api.post<any>('/conversations/group', { name, participantIds }),
   getDetails: (id: string) => api.get<any>(`/conversations/${id}`),
   delete: (id: string) => api.delete<any>(`/conversations/${id}`),
+  updateGroup: (id: string, data: { name?: string; avatarUrl?: string }) => api.patch<any>(`/conversations/${id}`, data),
+  addMembers: (id: string, userIds: string[]) => api.post<any>(`/conversations/${id}/members`, { userIds }),
+  removeMember: (id: string, userId: string) => api.delete<any>(`/conversations/${id}/members/${userId}`),
 };
 
 // Messages

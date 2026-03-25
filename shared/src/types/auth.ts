@@ -34,7 +34,10 @@ const strongPassword = z.string()
 
 export const registerSchema = z.object({
   phone: phoneSchema,
-  email: z.string().email('Некорректный email').optional().or(z.literal('')),
+});
+
+export const registerSetPasswordSchema = z.object({
+  phone: phoneSchema,
   password: strongPassword,
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -60,5 +63,6 @@ export type VerifyCode = z.infer<typeof verifyCodeSchema>;
 export type RefreshToken = z.infer<typeof refreshTokenSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type Register = z.infer<typeof registerSchema>;
+export type RegisterSetPassword = z.infer<typeof registerSetPasswordSchema>;
 export type Login = z.infer<typeof loginSchema>;
 export type SetPassword = z.infer<typeof setPasswordSchema>;

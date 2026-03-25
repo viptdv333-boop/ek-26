@@ -50,6 +50,15 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.namePlaceholder': 'Имя',
     'auth.saving': 'Сохранение...',
     'auth.continue': 'Продолжить',
+    'auth.createAccount': 'Создать аккаунт',
+    'auth.creatingAccount': 'Создание...',
+    'auth.accountCreated': 'Аккаунт создан!',
+    'auth.linkEmail': 'Привязать почту',
+    'auth.skip': 'Пропустить',
+    'auth.sendEmailCode': 'Отправить код',
+    'auth.emailConfirmed': 'Почта подтверждена!',
+    'auth.enterEmail': 'Введите email',
+    'auth.verifying': 'Проверка...',
 
     // ── Sidebar ───────────────────────────────────────────────────
     'sidebar.chats': 'Чаты',
@@ -388,6 +397,15 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.namePlaceholder': 'Name',
     'auth.saving': 'Saving...',
     'auth.continue': 'Continue',
+    'auth.createAccount': 'Create account',
+    'auth.creatingAccount': 'Creating...',
+    'auth.accountCreated': 'Account created!',
+    'auth.linkEmail': 'Link email',
+    'auth.skip': 'Skip',
+    'auth.sendEmailCode': 'Send code',
+    'auth.emailConfirmed': 'Email confirmed!',
+    'auth.enterEmail': 'Enter email',
+    'auth.verifying': 'Verifying...',
 
     // ── Sidebar ───────────────────────────────────────────────────
     'sidebar.chats': 'Chats',
@@ -726,6 +744,15 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.namePlaceholder': '\u59D3\u540D',
     'auth.saving': '\u4FDD\u5B58\u4E2D...',
     'auth.continue': '\u7EE7\u7EED',
+    'auth.createAccount': '\u521B\u5EFA\u8D26\u6237',
+    'auth.creatingAccount': '\u521B\u5EFA\u4E2D...',
+    'auth.accountCreated': '\u8D26\u6237\u5DF2\u521B\u5EFA\uFF01',
+    'auth.linkEmail': '\u7ED1\u5B9A\u90AE\u7BB1',
+    'auth.skip': '\u8DF3\u8FC7',
+    'auth.sendEmailCode': '\u53D1\u9001\u9A8C\u8BC1\u7801',
+    'auth.emailConfirmed': '\u90AE\u7BB1\u5DF2\u9A8C\u8BC1\uFF01',
+    'auth.enterEmail': '\u8F93\u5165\u90AE\u7BB1',
+    'auth.verifying': '\u9A8C\u8BC1\u4E2D...',
 
     // ── Sidebar ───────────────────────────────────────────────────
     'sidebar.chats': '\u804A\u5929',

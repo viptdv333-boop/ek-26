@@ -13,10 +13,12 @@ export const authApi = {
     api.post<{ success: boolean; user: any }>('/auth/link-phone/verify', { phone, code }),
 
   // New auth flow
-  register: (data: { phone: string; email: string; password: string; confirmPassword: string }) =>
-    api.post<{ success: boolean; message: string }>('/auth/register', data),
+  register: (data: { phone: string }) =>
+    api.post<{ success: boolean }>('/auth/register', data),
   registerVerifyPhone: (phone: string, code: string) =>
-    api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser?: boolean }>('/auth/register/verify-phone', { phone, code }),
+    api.post<{ success: boolean; verified: boolean }>('/auth/register/verify-phone', { phone, code }),
+  registerSetPassword: (phone: string, password: string, confirmPassword: string) =>
+    api.post<{ accessToken: string; refreshToken: string; user: any }>('/auth/register/set-password', { phone, password, confirmPassword }),
   login: (phone: string, password: string) =>
     api.post<{ accessToken: string; refreshToken: string; user: any }>('/auth/login', { phone, password }),
   setPassword: (password: string, confirmPassword: string) =>

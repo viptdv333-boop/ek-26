@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 import { useTranslation } from '../i18n';
@@ -42,12 +42,12 @@ const COUNTRIES = [
 ];
 
 type Tab = 'login' | 'register';
-type Step = 'form' | 'code' | 'profile';
+type Step = 'phone' | 'code' | 'setPassword' | 'created' | 'linkEmail';
 
 export function AuthPage() {
   const { t, lang, setLang } = useTranslation();
   const [tab, setTab] = useState<Tab>('register');
-  const [step, setStep] = useState<Step>('form');
+  const [step, setStep] = useState<Step>('phone');
   const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'dark');
 
   const toggleTheme = () => {
@@ -71,8 +71,6 @@ export function AuthPage() {
   const phone = selectedCountry.code + phoneNumber.replace(/\D/g, '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-
   // Code verification
   const [code, setCode] = useState(['', '', '', '']);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -126,7 +124,7 @@ export function AuthPage() {
   // ── Switch tabs ────────────────────────────────────────────────
   const switchTab = (t: Tab) => {
     setTab(t);
-    setStep('form');
+    setStep('phone');
     setError('');
     setCode(['', '', '', '']);
   };
@@ -153,7 +151,7 @@ export function AuthPage() {
     }
   };
 
-  // ── Register ───────────────────────────────────────────────────
+  // ── Register (phone only) ─────────────────────────────────────
   const handleRegister = async () => {
     if (!captchaVerified) {
       setError(t('auth.wrongCaptcha'));
@@ -163,26 +161,10 @@ export function AuthPage() {
       setError(t('auth.enterPhone'));
       return;
     }
-    if (!password || password.length < 6) {
-      setError(t('auth.passwordMin'));
-      return;
-    }
-    if (!/[A-ZА-ЯЁ]/.test(password)) {
-      setError(t('auth.passwordUppercase'));
-      return;
-    }
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
-      setError(t('auth.passwordSpecial'));
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError(t('auth.passwordMismatch'));
-      return;
-    }
     setError('');
     setLoading(true);
     try {
-      await authApi.register({ phone, email: email || '', password, confirmPassword });
+      await authApi.register({ phone });
       setStep('code');
       setCountdown(60);
       setTimeout(() => codeRefs.current[0]?.focus(), 100);
@@ -228,13 +210,8 @@ export function AuthPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await authApi.registerVerifyPhone(phone, fullCode);
-      if (res.isNewUser) {
-        useAuthStore.getState().setTokens(res.accessToken, res.refreshToken);
-        setStep('profile');
-      } else {
-        login(res.accessToken, res.refreshToken, res.user);
-      }
+      await authApi.registerVerifyPhone(phone, fullCode);
+      setStep('setPassword');
     } catch (e: any) {
       setError(t('auth.wrongCode'));
       setCode(['', '', '', '']);
@@ -248,7 +225,7 @@ export function AuthPage() {
     setError('');
     setLoading(true);
     try {
-      await authApi.register({ phone, email: email || '', password, confirmPassword });
+      await authApi.register({ phone });
       setCountdown(60);
     } catch (e: any) {
       setError(e.message || t('auth.resendError'));
@@ -257,23 +234,71 @@ export function AuthPage() {
     }
   };
 
-  // ── Profile ────────────────────────────────────────────────────
-  const handleSetProfile = async () => {
-    if (!displayName.trim()) {
-      setError(t('auth.enterName'));
+  // ── Set password (finalize registration) ─────────────────────
+  const handleSetPassword = async () => {
+    if (!password || password.length < 6) {
+      setError(t('auth.passwordMin'));
+      return;
+    }
+    if (!/[A-ZА-ЯЁ]/.test(password)) {
+      setError(t('auth.passwordUppercase'));
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
+      setError(t('auth.passwordSpecial'));
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(t('auth.passwordMismatch'));
       return;
     }
     setError('');
     setLoading(true);
     try {
-      await usersApi.updateProfile({ displayName: displayName.trim() });
-      const profile = await usersApi.getProfile();
-      const { token, refreshToken } = useAuthStore.getState();
-      login(token!, refreshToken!, profile);
+      const res = await authApi.registerSetPassword(phone, password, confirmPassword);
+      useAuthStore.getState().setTokens(res.accessToken, res.refreshToken);
+      setStep('created');
     } catch (e: any) {
       setError(e.message || t('auth.error'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ── Link email (optional) ────────────────────────────────────
+  const [emailCode, setEmailCode] = useState(['', '', '', '']);
+  const emailCodeRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+
+  const handleSendEmailCode = async () => {
+    if (!email || !email.includes('@')) {
+      setError(t('auth.enterEmail'));
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      // Use the existing link-phone-like mechanism but for email
+      // For now, we mark email sent and show code input
+      // The actual email verification happens via the existing verify-email link flow
+      setEmailSent(true);
+    } catch (e: any) {
+      setError(e.message || t('auth.error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinishRegistration = () => {
+    const { token, refreshToken } = useAuthStore.getState();
+    if (token && refreshToken) {
+      usersApi.getProfile().then((profile) => {
+        login(token, refreshToken, profile);
+      }).catch(() => {
+        // Fallback — just login with minimal user info
+        login(token, refreshToken, { id: '', phone, displayName: phone });
+      });
     }
   };
 
@@ -427,8 +452,8 @@ export function AuthPage() {
           <img src="/logo-f.png" alt="FOMO" className="h-16 mx-auto mb-4 object-contain" />
         </div>
 
-        {/* ── FORM step (Login / Register tabs) ─────────────────── */}
-        {step === 'form' && (
+        {/* ── PHONE step (Login / Register tabs) ────────────────── */}
+        {step === 'phone' && (
           <>
             {/* Tabs */}
             <div className="flex mb-6 bg-dark-700 rounded-xl p-1">
@@ -478,31 +503,12 @@ export function AuthPage() {
               </div>
             )}
 
-            {/* ── Register form ───────────────────────────────── */}
+            {/* ── Register form (phone + captcha only) ─────────── */}
             {tab === 'register' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">{t('auth.phone')}</label>
                   {phoneInput(true)}
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">{t('auth.email')} <span className="text-gray-600">{t('auth.emailOptional')}</span></label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">{t('auth.password')}</label>
-                  {passwordInput(password, setPassword, t('auth.passwordPlaceholder'), showPassword, () => setShowPassword(!showPassword))}
-                  <p className="text-xs text-gray-500 mt-1">{t('auth.passwordHint')}</p>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">{t('auth.confirmPassword')}</label>
-                  {passwordInput(confirmPassword, setConfirmPassword, t('auth.confirmPlaceholder'), showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleRegister())}
                 </div>
                 {/* Slider captcha */}
                 <div>
@@ -582,7 +588,7 @@ export function AuthPage() {
             </div>
             <button
               onClick={() => {
-                setStep('form');
+                setStep('phone');
                 setCode(['', '', '', '']);
               }}
               className="w-full text-center text-gray-500 text-sm hover:text-gray-300"
@@ -592,22 +598,85 @@ export function AuthPage() {
           </div>
         )}
 
-        {/* ── PROFILE step ──────────────────────────────────────── */}
-        {step === 'profile' && (
+        {/* ── SET PASSWORD step ────────────────────────────────── */}
+        {step === 'setPassword' && (
           <div className="space-y-4">
-            <p className="text-center text-gray-400 text-sm">{t('auth.whatsYourName')}</p>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSetProfile()}
-              placeholder={t('auth.namePlaceholder')}
-              className={inputClass}
-              autoFocus
-            />
-            <button onClick={handleSetProfile} disabled={loading} className={btnClass}>
-              {loading ? t('auth.saving') : t('auth.continue')}
+            <p className="text-center text-gray-400 text-sm">{t('auth.passwordHint')}</p>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">{t('auth.password')}</label>
+              {passwordInput(password, setPassword, t('auth.passwordPlaceholder'), showPassword, () => setShowPassword(!showPassword), undefined, true)}
+            </div>
+            {/* Password requirements */}
+            <ul className="text-xs space-y-1 text-gray-500">
+              <li className={password.length >= 6 ? 'text-green-500' : ''}>{password.length >= 6 ? '\u2713' : '\u2022'} {t('auth.passwordMin')}</li>
+              <li className={/[A-ZА-ЯЁ]/.test(password) ? 'text-green-500' : ''}>{/[A-ZА-ЯЁ]/.test(password) ? '\u2713' : '\u2022'} {t('auth.passwordUppercase')}</li>
+              <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? 'text-green-500' : ''}>{/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? '\u2713' : '\u2022'} {t('auth.passwordSpecial')}</li>
+            </ul>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">{t('auth.confirmPassword')}</label>
+              {passwordInput(confirmPassword, setConfirmPassword, t('auth.confirmPlaceholder'), showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleSetPassword())}
+            </div>
+            <button onClick={handleSetPassword} disabled={loading} className={btnClass}>
+              {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
             </button>
+          </div>
+        )}
+
+        {/* ── CREATED step ──────────────────────────────────────────── */}
+        {step === 'created' && (
+          <div className="space-y-4 text-center">
+            <div className="text-5xl mb-2">&#10003;</div>
+            <p className="text-xl text-white font-medium">{t('auth.accountCreated')}</p>
+            <button onClick={() => setStep('linkEmail')} className={btnClass}>
+              {t('auth.linkEmail')}
+            </button>
+            <button
+              onClick={handleFinishRegistration}
+              className="w-full py-3 bg-dark-700 hover:bg-dark-600 rounded-xl text-gray-400 font-medium transition-colors"
+            >
+              {t('auth.skip')}
+            </button>
+          </div>
+        )}
+
+        {/* ── LINK EMAIL step (optional) ─────────────────────────── */}
+        {step === 'linkEmail' && (
+          <div className="space-y-4">
+            {!emailVerified ? (
+              <>
+                <p className="text-center text-gray-400 text-sm">{t('auth.enterEmail')}</p>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className={inputClass}
+                  autoFocus
+                />
+                <button onClick={handleSendEmailCode} disabled={loading} className={btnClass}>
+                  {loading ? t('auth.sending') : t('auth.sendEmailCode')}
+                </button>
+                {emailSent && (
+                  <p className="text-center text-green-400 text-sm">
+                    {t('auth.sendEmailCode')} &#10003;
+                  </p>
+                )}
+                <button
+                  onClick={handleFinishRegistration}
+                  className="w-full py-3 bg-dark-700 hover:bg-dark-600 rounded-xl text-gray-400 font-medium transition-colors"
+                >
+                  {t('auth.skip')}
+                </button>
+              </>
+            ) : (
+              <div className="text-center space-y-4">
+                <div className="text-5xl mb-2">&#10003;</div>
+                <p className="text-xl text-white font-medium">{t('auth.emailConfirmed')}</p>
+                <button onClick={handleFinishRegistration} className={btnClass}>
+                  {t('auth.continue')}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

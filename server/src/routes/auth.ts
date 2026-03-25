@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { requestCodeSchema, verifyCodeSchema, registerSchema, loginSchema, setPasswordSchema } from '@ek-26/shared';
+import { requestCodeSchema, verifyCodeSchema, registerSchema, registerSetPasswordSchema, loginSchema, setPasswordSchema } from '@ek-26/shared';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { SmsCode } from '../models/SmsCode';
@@ -382,7 +382,7 @@ export async function authRoutes(app: FastifyInstance) {
     };
   });
 
-  // ─── Register (phone + email + password) ────────────────────────────
+  // ─── Register (phone only — send code, do NOT create user) ─────────
   app.post('/api/auth/register', async (request, reply) => {
     const body = registerSchema.parse(request.body);
 
@@ -392,28 +392,7 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(409).send({ error: 'Этот номер телефона уже зарегистрирован' });
     }
 
-    // Check if email already taken (only if provided)
-    if (body.email) {
-      const existingEmail = await User.findOne({ email: body.email });
-      if (existingEmail) {
-        return reply.code(409).send({ error: 'Этот email уже зарегистрирован' });
-      }
-    }
-
-    // Hash password
-    const passwordHash = await bcrypt.hash(body.password, 12);
-
-    // Create user
-    await User.create({
-      phone: body.phone,
-      email: body.email || null,
-      passwordHash,
-      emailVerified: false,
-      displayName: body.phone,
-      rssFeedId: crypto.randomUUID(),
-    });
-
-    // Send verification call (NumCheckAPI or uCaller)
+    // Send verification call (NumCheckAPI flash call)
     await SmsCode.deleteMany({ phone: body.phone });
 
     const generatedCode = generateOtp();
@@ -429,10 +408,10 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(502).send({ error: 'Не удалось отправить код. Попробуйте позже.' });
     }
 
-    return { success: true, message: 'Code sent' };
+    return { success: true };
   });
 
-  // ─── Verify phone after registration ───────────────────────────────
+  // ─── Verify phone after registration (do NOT create user yet) ──────
   app.post('/api/auth/register/verify-phone', async (request, reply) => {
     const body = verifyCodeSchema.parse(request.body);
 
@@ -460,20 +439,30 @@ export async function authRoutes(app: FastifyInstance) {
     // Code is valid — delete it
     await SmsCode.deleteOne({ _id: smsCode._id });
 
-    // Find user by phone
-    const user = await User.findOne({ phone: body.phone });
-    if (!user) {
-      return reply.code(404).send({ error: 'User not found' });
+    return { success: true, verified: true };
+  });
+
+  // ─── Set password after registration (create account) ──────────────
+  app.post('/api/auth/register/set-password', async (request, reply) => {
+    const body = registerSetPasswordSchema.parse(request.body);
+
+    // Ensure phone is not already registered
+    const existing = await User.findOne({ phone: body.phone });
+    if (existing) {
+      return reply.code(409).send({ error: 'Этот номер телефона уже зарегистрирован' });
     }
 
-    // Send verification email in background (doesn't block login)
-    if (user.email && !user.emailVerified) {
-      signEmailVerificationToken(user._id.toString())
-        .then(emailToken => sendVerificationEmail(user.email!, emailToken))
-        .catch(err => app.log.error({ err, msg: 'Failed to send verification email' }));
-    }
+    // Hash password and create user
+    const passwordHash = await bcrypt.hash(body.password, 12);
+    const user = await User.create({
+      phone: body.phone,
+      passwordHash,
+      emailVerified: false,
+      displayName: body.phone,
+      rssFeedId: crypto.randomUUID(),
+    });
 
-    // Issue tokens immediately — email verification is optional
+    // Issue tokens
     const userId = user._id.toString();
     const accessToken = await signAccessToken(userId, user.phone || '');
     const refreshToken = await signRefreshToken(userId);
@@ -493,7 +482,7 @@ export async function authRoutes(app: FastifyInstance) {
         phone: user.phone,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
-        isNewUser: !user.displayName || user.displayName === user.phone,
+        isNewUser: true,
       },
     };
   });

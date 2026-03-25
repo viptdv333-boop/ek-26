@@ -9,6 +9,7 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRY: z.string().default('30d'),
   UCALLER_SERVICE_ID: z.string().default(''),
   UCALLER_SECRET_KEY: z.string().default(''),
+  NUMCHECK_TOKEN: z.string().default(''),
   TELEGRAM_BOT_TOKEN: z.string().default(''),
   OTP_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
   FIREBASE_SERVICE_ACCOUNT: z.string().default(''),

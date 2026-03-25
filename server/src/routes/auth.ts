@@ -28,15 +28,15 @@ export async function authRoutes(app: FastifyInstance) {
     // Delete old codes for this phone
     await SmsCode.deleteMany({ phone: body.phone });
 
-    const code = generateOtp();
-    await SmsCode.create({
-      phone: body.phone,
-      codeHash: hashOtp(code),
-      expiresAt: new Date(Date.now() + 5 * 60_000), // 5 minutes
-    });
+    const generatedCode = generateOtp();
 
     try {
-      await sendCode(body.phone, code);
+      const actualCode = await sendCode(body.phone, generatedCode);
+      await SmsCode.create({
+        phone: body.phone,
+        codeHash: hashOtp(actualCode),
+        expiresAt: new Date(Date.now() + 5 * 60_000), // 5 minutes
+      });
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed' });
       return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });
@@ -298,15 +298,15 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(429).send({ error: 'Wait 60 seconds before requesting a new code' });
     }
 
-    const code = generateOtp();
-    await SmsCode.findOneAndUpdate(
-      { phone },
-      { phone, codeHash: hashOtp(code), attempts: 0, expiresAt: new Date(Date.now() + 5 * 60_000) },
-      { upsert: true }
-    );
+    const generatedCode = generateOtp();
 
     try {
-      await sendCode(phone, code);
+      const actualCode = await sendCode(phone, generatedCode);
+      await SmsCode.findOneAndUpdate(
+        { phone },
+        { phone, codeHash: hashOtp(actualCode), attempts: 0, expiresAt: new Date(Date.now() + 5 * 60_000) },
+        { upsert: true }
+      );
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed (link-phone)' });
       return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });
@@ -413,18 +413,17 @@ export async function authRoutes(app: FastifyInstance) {
       rssFeedId: crypto.randomUUID(),
     });
 
-    // Send uCaller flash call for phone verification
+    // Send verification call (NumCheckAPI or uCaller)
     await SmsCode.deleteMany({ phone: body.phone });
 
-    const code = generateOtp();
-    await SmsCode.create({
-      phone: body.phone,
-      codeHash: hashOtp(code),
-      expiresAt: new Date(Date.now() + 5 * 60_000),
-    });
-
+    const generatedCode = generateOtp();
     try {
-      await sendCode(body.phone, code);
+      const actualCode = await sendCode(body.phone, generatedCode);
+      await SmsCode.create({
+        phone: body.phone,
+        codeHash: hashOtp(actualCode),
+        expiresAt: new Date(Date.now() + 5 * 60_000),
+      });
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed (register)' });
       return reply.code(502).send({ error: 'Не удалось отправить код. Попробуйте позже.' });

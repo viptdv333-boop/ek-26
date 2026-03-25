@@ -5,7 +5,7 @@ export function generateOtp(): string {
   if (config.OTP_DEV_MODE) {
     return '1234';
   }
-  // 4-digit code for uCaller (1000–9999, no leading zeros)
+  // 4-digit code (1000–9999)
   return crypto.randomInt(1000, 10000).toString();
 }
 
@@ -13,25 +13,66 @@ export function hashOtp(code: string): string {
   return crypto.createHash('sha256').update(code).digest('hex');
 }
 
-interface UCallerResponse {
-  status: boolean;
-  ucaller_id?: number;
-  phone?: number;
-  code?: number;
-  client?: string;
-  unique_request_id?: string;
-  exists?: boolean;
-  free_repeated?: boolean;
-  error?: string;
+interface NumCheckResponse {
+  callId?: string;
+  callerId?: string;
+  code?: string;
+  statusCode?: number;
+  errorCode?: number;
+  message?: string;
+  success?: boolean;
 }
 
-export async function sendCode(phone: string, code: string): Promise<void> {
+/**
+ * Send verification call. Returns the actual code to store.
+ * For NumCheckAPI: they generate the code (last 4 digits of caller number)
+ * For uCaller: we pass our own code
+ * For dev mode: returns the dev code '1234'
+ */
+export async function sendCode(phone: string, code: string): Promise<string> {
   if (config.OTP_DEV_MODE) {
     console.log(`[DEV OTP] Code for ${phone}: ${code}`);
-    return;
+    return code;
   }
 
-  // Production: uCaller flash call
+  // Use NumCheckAPI if token is set
+  if (config.NUMCHECK_TOKEN) {
+    return sendCodeViaNumCheck(phone);
+  }
+
+  // Fallback: uCaller (we pass our code)
+  await sendCodeViaUCaller(phone, code);
+  return code;
+}
+
+async function sendCodeViaNumCheck(phone: string): Promise<string> {
+  const cleanPhone = phone.replace(/[^\d+]/g, '');
+
+  console.log(`[NumCheck] Calling ${cleanPhone}...`);
+
+  const res = await fetch('https://api.numcheckapi.com/ru/init-call', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-AUTH-Token': config.NUMCHECK_TOKEN,
+    },
+    body: JSON.stringify({ phone: cleanPhone }),
+  });
+
+  const data = (await res.json()) as NumCheckResponse;
+  console.log(`[NumCheck] Response:`, JSON.stringify(data));
+
+  if (data.errorCode) {
+    console.error('[NumCheck] Error:', data.message);
+    throw new Error(`Ошибка верификации: ${data.message || 'unknown'}`);
+  }
+
+  const actualCode = data.code || '';
+  console.log(`[NumCheck] Call initiated, callId: ${data.callId}, code: ${actualCode}`);
+  return actualCode;
+}
+
+async function sendCodeViaUCaller(phone: string, code: string): Promise<void> {
   const cleanPhone = phone.replace(/[^\d]/g, '');
 
   const url = new URL('https://api.ucaller.ru/v1.0/initCall');
@@ -43,14 +84,11 @@ export async function sendCode(phone: string, code: string): Promise<void> {
   console.log(`[uCaller] Calling ${cleanPhone} with code ${code}...`);
 
   const res = await fetch(url.toString());
-  const data = (await res.json()) as UCallerResponse;
-
+  const data = (await res.json()) as any;
   console.log(`[uCaller] Response:`, JSON.stringify(data));
 
   if (!data.status) {
     console.error('[uCaller] Error:', data.error);
     throw new Error(`uCaller error: ${data.error || 'unknown'}`);
   }
-
-  console.log(`[uCaller] Call initiated, ucaller_id: ${data.ucaller_id}`);
 }

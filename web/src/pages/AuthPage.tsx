@@ -544,7 +544,7 @@ export function AuthPage() {
 
   // ── Render ─────────────────────────────────────────────────────
   return (
-    <div className="h-[100dvh] flex items-center justify-center bg-dark-900 relative overflow-auto">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-dark-900 relative overflow-y-auto">
       {/* Top bar: theme toggle only */}
       <div className="absolute top-4 right-4">
         <button
@@ -567,7 +567,7 @@ export function AuthPage() {
       <div className="w-full max-w-sm px-6">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo-f.png" alt="FOMO" className="h-16 mx-auto mb-4 object-contain" />
+          <img src="/logo-f.png" alt="FOMO" className="h-16 w-auto mx-auto mb-4 object-contain shrink-0" />
         </div>
 
         {/* ── PHONE step (Login / Register tabs) ────────────────── */}

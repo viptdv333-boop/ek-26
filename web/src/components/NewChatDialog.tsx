@@ -32,6 +32,7 @@ export function NewChatDialog({ onClose }: Props) {
   // Group state
   const [groupName, setGroupName] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedNames, setSelectedNames] = useState<Map<string, string>>(new Map());
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
 
@@ -68,13 +69,21 @@ export function NewChatDialog({ onClose }: Props) {
     }
   };
 
-  const toggleMember = (userId: string) => {
+  const toggleMember = (userId: string, name?: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(userId)) next.delete(userId);
       else next.add(userId);
       return next;
     });
+    if (name) {
+      setSelectedNames((prev) => {
+        const next = new Map(prev);
+        if (next.has(userId)) next.delete(userId);
+        else next.set(userId, name);
+        return next;
+      });
+    }
   };
 
   const handleCreateGroup = async () => {
@@ -102,6 +111,7 @@ export function NewChatDialog({ onClose }: Props) {
     setError('');
     setGroupName('');
     setSelectedIds(new Set());
+    setSelectedNames(new Map());
   };
 
   return (
@@ -152,16 +162,16 @@ export function NewChatDialog({ onClose }: Props) {
         </div>
 
         {/* Selected chips for group tab */}
-        {tab === 'group' && selectedContacts.length > 0 && (
+        {tab === 'group' && selectedIds.size > 0 && (
           <div className="px-4 py-2 border-b border-dark-600 flex flex-wrap gap-1.5">
-            {selectedContacts.map((c) => (
+            {Array.from(selectedIds).map((id) => (
               <span
-                key={c.userId}
+                key={id}
                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent/20 text-accent rounded-full text-xs font-medium"
               >
-                {c.displayName}
+                {selectedNames.get(id) || contacts.find(c => c.userId === id)?.displayName || id.slice(0, 8)}
                 <button
-                  onClick={() => toggleMember(c.userId)}
+                  onClick={() => toggleMember(id)}
                   className="hover:text-white transition-colors"
                 >
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -179,7 +189,7 @@ export function NewChatDialog({ onClose }: Props) {
           {searchResults.length === 0 && filteredContacts.map((contact) => (
             <button
               key={contact.id}
-              onClick={() => tab === 'direct' ? handleSelect(contact.userId) : toggleMember(contact.userId)}
+              onClick={() => tab === 'direct' ? handleSelect(contact.userId) : toggleMember(contact.userId, contact.displayName)}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-dark-600 transition-colors text-left"
             >
               {tab === 'group' && (
@@ -214,7 +224,7 @@ export function NewChatDialog({ onClose }: Props) {
           {searchResults.length > 0 && searchResults.map((user) => (
             <button
               key={user.id}
-              onClick={() => tab === 'direct' ? handleSelect(user.id) : toggleMember(user.id)}
+              onClick={() => tab === 'direct' ? handleSelect(user.id) : toggleMember(user.id, user.displayName || user.phone)}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-dark-600 transition-colors text-left"
             >
               {tab === 'group' && (
@@ -257,7 +267,7 @@ export function NewChatDialog({ onClose }: Props) {
           >
             Отмена
           </button>
-          {tab === 'direct' && search.length >= 2 && searchResults.length === 0 && (
+          {search.length >= 2 && searchResults.length === 0 && (
             <button
               onClick={handleSearch}
               disabled={loading}
@@ -269,7 +279,7 @@ export function NewChatDialog({ onClose }: Props) {
           {tab === 'group' && (
             <button
               onClick={handleCreateGroup}
-              disabled={loading || !groupName.trim() || selectedIds.size < 1}
+              disabled={loading || !groupName.trim()}
               className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-medium transition-colors text-sm"
             >
               {loading ? '...' : `Создать группу${selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}`}

@@ -45,7 +45,7 @@ type Tab = 'login' | 'register';
 type Step = 'form' | 'code' | 'profile';
 
 export function AuthPage() {
-  const { t } = useTranslation();
+  const { t, lang, setLang } = useTranslation();
   const [tab, setTab] = useState<Tab>('register');
   const [step, setStep] = useState<Step>('form');
   const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'dark');

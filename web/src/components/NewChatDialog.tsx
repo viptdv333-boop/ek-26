@@ -88,7 +88,6 @@ export function NewChatDialog({ onClose }: Props) {
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) { setError('Введите название группы'); return; }
-    if (selectedIds.size < 1) { setError('Выберите хотя бы одного участника'); return; }
     setLoading(true);
     setError('');
     try {

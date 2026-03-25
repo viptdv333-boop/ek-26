@@ -325,6 +325,24 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 </button>
               </div>
 
+              {/* Contacts sync toggle */}
+              <div className="pt-4 border-t border-dark-500">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-sm text-white">{t('contacts.syncContacts')}</p>
+                    <p className="text-xs text-gray-500">{t('contacts.syncContactsDesc')}</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={localStorage.getItem('ek26_contacts_sync') === 'true'}
+                    onChange={(e) => {
+                      localStorage.setItem('ek26_contacts_sync', String(e.target.checked));
+                    }}
+                    className="w-5 h-5 rounded accent-accent"
+                  />
+                </label>
+              </div>
+
               {/* Logout */}
               <div className="pt-4 border-t border-dark-500">
                 <button

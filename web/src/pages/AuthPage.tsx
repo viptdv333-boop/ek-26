@@ -544,7 +544,7 @@ export function AuthPage() {
 
   // ── Render ─────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-900 relative">
+    <div className="h-[100dvh] flex items-center justify-center bg-dark-900 relative overflow-auto">
       {/* Top bar: theme toggle only */}
       <div className="absolute top-4 right-4">
         <button

@@ -4,8 +4,18 @@ import { useChatStore } from '../stores/chatStore';
 import { conversationsApi, usersApi, contactsApi, chatActionsApi } from '../services/api/endpoints';
 import { MessageContextMenu } from './MessageContextMenu';
 import { ContactCard } from './ContactCard';
+import { useTranslation } from '../i18n';
+
+interface SyncResult {
+  name: string;
+  phone: string;
+  userId?: string;
+  avatarUrl?: string;
+  registered: boolean;
+}
 
 export function ContactsPanel() {
+  const { t } = useTranslation();
   const contacts = useContactsStore((s) => s.contacts);
   const loading = useContactsStore((s) => s.loading);
   const fetchContacts = useContactsStore((s) => s.fetchContacts);
@@ -19,6 +29,7 @@ export function ContactsPanel() {
   const [addError, setAddError] = useState('');
   const [contactMenu, setContactMenu] = useState<{ x: number; y: number; contact: Contact } | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [syncResults, setSyncResults] = useState<SyncResult[] | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
   const hasContactPicker = 'contacts' in navigator && 'ContactsManager' in window;
@@ -54,26 +65,56 @@ export function ContactsPanel() {
   const handleSyncContacts = async () => {
     if (!hasContactPicker) return;
     setSyncing(true);
+    setSyncResults(null);
     try {
       const deviceContacts = await (navigator as any).contacts.select(['name', 'tel'], { multiple: true });
-      const phones: string[] = deviceContacts
-        .flatMap((c: any) => c.tel || [])
-        .map((t: string) => {
-          let p = t.replace(/[^\d+]/g, '');
+      const phoneMap = new Map<string, string>(); // phone → name
+      for (const c of deviceContacts) {
+        const name = c.name?.[0] || '';
+        for (const tel of (c.tel || [])) {
+          let p = tel.replace(/[^\d+]/g, '');
           if (p.startsWith('8') && p.length === 11) p = '+7' + p.slice(1);
           if (!p.startsWith('+')) p = '+' + p;
-          return p;
-        })
-        .filter((p: string) => p.length >= 10);
-      if (phones.length === 0) return;
-      const found = await usersApi.lookupByPhones([...new Set(phones)]);
-      let added = 0;
-      for (const user of (Array.isArray(found) ? found : [])) {
-        try { await contactsApi.add(user.id); added++; } catch {}
+          if (p.length >= 10) phoneMap.set(p, name);
+        }
       }
-      await fetchContacts();
-      if (added > 0) alert(`Добавлено ${added} контактов`);
+      if (phoneMap.size === 0) return;
+      const phones = [...phoneMap.keys()];
+      const found = await usersApi.lookupByPhones(phones);
+      const foundPhones = new Set((Array.isArray(found) ? found : []).map((u: any) => u.phone));
+
+      const results: SyncResult[] = [];
+      // Registered users first
+      for (const user of (Array.isArray(found) ? found : [])) {
+        results.push({
+          name: phoneMap.get(user.phone) || user.displayName,
+          phone: user.phone,
+          userId: user.id,
+          avatarUrl: user.avatarUrl,
+          registered: true,
+        });
+      }
+      // Unregistered phones
+      for (const [ph, name] of phoneMap) {
+        if (!foundPhones.has(ph)) {
+          results.push({ name, phone: ph, registered: false });
+        }
+      }
+      setSyncResults(results);
     } catch {} finally { setSyncing(false); }
+  };
+
+  const handleAddSyncedContact = async (userId: string) => {
+    try {
+      await contactsApi.add(userId);
+      await fetchContacts();
+      setSyncResults(prev => prev?.map(r => r.userId === userId ? { ...r, userId: undefined } : r) || null);
+    } catch {}
+  };
+
+  const handleInvite = (phoneNum: string) => {
+    const text = encodeURIComponent(t('contacts.inviteText'));
+    window.open(`sms:${phoneNum}?body=${text}`, '_self');
   };
 
   const handleOpenChat = async (contact: Contact) => {
@@ -166,6 +207,50 @@ export function ContactsPanel() {
             </svg>
             {syncing ? 'Синхронизация...' : 'Из телефонной книги'}
           </button>
+        </div>
+      )}
+
+      {/* Sync results */}
+      {syncResults && (
+        <div className="px-2 pb-2">
+          <div className="flex items-center justify-between px-2 mb-2">
+            <span className="text-xs text-gray-500">{t('contacts.syncFromPhone')} ({syncResults.length})</span>
+            <button onClick={() => setSyncResults(null)} className="text-xs text-gray-500 hover:text-white">&times;</button>
+          </div>
+          <div className="max-h-60 overflow-y-auto space-y-1">
+            {syncResults.map((r, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2 bg-dark-700 rounded-xl">
+                {r.avatarUrl ? (
+                  <img src={r.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-dark-500 flex items-center justify-center">
+                    <span className="text-gray-400 text-xs">{r.name?.[0]?.toUpperCase() || '?'}</span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-white truncate">{r.name || r.phone}</p>
+                  <p className="text-xs text-gray-500 truncate">{r.phone}</p>
+                </div>
+                {r.registered && r.userId ? (
+                  <button
+                    onClick={() => handleAddSyncedContact(r.userId!)}
+                    className="px-2 py-1 bg-accent hover:bg-accent-hover text-white text-xs rounded-lg"
+                  >
+                    {t('contacts.add')}
+                  </button>
+                ) : !r.registered ? (
+                  <button
+                    onClick={() => handleInvite(r.phone)}
+                    className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg"
+                  >
+                    {t('contacts.invite')}
+                  </button>
+                ) : (
+                  <span className="text-xs text-green-400">{t('contacts.added')} \u2713</span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

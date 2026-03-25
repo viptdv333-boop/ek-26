@@ -9,6 +9,15 @@
     padding: 0;
   }
 
+  html, body, #root {
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    position: fixed;
+    width: 100%;
+  }
+
   /* Dark theme (default) */
   :root {
     --color-dark-900: #0a0a0f;

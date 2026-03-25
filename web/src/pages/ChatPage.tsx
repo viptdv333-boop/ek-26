@@ -92,7 +92,7 @@ export function ChatPage() {
   }, [setActiveConversation]);
 
   return (
-    <div className="h-screen flex bg-dark-900">
+    <div className="h-[100dvh] flex bg-dark-900 overflow-hidden">
       {/* Mobile: show sidebar OR chat, not both */}
       <div className={`${activeConversationId ? 'hidden md:flex' : 'flex'} w-full md:w-auto`}>
         <Sidebar />

@@ -400,7 +400,7 @@ export function AuthPage() {
                 : 'bg-dark-700 text-gray-400 hover:text-white'
             }`}
           >
-            {l === 'ru' ? '🇷🇺' : l === 'en' ? '🇬🇧' : '🇨🇳'}
+            {l === 'ru' ? 'Рус' : l === 'en' ? 'Eng' : '中文'}
           </button>
         ))}
         {/* Theme toggle */}

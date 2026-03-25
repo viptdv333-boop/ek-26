@@ -384,9 +384,9 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                 <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.language')}</label>
                 <div className="flex gap-2">
                   {[
-                    { code: 'ru' as const, flag: '\u{1F1F7}\u{1F1FA}', name: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439' },
-                    { code: 'en' as const, flag: '\u{1F1EC}\u{1F1E7}', name: 'English' },
-                    { code: 'zh' as const, flag: '\u{1F1E8}\u{1F1F3}', name: '\u4E2D\u6587' },
+                    { code: 'ru' as const, label: 'Рус' },
+                    { code: 'en' as const, label: 'Eng' },
+                    { code: 'zh' as const, label: '中文' },
                   ].map(item => (
                     <button
                       key={item.code}
@@ -395,7 +395,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                         lang === item.code ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
                       }`}
                     >
-                      {item.flag}
+                      {item.label}
                     </button>
                   ))}
                 </div>

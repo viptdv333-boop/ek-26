@@ -121,7 +121,34 @@ export async function conversationRoutes(app: FastifyInstance) {
       },
     });
 
-    return { id: conversation._id.toString() };
+    // Return full conversation object
+    const populated = await Conversation.findById(conversation._id)
+      .populate('participants', 'displayName avatarUrl phone status lastSeen')
+      .lean();
+
+    return {
+      id: populated!._id.toString(),
+      type: populated!.type,
+      participants: (populated!.participants as any[]).map((p: any) => ({
+        id: p._id.toString(),
+        displayName: p.displayName,
+        avatarUrl: p.avatarUrl,
+        phone: p.phone,
+        status: p.status,
+        lastSeen: p.lastSeen,
+      })),
+      groupMeta: populated!.groupMeta
+        ? {
+            name: populated!.groupMeta.name,
+            avatarUrl: populated!.groupMeta.avatarUrl,
+            admins: populated!.groupMeta.admins.map((a: any) => a.toString()),
+            createdBy: populated!.groupMeta.createdBy.toString(),
+          }
+        : null,
+      lastMessage: null,
+      createdAt: populated!.createdAt.toISOString(),
+      updatedAt: populated!.updatedAt.toISOString(),
+    };
   });
 
   // Get conversation details

@@ -365,7 +365,9 @@ export function Sidebar() {
             >
               {/* Avatar */}
               <div className="relative w-10 h-10 flex-shrink-0">
-                {!isGroup && getOtherUser(conv)?.avatarUrl ? (
+                {isGroup && conv.groupMeta?.avatarUrl ? (
+                  <img src={conv.groupMeta.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                ) : !isGroup && getOtherUser(conv)?.avatarUrl ? (
                   <img src={getOtherUser(conv)!.avatarUrl!} alt="" className="w-10 h-10 rounded-full object-cover" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { conversationsApi, usersApi } from '../services/api/endpoints';
+import { useState, useRef, useEffect } from 'react';
+import { conversationsApi, usersApi, chatActionsApi } from '../services/api/endpoints';
 import { useContactsStore } from '../stores/contactsStore';
 import { useChatStore } from '../stores/chatStore';
+import { uploadFile } from '../services/api/upload';
 
 interface Participant {
   id: string;
@@ -22,6 +23,7 @@ interface Conversation {
   type: string;
   participants: Participant[];
   groupMeta?: GroupMeta;
+  isMuted?: boolean;
 }
 
 interface Props {
@@ -40,12 +42,49 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
   const [addSearch, setAddSearch] = useState('');
   const [addSearchResults, setAddSearchResults] = useState<Participant[]>([]);
   const [addLoading, setAddLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [memberMenu, setMemberMenu] = useState<{ userId: string; x: number; y: number } | null>(null);
+  const [isMuted, setIsMuted] = useState(!!(conversation as any).isMuted);
+  const [muteLoading, setMuteLoading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contacts = useContactsStore((s) => s.contacts);
 
   const admins = new Set(conversation.groupMeta?.admins || []);
   const isAdmin = admins.has(currentUserId);
+  const createdBy = conversation.groupMeta?.createdBy;
   const participantIds = new Set(conversation.participants.map((p) => p.id));
+
+  // Close member menu on outside click
+  useEffect(() => {
+    if (!memberMenu) return;
+    const handler = () => setMemberMenu(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [memberMenu]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Максимальный размер аватара — 5 МБ');
+      return;
+    }
+
+    setAvatarUploading(true);
+    setError('');
+    try {
+      const att = await uploadFile(file);
+      await conversationsApi.updateGroup(conversation.id, { avatarUrl: att.url });
+      onUpdated();
+    } catch (err: any) {
+      setError(err.message || 'Ошибка загрузки аватара');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleSaveName = async () => {
     if (!nameValue.trim() || nameValue.trim() === conversation.groupMeta?.name) {
@@ -66,12 +105,23 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
   };
 
   const handleRemoveMember = async (userId: string) => {
+    setMemberMenu(null);
     if (!confirm('Удалить участника из группы?')) return;
     try {
       await conversationsApi.removeMember(conversation.id, userId);
       onUpdated();
     } catch {
       setError('Ошибка удаления участника');
+    }
+  };
+
+  const handleToggleAdmin = async (userId: string, makeAdmin: boolean) => {
+    setMemberMenu(null);
+    try {
+      await conversationsApi.updateAdmin(conversation.id, userId, makeAdmin ? 'add' : 'remove');
+      onUpdated();
+    } catch {
+      setError('Ошибка изменения прав');
     }
   };
 
@@ -83,6 +133,24 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
       onUpdated();
     } catch {
       setError('Ошибка выхода из группы');
+    }
+  };
+
+  const handleToggleMute = async () => {
+    setMuteLoading(true);
+    try {
+      const res = await chatActionsApi.mute(conversation.id);
+      setIsMuted((res as any).muted);
+      // Also update sidebar state
+      const conversations = useChatStore.getState().conversations;
+      const updated = conversations.map((c) =>
+        c.id === conversation.id ? { ...c, isMuted: (res as any).muted } as any : c
+      );
+      useChatStore.getState().setConversations(updated);
+    } catch {
+      setError('Ошибка изменения уведомлений');
+    } finally {
+      setMuteLoading(false);
     }
   };
 
@@ -115,10 +183,19 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
     }
   };
 
+  const handleMemberClick = (e: React.MouseEvent, userId: string) => {
+    if (!isAdmin || userId === currentUserId) return;
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMemberMenu({ userId, x: rect.right - 200, y: rect.bottom });
+  };
+
   // Filter contacts not already in the group for the add member dialog
   const filteredAddContacts = contacts.filter(
     (c) => !participantIds.has(c.userId) && (!addSearch || c.displayName.toLowerCase().includes(addSearch.toLowerCase()) || c.phone?.includes(addSearch))
   );
+
+  const groupAvatarUrl = conversation.groupMeta?.avatarUrl;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
@@ -128,9 +205,40 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
       >
         {/* Header */}
         <div className="p-4 border-b border-dark-600 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-            <span className="text-accent text-lg font-bold">#</span>
+          {/* Group avatar — clickable for admins */}
+          <div
+            className={`relative w-12 h-12 rounded-full flex-shrink-0 ${isAdmin ? 'cursor-pointer group' : ''}`}
+            onClick={() => isAdmin && avatarInputRef.current?.click()}
+            title={isAdmin ? 'Изменить аватар группы' : undefined}
+          >
+            {groupAvatarUrl ? (
+              <img src={groupAvatarUrl} alt="" className="w-12 h-12 rounded-full object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
+                <span className="text-accent text-lg font-bold">#</span>
+              </div>
+            )}
+            {isAdmin && (
+              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                </svg>
+              </div>
+            )}
+            {avatarUploading && (
+              <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
           </div>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
           <div className="flex-1 min-w-0">
             {editingName ? (
               <div className="flex items-center gap-2">
@@ -184,6 +292,29 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
         {error && (
           <div className="px-4 py-2 text-red-400 text-sm text-center">{error}</div>
         )}
+
+        {/* Mute toggle */}
+        <div className="px-4 py-3 border-b border-dark-600 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+            </svg>
+            <span className="text-sm text-white">Уведомления</span>
+          </div>
+          <button
+            onClick={handleToggleMute}
+            disabled={muteLoading}
+            className={`relative w-11 h-6 rounded-full transition-colors ${
+              isMuted ? 'bg-dark-500' : 'bg-accent'
+            } ${muteLoading ? 'opacity-50' : ''}`}
+          >
+            <div
+              className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                isMuted ? 'left-0.5' : 'left-[22px]'
+              }`}
+            />
+          </button>
+        </div>
 
         {/* Members list */}
         <div className="flex-1 overflow-y-auto">
@@ -268,7 +399,10 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
           {conversation.participants.map((p) => (
             <div
               key={p.id}
-              className="flex items-center gap-3 px-4 py-2.5 hover:bg-dark-600/50 transition-colors"
+              className={`flex items-center gap-3 px-4 py-2.5 hover:bg-dark-600/50 transition-colors ${
+                isAdmin && p.id !== currentUserId ? 'cursor-pointer' : ''
+              }`}
+              onClick={(e) => handleMemberClick(e, p.id)}
             >
               <div className="relative w-10 h-10 flex-shrink-0">
                 {p.avatarUrl ? (
@@ -290,7 +424,7 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
                   </span>
                   {admins.has(p.id) && (
                     <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-full font-medium">
-                      Админ
+                      {p.id === createdBy ? 'Создатель' : 'Админ'}
                     </span>
                   )}
                 </div>
@@ -298,20 +432,50 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
                   {onlineUsers.has(p.id) ? 'в сети' : ''}
                 </p>
               </div>
-              {isAdmin && p.id !== currentUserId && (
-                <button
-                  onClick={() => handleRemoveMember(p.id)}
-                  className="text-gray-500 hover:text-red-400 p-1 transition-colors"
-                  title="Удалить из группы"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
             </div>
           ))}
         </div>
+
+        {/* Member context menu */}
+        {memberMenu && (
+          <div
+            className="fixed bg-dark-600 rounded-xl shadow-2xl border border-dark-500 py-1 z-[60] min-w-[200px]"
+            style={{ left: memberMenu.x, top: memberMenu.y }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {!admins.has(memberMenu.userId) && (
+              <button
+                onClick={() => handleToggleAdmin(memberMenu.userId, true)}
+                className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-dark-500 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                Назначить админом
+              </button>
+            )}
+            {admins.has(memberMenu.userId) && memberMenu.userId !== createdBy && (
+              <button
+                onClick={() => handleToggleAdmin(memberMenu.userId, false)}
+                className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-dark-500 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285zM12 12.75h.007v.008H12v-.008z" />
+                </svg>
+                Снять админа
+              </button>
+            )}
+            <button
+              onClick={() => handleRemoveMember(memberMenu.userId)}
+              className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-dark-500 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+              </svg>
+              Удалить из группы
+            </button>
+          </div>
+        )}
 
         {/* Leave group button */}
         <div className="p-4 border-t border-dark-600">

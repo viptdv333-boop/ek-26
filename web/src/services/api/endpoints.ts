@@ -43,6 +43,8 @@ export const conversationsApi = {
   updateGroup: (id: string, data: { name?: string; avatarUrl?: string }) => api.patch<any>(`/conversations/${id}`, data),
   addMembers: (id: string, userIds: string[]) => api.post<any>(`/conversations/${id}/members`, { userIds }),
   removeMember: (id: string, userId: string) => api.delete<any>(`/conversations/${id}/members/${userId}`),
+  updateAdmin: (id: string, userId: string, action: 'add' | 'remove') =>
+    api.patch<{ success: boolean }>(`/conversations/${id}/admins`, { userId, action }),
 };
 
 // Messages

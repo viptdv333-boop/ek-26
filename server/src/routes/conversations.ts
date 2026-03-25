@@ -44,6 +44,7 @@ export async function conversationRoutes(app: FastifyInstance) {
             createdAt: c.lastMessage.timestamp?.toISOString() || c.updatedAt.toISOString(),
           }
         : null,
+      isMuted: (c.mutedBy || []).some((u: any) => u.toString() === request.userId),
       unreadCount: 0,
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
@@ -183,6 +184,7 @@ export async function conversationRoutes(app: FastifyInstance) {
       })),
       groupMeta: conversation.groupMeta,
       lastMessage: conversation.lastMessage,
+      isMuted: (conversation.mutedBy || []).some((u: any) => u.toString() === request.userId),
       createdAt: conversation.createdAt.toISOString(),
       updatedAt: conversation.updatedAt.toISOString(),
     };
@@ -290,6 +292,51 @@ export async function conversationRoutes(app: FastifyInstance) {
     await Conversation.findByIdAndUpdate(id, {
       $pull: { participants: new mongoose.Types.ObjectId(targetUserId) },
     });
+
+    return { success: true };
+  });
+
+  // Add/remove admin in group
+  app.patch('/api/conversations/:id/admins', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { userId: targetUserId, action } = request.body as { userId: string; action: 'add' | 'remove' };
+
+    const conversation = await Conversation.findById(id);
+    if (!conversation || conversation.type !== 'group') {
+      return reply.code(404).send({ error: 'Group not found' });
+    }
+
+    const isAdmin = conversation.groupMeta?.admins.some(
+      (a) => a.toString() === request.userId
+    );
+    if (!isAdmin) {
+      return reply.code(403).send({ error: 'Not an admin' });
+    }
+
+    const targetOid = new mongoose.Types.ObjectId(targetUserId);
+
+    if (action === 'add') {
+      // Verify target is a participant
+      const isParticipant = conversation.participants.some(
+        (p: any) => p.toString() === targetUserId
+      );
+      if (!isParticipant) {
+        return reply.code(400).send({ error: 'User is not a participant' });
+      }
+      await Conversation.findByIdAndUpdate(id, {
+        $addToSet: { 'groupMeta.admins': targetOid },
+      });
+    } else if (action === 'remove') {
+      // Cannot remove the creator from admins
+      if (conversation.groupMeta?.createdBy.toString() === targetUserId) {
+        return reply.code(400).send({ error: 'Cannot remove creator from admins' });
+      }
+      await Conversation.findByIdAndUpdate(id, {
+        $pull: { 'groupMeta.admins': targetOid },
+      });
+    } else {
+      return reply.code(400).send({ error: 'Invalid action' });
+    }
 
     return { success: true };
   });

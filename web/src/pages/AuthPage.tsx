@@ -597,19 +597,24 @@ export function AuthPage() {
               </button>
             </div>
 
-            {/* Language selector */}
+            {/* Language selector with flag images */}
             <div className="flex justify-center gap-3 mb-4">
-              {(['ru', 'en', 'zh'] as const).map((l) => (
+              {([
+                { l: 'ru' as const, flag: 'ru', label: 'Рус' },
+                { l: 'en' as const, flag: 'gb', label: 'Eng' },
+                { l: 'zh' as const, flag: 'cn', label: '中文' },
+              ]).map(({ l, flag, label }) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     lang === l
                       ? 'bg-accent/20 text-accent border border-accent/40'
                       : 'bg-dark-700 text-gray-400 hover:text-white border border-transparent'
                   }`}
                 >
-                  {l === 'ru' ? '\u{1F1F7}\u{1F1FA} Рус' : l === 'en' ? '\u{1F1EC}\u{1F1E7} Eng' : '\u{1F1E8}\u{1F1F3} \u4E2D\u6587'}
+                  <img src={`https://flagcdn.com/w20/${flag}.png`} alt={label} className="w-5 h-3.5 object-cover rounded-sm" />
+                  {label}
                 </button>
               ))}
             </div>

@@ -46,17 +46,16 @@ export async function sendCode(phone: string, code: string): Promise<string> {
 }
 
 async function sendCodeViaNumCheck(phone: string): Promise<string> {
-  const cleanPhone = phone.replace(/[^\d+]/g, '');
+  const cleanPhone = phone.replace(/[^\d]/g, ''); // digits only, no +
 
   console.log(`[NumCheck] Calling ${cleanPhone}...`);
 
-  const res = await fetch('https://api.numcheckapi.com/ru/init-call', {
+  const url = `https://api.numcheckapi.com/ru/init-call?phone=${cleanPhone}`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       'X-AUTH-Token': config.NUMCHECK_TOKEN,
     },
-    body: JSON.stringify({ phone: cleanPhone }),
   });
 
   const data = (await res.json()) as NumCheckResponse;

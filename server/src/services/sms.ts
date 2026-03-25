@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import https from 'https';
 import { config } from '../config';
 
 export function generateOtp(): string {
@@ -51,11 +52,14 @@ async function sendCodeViaNumCheck(phone: string): Promise<string> {
   console.log(`[NumCheck] Calling ${cleanPhone}...`);
 
   const url = `https://api.numcheckapi.com/ru/init-call?phone=${cleanPhone}`;
+  const agent = new https.Agent({ rejectUnauthorized: false });
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'X-AUTH-Token': config.NUMCHECK_TOKEN,
     },
+    // @ts-ignore — Node fetch supports agent for TLS override
+    agent,
   });
 
   const data = (await res.json()) as NumCheckResponse;

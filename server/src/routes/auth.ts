@@ -386,9 +386,9 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/api/auth/register', async (request, reply) => {
     const body = registerSchema.parse(request.body);
 
-    // Check if phone already taken
+    // Check if phone already taken (allow if user has no password — incomplete old registration)
     const existingPhone = await User.findOne({ phone: body.phone });
-    if (existingPhone) {
+    if (existingPhone && existingPhone.passwordHash) {
       return reply.code(409).send({ error: 'Этот номер телефона уже зарегистрирован' });
     }
 
@@ -446,21 +446,28 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/api/auth/register/set-password', async (request, reply) => {
     const body = registerSetPasswordSchema.parse(request.body);
 
-    // Ensure phone is not already registered
-    const existing = await User.findOne({ phone: body.phone });
-    if (existing) {
+    // Hash password
+    const passwordHash = await bcrypt.hash(body.password, 12);
+
+    // If user exists without password (incomplete old registration), update it
+    let user = await User.findOne({ phone: body.phone });
+    if (user && user.passwordHash) {
       return reply.code(409).send({ error: 'Этот номер телефона уже зарегистрирован' });
     }
 
-    // Hash password and create user
-    const passwordHash = await bcrypt.hash(body.password, 12);
-    const user = await User.create({
-      phone: body.phone,
-      passwordHash,
-      emailVerified: false,
-      displayName: body.phone,
-      rssFeedId: crypto.randomUUID(),
-    });
+    if (user) {
+      user.passwordHash = passwordHash;
+      user.emailVerified = false;
+      await user.save();
+    } else {
+      user = await User.create({
+        phone: body.phone,
+        passwordHash,
+        emailVerified: false,
+        displayName: body.phone,
+        rssFeedId: crypto.randomUUID(),
+      });
+    }
 
     // Issue tokens
     const userId = user._id.toString();

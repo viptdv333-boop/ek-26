@@ -71,7 +71,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       const { token: newToken } = useAuthStore.getState();
       headers['Authorization'] = `Bearer ${newToken}`;
       const retry = await fetch(`${BASE_URL}${path}`, { ...options, headers });
-      if (!retry.ok) throw new Error(`${retry.status}: ${await retry.text()}`);
+      if (!retry.ok) {
+        const retryText = await retry.text();
+        try { const j = JSON.parse(retryText); throw new Error(j.error || `${retry.status}: ${retryText}`); } catch (e) { if (e instanceof Error && !e.message.startsWith(String(retry.status))) throw e; throw new Error(`${retry.status}: ${retryText}`); }
+      }
       return retry.json();
     }
     throw new Error('Session expired');
@@ -79,7 +82,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      const json = JSON.parse(text);
+      throw new Error(json.error || `${res.status}: ${text}`);
+    } catch (e) {
+      if (e instanceof Error && !e.message.startsWith(String(res.status))) throw e;
+      throw new Error(`${res.status}: ${text}`);
+    }
   }
 
   return res.json();

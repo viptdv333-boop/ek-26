@@ -1,4 +1,7 @@
+import { useTranslation } from '../i18n';
+
 export function EmptyState() {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 flex items-center justify-center bg-dark-900">
       <div className="text-center">
@@ -12,8 +15,8 @@ export function EmptyState() {
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-400">Выберите чат</h3>
-        <p className="text-sm text-gray-600 mt-1">или начните новый разговор</p>
+        <h3 className="text-lg font-medium text-gray-400">{t('empty.selectChat')}</h3>
+        <p className="text-sm text-gray-600 mt-1">{t('empty.orStartNew')}</p>
       </div>
     </div>
   );

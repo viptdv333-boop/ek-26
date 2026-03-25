@@ -7,6 +7,7 @@ import { PhoneLinkDialog } from './PhoneLinkDialog';
 import { SettingsModal } from './SettingsModal';
 import { ContactsPanel } from './ContactsPanel';
 import { MessageContextMenu } from './MessageContextMenu';
+import { useTranslation } from '../i18n';
 
 function WeatherWidget() {
   const [weather, setWeather] = useState<{ temp: string; icon: string; desc: string } | null>(null);
@@ -64,6 +65,7 @@ interface SearchResult {
 }
 
 export function Sidebar() {
+  const { t, locale } = useTranslation();
   const conversations = useChatStore((s) => s.conversations);
   const activeId = useChatStore((s) => s.activeConversationId);
   const setActive = useChatStore((s) => s.setActiveConversation);
@@ -198,7 +200,7 @@ export function Sidebar() {
     const otherId = getOtherUserId(conv);
     if (!otherId) return;
     await new Promise(r => setTimeout(r, 100));
-    if (!window.confirm('Заблокировать пользователя? Вы не будете получать от него сообщения.')) return;
+    if (!window.confirm(t('confirm.blockUser'))) return;
     try {
       await chatActionsApi.block(otherId);
     } catch (err) {
@@ -209,7 +211,7 @@ export function Sidebar() {
   const handleLeaveGroup = async (convId: string) => {
     setChatMenu(null);
     await new Promise(r => setTimeout(r, 100));
-    if (!window.confirm('Покинуть группу?')) return;
+    if (!window.confirm(t('confirm.leaveGroup'))) return;
     try {
       const userId = useAuthStore.getState().user?.id;
       if (userId) {
@@ -227,7 +229,7 @@ export function Sidebar() {
     setChatMenu(null);
     // Small delay to let menu close before confirm dialog
     await new Promise(r => setTimeout(r, 100));
-    if (!window.confirm('Удалить чат? История сообщений будет потеряна.')) return;
+    if (!window.confirm(t('confirm.deleteChat'))) return;
     try {
       await conversationsApi.delete(convId);
       const updated = conversations.filter(c => c.id !== convId);
@@ -245,9 +247,9 @@ export function Sidebar() {
       const id = typeof p === 'string' ? p : p.id;
       return id !== user?.id;
     });
-    if (!other) return 'Чат';
-    if (typeof other === 'string') return 'Пользователь';
-    return other.displayName || 'Пользователь';
+    if (!other) return t('sidebar.chat');
+    if (typeof other === 'string') return t('sidebar.user');
+    return other.displayName || t('sidebar.user');
   };
 
   const getOtherUser = (conv: Conversation) => {
@@ -269,9 +271,9 @@ export function Sidebar() {
     const d = new Date(dateStr);
     const now = new Date();
     if (d.toDateString() === now.toDateString()) {
-      return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
     }
-    return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+    return d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
   };
 
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -320,7 +322,7 @@ export function Sidebar() {
         <button
           onClick={() => setShowSettings('appearance')}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
-          title="Настройки приложения"
+          title={t('sidebar.settingsApp')}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.004.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
@@ -338,7 +340,7 @@ export function Sidebar() {
             activeTab === 'chats' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
           }`}
         >
-          Чаты
+          {t('sidebar.chats')}
         </button>
         <button
           onClick={() => setActiveTab('contacts')}
@@ -346,7 +348,7 @@ export function Sidebar() {
             activeTab === 'contacts' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
           }`}
         >
-          Контакты
+          {t('sidebar.contacts')}
         </button>
       </div>
 
@@ -360,7 +362,7 @@ export function Sidebar() {
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          placeholder="Поиск по чатам и сообщениям..."
+          placeholder={t('sidebar.search')}
           className="w-full px-3 py-2 bg-dark-700 border border-dark-500 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
         />
       </div>
@@ -369,10 +371,10 @@ export function Sidebar() {
       {searchResults !== null && search.trim() ? (
         <div className="flex-1 overflow-y-auto">
           {searchLoading && (
-            <div className="px-4 py-4 text-center text-gray-500 text-sm">Поиск...</div>
+            <div className="px-4 py-4 text-center text-gray-500 text-sm">{t('sidebar.searching')}</div>
           )}
           {!searchLoading && searchResults.length === 0 && (
-            <div className="px-4 py-8 text-center text-gray-500 text-sm">Ничего не найдено</div>
+            <div className="px-4 py-8 text-center text-gray-500 text-sm">{t('sidebar.nothingFound')}</div>
           )}
           {!searchLoading && searchResults.map((result, i) => (
             <button
@@ -386,10 +388,10 @@ export function Sidebar() {
               className="w-full px-4 py-3 flex flex-col gap-1 hover:bg-dark-700 transition-colors text-left border-b border-dark-600/50"
             >
               <div className="flex justify-between items-baseline">
-                <span className="text-sm font-medium text-accent truncate">{result.conversationName || 'Чат'}</span>
+                <span className="text-sm font-medium text-accent truncate">{result.conversationName || t('sidebar.chat')}</span>
                 <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatTime(result.createdAt)}</span>
               </div>
-              <p className="text-xs text-gray-400">{result.senderName || 'Пользователь'}</p>
+              <p className="text-xs text-gray-400">{result.senderName || t('sidebar.user')}</p>
               <p className="text-xs text-gray-300 line-clamp-2">
                 {highlightMatch(result.text || '', search)}
               </p>
@@ -402,7 +404,7 @@ export function Sidebar() {
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 && (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
-            {search ? 'Ничего не найдено' : 'Нет чатов. Начните новый разговор.'}
+            {search ? t('sidebar.nothingFound') : t('sidebar.noChats')}
           </div>
         )}
         {filtered.map((conv) => {
@@ -448,7 +450,7 @@ export function Sidebar() {
                 <div className="flex justify-between items-baseline">
                   <span className="text-sm font-medium text-white truncate flex items-center gap-1">
                     {name}
-                    {isMuted && <span className="text-gray-500 text-xs" title="Уведомления выключены">🔇</span>}
+                    {isMuted && <span className="text-gray-500 text-xs" title={t('sidebar.mutedNotif')}>🔇</span>}
                   </span>
                   {conv.lastMessage && (
                     <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
@@ -504,7 +506,7 @@ export function Sidebar() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
               </svg>
-              Архив ({archivedConversations.length})
+              {t('sidebar.archive')} ({archivedConversations.length})
             </button>
             {showArchive && archivedConversations.map((conv) => {
               const isActive = conv.id === activeId;
@@ -559,7 +561,7 @@ export function Sidebar() {
             onClick={() => setShowNewChat(true)}
             className="w-full py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-colors text-sm"
           >
-            Новый чат
+            {t('sidebar.newChat')}
           </button>
         </div>
       )}
@@ -583,14 +585,14 @@ export function Sidebar() {
                 onClick={() => setShowPhoneLink(true)}
                 className="text-xs text-accent hover:text-accent-hover transition-colors"
               >
-                Привязать телефон
+                {t('sidebar.linkPhone')}
               </button>
             )}
           </div>
           <button
             onClick={() => setShowSettings('profile')}
             className="p-2 text-gray-400 hover:text-white hover:bg-dark-600 rounded-lg transition-colors"
-            title="Настройки профиля"
+            title={t('sidebar.settingsProfile')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.004.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
@@ -610,32 +612,32 @@ export function Sidebar() {
           y={chatMenu.y}
           items={[
             {
-              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isPinned ? 'Открепить' : 'Закрепить',
+              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isPinned ? t('menu.unpin') : t('menu.pin'),
               icon: 'pin',
               onClick: () => handlePinChat(chatMenu.convId),
             },
             {
-              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isMuted ? 'Вкл. уведомления' : 'Выкл. уведомления',
+              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isMuted ? t('menu.unmute') : t('menu.mute'),
               icon: 'mute',
               onClick: () => handleMuteChat(chatMenu.convId),
             },
             {
-              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isArchived ? 'Из архива' : 'В архив',
+              label: (conversations.find(c => c.id === chatMenu.convId) as any)?.isArchived ? t('menu.unarchive') : t('menu.archive'),
               icon: 'archive',
               onClick: () => handleArchiveChat(chatMenu.convId),
             },
             ...(conversations.find(c => c.id === chatMenu.convId)?.type === 'direct' ? [{
-              label: 'Заблокировать',
+              label: t('menu.block'),
               icon: 'block',
               onClick: () => handleBlockUser(chatMenu.convId),
             }] : [{
-              label: 'Покинуть группу',
+              label: t('menu.leaveGroup'),
               icon: 'delete',
               onClick: () => handleLeaveGroup(chatMenu.convId),
               danger: true,
             }]),
             {
-              label: 'Удалить чат',
+              label: t('menu.deleteChat'),
               icon: 'delete',
               onClick: () => handleDeleteChat(chatMenu.convId),
               danger: true,

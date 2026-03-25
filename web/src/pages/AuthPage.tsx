@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
+import { useTranslation } from '../i18n';
 
 function generateCaptcha() {
   const ops = ['+', '-', '×'] as const;
@@ -15,43 +16,44 @@ function generateCaptcha() {
 }
 
 const COUNTRIES = [
-  { code: '+7', flag: '🇷🇺', name: 'Россия' },
-  { code: '+7', flag: '🇰🇿', name: 'Казахстан' },
-  { code: '+375', flag: '🇧🇾', name: 'Беларусь' },
-  { code: '+380', flag: '🇺🇦', name: 'Украина' },
-  { code: '+998', flag: '🇺🇿', name: 'Узбекистан' },
-  { code: '+996', flag: '🇰🇬', name: 'Кыргызстан' },
-  { code: '+992', flag: '🇹🇯', name: 'Таджикистан' },
-  { code: '+993', flag: '🇹🇲', name: 'Туркменистан' },
-  { code: '+374', flag: '🇦🇲', name: 'Армения' },
-  { code: '+995', flag: '🇬🇪', name: 'Грузия' },
-  { code: '+994', flag: '🇦🇿', name: 'Азербайджан' },
-  { code: '+373', flag: '🇲🇩', name: 'Молдова' },
-  { code: '+370', flag: '🇱🇹', name: 'Литва' },
-  { code: '+371', flag: '🇱🇻', name: 'Латвия' },
-  { code: '+372', flag: '🇪🇪', name: 'Эстония' },
-  { code: '+1', flag: '🇺🇸', name: 'США' },
-  { code: '+44', flag: '🇬🇧', name: 'Великобритания' },
-  { code: '+49', flag: '🇩🇪', name: 'Германия' },
-  { code: '+33', flag: '🇫🇷', name: 'Франция' },
-  { code: '+39', flag: '🇮🇹', name: 'Италия' },
-  { code: '+34', flag: '🇪🇸', name: 'Испания' },
-  { code: '+90', flag: '🇹🇷', name: 'Турция' },
-  { code: '+971', flag: '🇦🇪', name: 'ОАЭ' },
-  { code: '+972', flag: '🇮🇱', name: 'Израиль' },
-  { code: '+86', flag: '🇨🇳', name: 'Китай' },
-  { code: '+82', flag: '🇰🇷', name: 'Южная Корея' },
-  { code: '+81', flag: '🇯🇵', name: 'Япония' },
-  { code: '+91', flag: '🇮🇳', name: 'Индия' },
-  { code: '+55', flag: '🇧🇷', name: 'Бразилия' },
-  { code: '+52', flag: '🇲🇽', name: 'Мексика' },
-  { code: '+61', flag: '🇦🇺', name: 'Австралия' },
+  { code: '+7', flag: '\u{1F1F7}\u{1F1FA}', nameKey: 'country.russia' },
+  { code: '+7', flag: '\u{1F1F0}\u{1F1FF}', nameKey: 'country.kazakhstan' },
+  { code: '+375', flag: '\u{1F1E7}\u{1F1FE}', nameKey: 'country.belarus' },
+  { code: '+380', flag: '\u{1F1FA}\u{1F1E6}', nameKey: 'country.ukraine' },
+  { code: '+998', flag: '\u{1F1FA}\u{1F1FF}', nameKey: 'country.uzbekistan' },
+  { code: '+996', flag: '\u{1F1F0}\u{1F1EC}', nameKey: 'country.kyrgyzstan' },
+  { code: '+992', flag: '\u{1F1F9}\u{1F1EF}', nameKey: 'country.tajikistan' },
+  { code: '+993', flag: '\u{1F1F9}\u{1F1F2}', nameKey: 'country.turkmenistan' },
+  { code: '+374', flag: '\u{1F1E6}\u{1F1F2}', nameKey: 'country.armenia' },
+  { code: '+995', flag: '\u{1F1EC}\u{1F1EA}', nameKey: 'country.georgia' },
+  { code: '+994', flag: '\u{1F1E6}\u{1F1FF}', nameKey: 'country.azerbaijan' },
+  { code: '+373', flag: '\u{1F1F2}\u{1F1E9}', nameKey: 'country.moldova' },
+  { code: '+370', flag: '\u{1F1F1}\u{1F1F9}', nameKey: 'country.lithuania' },
+  { code: '+371', flag: '\u{1F1F1}\u{1F1FB}', nameKey: 'country.latvia' },
+  { code: '+372', flag: '\u{1F1EA}\u{1F1EA}', nameKey: 'country.estonia' },
+  { code: '+1', flag: '\u{1F1FA}\u{1F1F8}', nameKey: 'country.usa' },
+  { code: '+44', flag: '\u{1F1EC}\u{1F1E7}', nameKey: 'country.uk' },
+  { code: '+49', flag: '\u{1F1E9}\u{1F1EA}', nameKey: 'country.germany' },
+  { code: '+33', flag: '\u{1F1EB}\u{1F1F7}', nameKey: 'country.france' },
+  { code: '+39', flag: '\u{1F1EE}\u{1F1F9}', nameKey: 'country.italy' },
+  { code: '+34', flag: '\u{1F1EA}\u{1F1F8}', nameKey: 'country.spain' },
+  { code: '+90', flag: '\u{1F1F9}\u{1F1F7}', nameKey: 'country.turkey' },
+  { code: '+971', flag: '\u{1F1E6}\u{1F1EA}', nameKey: 'country.uae' },
+  { code: '+972', flag: '\u{1F1EE}\u{1F1F1}', nameKey: 'country.israel' },
+  { code: '+86', flag: '\u{1F1E8}\u{1F1F3}', nameKey: 'country.china' },
+  { code: '+82', flag: '\u{1F1F0}\u{1F1F7}', nameKey: 'country.southKorea' },
+  { code: '+81', flag: '\u{1F1EF}\u{1F1F5}', nameKey: 'country.japan' },
+  { code: '+91', flag: '\u{1F1EE}\u{1F1F3}', nameKey: 'country.india' },
+  { code: '+55', flag: '\u{1F1E7}\u{1F1F7}', nameKey: 'country.brazil' },
+  { code: '+52', flag: '\u{1F1F2}\u{1F1FD}', nameKey: 'country.mexico' },
+  { code: '+61', flag: '\u{1F1E6}\u{1F1FA}', nameKey: 'country.australia' },
 ];
 
 type Tab = 'login' | 'register';
 type Step = 'form' | 'code' | 'profile';
 
 export function AuthPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('register');
   const [step, setStep] = useState<Step>('form');
   const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'dark');
@@ -164,11 +166,11 @@ export function AuthPage() {
   // ── Login ──────────────────────────────────────────────────────
   const handleLogin = async () => {
     if (phoneNumber.replace(/\D/g, '').length < 6) {
-      setError('Введите номер телефона');
+      setError(t('auth.enterPhone'));
       return;
     }
     if (!password) {
-      setError('Введите пароль');
+      setError(t('auth.enterPassword'));
       return;
     }
     setError('');
@@ -177,7 +179,7 @@ export function AuthPage() {
       const res = await authApi.login(phone, password);
       login(res.accessToken, res.refreshToken, res.user);
     } catch (e: any) {
-      setError(e.message || 'Неверный номер или пароль');
+      setError(e.message || t('auth.wrongCredentials'));
     } finally {
       setLoading(false);
     }
@@ -186,28 +188,28 @@ export function AuthPage() {
   // ── Register ───────────────────────────────────────────────────
   const handleRegister = async () => {
     if (parseInt(captchaInput) !== captcha.answer) {
-      setError('Неверный ответ на задачу');
+      setError(t('auth.wrongCaptcha'));
       refreshCaptcha();
       return;
     }
     if (phoneNumber.replace(/\D/g, '').length < 6) {
-      setError('Введите номер телефона');
+      setError(t('auth.enterPhone'));
       return;
     }
     if (!password || password.length < 6) {
-      setError('Пароль минимум 6 символов');
+      setError(t('auth.passwordMin'));
       return;
     }
     if (!/[A-ZА-ЯЁ]/.test(password)) {
-      setError('Пароль должен содержать заглавную букву');
+      setError(t('auth.passwordUppercase'));
       return;
     }
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
-      setError('Пароль должен содержать один из символов: !@#$%^&*_-');
+      setError(t('auth.passwordSpecial'));
       return;
     }
     if (password !== confirmPassword) {
-      setError('Пароли не совпадают');
+      setError(t('auth.passwordMismatch'));
       return;
     }
     setError('');
@@ -218,7 +220,7 @@ export function AuthPage() {
       setCountdown(60);
       setTimeout(() => codeRefs.current[0]?.focus(), 100);
     } catch (e: any) {
-      setError(e.message || 'Ошибка регистрации');
+      setError(e.message || t('auth.registerError'));
     } finally {
       setLoading(false);
     }
@@ -267,7 +269,7 @@ export function AuthPage() {
         login(res.accessToken, res.refreshToken, res.user);
       }
     } catch (e: any) {
-      setError('Неверный код');
+      setError(t('auth.wrongCode'));
       setCode(['', '', '', '']);
       codeRefs.current[0]?.focus();
     } finally {
@@ -282,7 +284,7 @@ export function AuthPage() {
       await authApi.register({ phone, email: email || '', password, confirmPassword });
       setCountdown(60);
     } catch (e: any) {
-      setError(e.message || 'Ошибка повторной отправки');
+      setError(e.message || t('auth.resendError'));
     } finally {
       setLoading(false);
     }
@@ -291,7 +293,7 @@ export function AuthPage() {
   // ── Profile ────────────────────────────────────────────────────
   const handleSetProfile = async () => {
     if (!displayName.trim()) {
-      setError('Введите имя');
+      setError(t('auth.enterName'));
       return;
     }
     setError('');
@@ -302,14 +304,14 @@ export function AuthPage() {
       const { token, refreshToken } = useAuthStore.getState();
       login(token!, refreshToken!, profile);
     } catch (e: any) {
-      setError(e.message || 'Ошибка');
+      setError(e.message || t('auth.error'));
     } finally {
       setLoading(false);
     }
   };
 
   const filteredCountries = countrySearch
-    ? COUNTRIES.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.includes(countrySearch))
+    ? COUNTRIES.filter(c => t(c.nameKey).toLowerCase().includes(countrySearch.toLowerCase()) || c.code.includes(countrySearch))
     : COUNTRIES;
 
   const phoneInput = (autoFocus?: boolean, onEnter?: () => void) => (
@@ -341,7 +343,7 @@ export function AuthPage() {
               type="text"
               value={countrySearch}
               onChange={(e) => setCountrySearch(e.target.value)}
-              placeholder="Поиск страны..."
+              placeholder={t('auth.searchCountry')}
               className="w-full px-3 py-2 bg-dark-600 border border-dark-500 rounded-lg text-white text-sm focus:outline-none focus:border-accent"
               autoFocus
             />
@@ -349,14 +351,14 @@ export function AuthPage() {
           <div className="overflow-y-auto">
             {filteredCountries.map((c, i) => (
               <button
-                key={`${c.code}-${c.name}-${i}`}
+                key={`${c.code}-${c.nameKey}-${i}`}
                 onClick={() => { setSelectedCountry(c); setShowCountryPicker(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 transition-colors text-left ${
-                  c.code === selectedCountry.code && c.name === selectedCountry.name ? 'bg-dark-600' : ''
+                  c.code === selectedCountry.code && c.nameKey === selectedCountry.nameKey ? 'bg-dark-600' : ''
                 }`}
               >
                 <span className="text-lg">{c.flag}</span>
-                <span className="text-white text-sm flex-1">{c.name}</span>
+                <span className="text-white text-sm flex-1">{t(c.nameKey)}</span>
                 <span className="text-gray-400 text-sm">{c.code}</span>
               </button>
             ))}
@@ -422,7 +424,7 @@ export function AuthPage() {
       <button
         onClick={toggleTheme}
         className="absolute top-6 right-6 p-2 rounded-full bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
-        title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+        title={theme === 'dark' ? t('auth.lightTheme') : t('auth.darkTheme')}
       >
         {theme === 'dark' ? (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -454,7 +456,7 @@ export function AuthPage() {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                Регистрация
+                {t('auth.register')}
               </button>
               <button
                 onClick={() => switchTab('login')}
@@ -464,7 +466,7 @@ export function AuthPage() {
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                Вход
+                {t('auth.login')}
               </button>
             </div>
 
@@ -472,21 +474,21 @@ export function AuthPage() {
             {tab === 'login' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Номер телефона</label>
+                  <label className="block text-sm text-gray-400 mb-2">{t('auth.phone')}</label>
                   {phoneInput(true, handleLogin)}
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Пароль</label>
-                  {passwordInput(password, setPassword, 'Пароль', showPassword, () => setShowPassword(!showPassword), (e) => e.key === 'Enter' && handleLogin())}
+                  <label className="block text-sm text-gray-400 mb-2">{t('auth.password')}</label>
+                  {passwordInput(password, setPassword, t('auth.password'), showPassword, () => setShowPassword(!showPassword), (e) => e.key === 'Enter' && handleLogin())}
                 </div>
                 <button onClick={handleLogin} disabled={loading} className={btnClass}>
-                  {loading ? 'Вход...' : 'Войти'}
+                  {loading ? t('auth.loginLoading') : t('auth.signIn')}
                 </button>
 
                 <p className="text-center text-gray-500 text-sm">
-                  Нет аккаунта?{' '}
+                  {t('auth.noAccount')}{' '}
                   <span onClick={() => switchTab('register')} className={linkClass}>
-                    Зарегистрироваться
+                    {t('auth.signUp')}
                   </span>
                 </p>
               </div>
@@ -496,11 +498,11 @@ export function AuthPage() {
             {tab === 'register' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Номер телефона</label>
+                  <label className="block text-sm text-gray-400 mb-2">{t('auth.phone')}</label>
                   {phoneInput(true)}
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Email <span className="text-gray-600">(необязательно)</span></label>
+                  <label className="block text-sm text-gray-400 mb-2">{t('auth.email')} <span className="text-gray-600">{t('auth.emailOptional')}</span></label>
                   <input
                     type="email"
                     value={email}
@@ -510,19 +512,19 @@ export function AuthPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Пароль</label>
-                  {passwordInput(password, setPassword, 'Aa + !@#$%, мин. 6', showPassword, () => setShowPassword(!showPassword))}
-                  <p className="text-xs text-gray-500 mt-1">Минимум 6 символов, заглавная буква и один из: !@#$%^&*</p>
+                  <label className="block text-sm text-gray-400 mb-2">{t('auth.password')}</label>
+                  {passwordInput(password, setPassword, t('auth.passwordPlaceholder'), showPassword, () => setShowPassword(!showPassword))}
+                  <p className="text-xs text-gray-500 mt-1">{t('auth.passwordHint')}</p>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Подтвердите пароль</label>
-                  {passwordInput(confirmPassword, setConfirmPassword, 'Ещё раз', showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleRegister())}
+                  <label className="block text-sm text-gray-400 mb-2">{t('auth.confirmPassword')}</label>
+                  {passwordInput(confirmPassword, setConfirmPassword, t('auth.confirmPlaceholder'), showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleRegister())}
                 </div>
                 {/* Captcha */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <canvas ref={captchaCanvasRef} width={200} height={50} className="rounded-lg border border-dark-500" />
-                    <button type="button" onClick={refreshCaptcha} className="text-gray-400 hover:text-white transition-colors p-1" title="Обновить">
+                    <button type="button" onClick={refreshCaptcha} className="text-gray-400 hover:text-white transition-colors p-1" title={t('auth.captchaRefresh')}>
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.015 4.356v4.992" />
                       </svg>
@@ -534,19 +536,19 @@ export function AuthPage() {
                     value={captchaInput}
                     onChange={(e) => setCaptchaInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
-                    placeholder="Введите ответ"
+                    placeholder={t('auth.captchaPlaceholder')}
                     className={inputClass + ' text-center'}
                   />
                 </div>
 
                 <button onClick={handleRegister} disabled={loading} className={btnClass}>
-                  {loading ? 'Отправка...' : 'Получить код'}
+                  {loading ? t('auth.sending') : t('auth.getCode')}
                 </button>
 
                 <p className="text-center text-gray-500 text-sm">
-                  Уже есть аккаунт?{' '}
+                  {t('auth.haveAccount')}{' '}
                   <span onClick={() => switchTab('login')} className={linkClass}>
-                    Войти
+                    {t('auth.signIn')}
                   </span>
                 </p>
               </div>
@@ -558,8 +560,8 @@ export function AuthPage() {
         {step === 'code' && (
           <div className="space-y-4">
             <p className="text-center text-gray-400 text-sm">
-              Мы позвоним на <span className="text-white">{phone}</span>,<br />
-              введите последние 4 цифры
+              {t('auth.weWillCall')} <span className="text-white">{phone}</span>,<br />
+              {t('auth.enterLast4')}
             </p>
             <div className="flex gap-3 justify-center">
               {code.map((digit, i) => (
@@ -582,11 +584,11 @@ export function AuthPage() {
             <div className="text-center">
               {countdown > 0 ? (
                 <span className="text-gray-500 text-sm">
-                  Повторная отправка через {countdown}с
+                  {t('auth.resendIn', { countdown })}
                 </span>
               ) : (
                 <button onClick={handleResendCode} className={linkClass}>
-                  Отправить код повторно
+                  {t('auth.resendCode')}
                 </button>
               )}
             </div>
@@ -597,7 +599,7 @@ export function AuthPage() {
               }}
               className="w-full text-center text-gray-500 text-sm hover:text-gray-300"
             >
-              Изменить номер
+              {t('auth.changeNumber')}
             </button>
           </div>
         )}
@@ -605,18 +607,18 @@ export function AuthPage() {
         {/* ── PROFILE step ──────────────────────────────────────── */}
         {step === 'profile' && (
           <div className="space-y-4">
-            <p className="text-center text-gray-400 text-sm">Как вас зовут?</p>
+            <p className="text-center text-gray-400 text-sm">{t('auth.whatsYourName')}</p>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSetProfile()}
-              placeholder="Имя"
+              placeholder={t('auth.namePlaceholder')}
               className={inputClass}
               autoFocus
             />
             <button onClick={handleSetProfile} disabled={loading} className={btnClass}>
-              {loading ? 'Сохранение...' : 'Продолжить'}
+              {loading ? t('auth.saving') : t('auth.continue')}
             </button>
           </div>
         )}

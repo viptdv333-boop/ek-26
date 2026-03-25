@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 import { messagesApi, messageActionsApi } from '../services/api/endpoints';
+import { useTranslation } from '../i18n';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { MessageBubble } from './MessageBubble';
 import { sessionManager, messageCache } from '../services/crypto';
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function ChatRoom({ conversationId }: Props) {
+  const { t, locale } = useTranslation();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -126,23 +128,23 @@ export function ChatRoom({ conversationId }: Props) {
   const getTitle = () => {
     if (conv?.groupMeta?.name) return conv.groupMeta.name;
     const other = getOther();
-    return other?.displayName || 'Чат';
+    return other?.displayName || t('sidebar.chat');
   };
 
   const otherUser = getOther();
   const otherAvatarUrl = otherUser?.avatarUrl || null;
 
   const getSubtitle = () => {
-    if (typingUsers.length > 0) return 'печатает...';
+    if (typingUsers.length > 0) return t('chat.typing');
     if (conv?.type === 'group') {
-      return `${conv.participants.length} участников`;
+      return t('chat.participants', { count: conv.participants.length });
     }
     const other = conv?.participants.find((p) => {
       const id = typeof p === 'string' ? p : p.id;
       return id !== userId;
     });
     const otherId = other ? (typeof other === 'string' ? other : other.id) : null;
-    if (otherId && isUserOnline(otherId)) return 'в сети';
+    if (otherId && isUserOnline(otherId)) return t('chat.online');
     return null;
   };
 
@@ -168,7 +170,7 @@ export function ChatRoom({ conversationId }: Props) {
               await messageCache.put(m.id, text);
             }
           } catch {
-            text = 'Сообщение из старой версии';
+            text = t('chat.oldVersionMessage');
           }
         }
         return {
@@ -247,7 +249,7 @@ export function ChatRoom({ conversationId }: Props) {
     e.target.value = '';
 
     if (file.size > 15 * 1024 * 1024) {
-      alert('Файл слишком большой. Максимум 15 МБ.');
+      alert(t('chat.fileTooLarge'));
       return;
     }
 
@@ -262,7 +264,7 @@ export function ChatRoom({ conversationId }: Props) {
       const att = await uploadFile(file);
       setPendingAttachment(att);
     } catch (err: any) {
-      alert(err.message || 'Ошибка загрузки файла');
+      alert(err.message || t('chat.uploadError'));
       setPreviewUrl(null);
     } finally {
       setUploading(false);
@@ -375,7 +377,7 @@ export function ChatRoom({ conversationId }: Props) {
       conversationId,
       messageId: msg.id,
       text: msg.text || '',
-      senderName: msg.senderName || 'Пользователь',
+      senderName: msg.senderName || t('sidebar.user'),
     });
   };
 
@@ -394,7 +396,7 @@ export function ChatRoom({ conversationId }: Props) {
   };
 
   const handleDelete = async (msg: any) => {
-    if (!confirm('Удалить сообщение?')) return;
+    if (!confirm(t('chat.deleteConfirm'))) return;
     try {
       await messageActionsApi.delete(msg.id);
       deleteMessage(msg.id);
@@ -464,7 +466,7 @@ export function ChatRoom({ conversationId }: Props) {
               if (other) callManager.startCall(other.id, other.displayName, other.avatarUrl || null, 'audio');
             }}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
-            title="Аудиозвонок"
+            title={t('chat.audioCall')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
@@ -476,7 +478,7 @@ export function ChatRoom({ conversationId }: Props) {
               if (other) callManager.startCall(other.id, other.displayName, other.avatarUrl || null, 'video');
             }}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
-            title="Видеозвонок"
+            title={t('chat.videoCall')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9.75a2.25 2.25 0 002.25-2.25V7.5a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
@@ -506,13 +508,13 @@ export function ChatRoom({ conversationId }: Props) {
                   <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
                 </svg>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-accent font-medium truncate">{pin.senderName || 'Закреплено'}</p>
-                  <p className="text-[11px] text-gray-300 truncate">{pin.text || 'Сообщение'}</p>
+                  <p className="text-[10px] text-accent font-medium truncate">{pin.senderName || t('chat.pinned')}</p>
+                  <p className="text-[11px] text-gray-300 truncate">{pin.text || t('chat.message')}</p>
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleUnpin(pin.id); }}
                   className="text-gray-500 hover:text-white p-0.5 flex-shrink-0"
-                  title="Открепить"
+                  title={t('chat.unpin')}
                 >
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -527,11 +529,11 @@ export function ChatRoom({ conversationId }: Props) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1" style={getWallpaperStyle()}>
         {loading && (
-          <div className="text-center text-gray-500 text-sm py-4">Загрузка...</div>
+          <div className="text-center text-gray-500 text-sm py-4">{t('chat.loading')}</div>
         )}
         {!loading && messages.length === 0 && (
           <div className="text-center text-gray-500 text-sm py-8">
-            Нет сообщений. Напишите первое!
+            {t('chat.noMessages')}
           </div>
         )}
         {messages.map((msg) => (
@@ -568,7 +570,7 @@ export function ChatRoom({ conversationId }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
           </svg>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-accent">Редактирование</p>
+            <p className="text-xs font-medium text-accent">{t('chat.editing')}</p>
             <p className="text-xs text-gray-400 truncate">{editingMessage.text}</p>
           </div>
           <button onClick={handleCancelEdit} className="text-gray-400 hover:text-white p-1">
@@ -584,7 +586,7 @@ export function ChatRoom({ conversationId }: Props) {
         <div className="px-4 py-2 border-t border-dark-600 bg-dark-800 flex items-center gap-3">
           <div className="border-l-2 border-accent pl-3 flex-1 min-w-0">
             <p className="text-xs font-medium text-accent">{replyingTo.senderName}</p>
-            <p className="text-xs text-gray-400 truncate">{replyingTo.text || 'Сообщение'}</p>
+            <p className="text-xs text-gray-400 truncate">{replyingTo.text || t('chat.message')}</p>
           </div>
           <button onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-white p-1">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -609,7 +611,7 @@ export function ChatRoom({ conversationId }: Props) {
             )}
             <div className="flex-1 min-w-0">
               {uploading ? (
-                <p className="text-sm text-gray-400">Загрузка файла...</p>
+                <p className="text-sm text-gray-400">{t('chat.uploadingFile')}</p>
               ) : pendingAttachment ? (
                 <p className="text-sm text-white truncate">{pendingAttachment.fileName}</p>
               ) : null}
@@ -698,7 +700,7 @@ export function ChatRoom({ conversationId }: Props) {
             value={text}
             onChange={(e) => { setText(e.target.value); handleTyping(); }}
             onKeyDown={handleKeyDown}
-            placeholder="Сообщение..."
+            placeholder={t('chat.messagePlaceholder')}
             rows={1}
             className="flex-1 px-4 py-2.5 bg-dark-700 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 resize-none focus:outline-none focus:border-accent transition-colors"
             style={{ maxHeight: '120px' }}
@@ -708,7 +710,7 @@ export function ChatRoom({ conversationId }: Props) {
           <button
             onClick={() => setIsRecordingVoice(true)}
             className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-white hover:bg-dark-600 transition-colors flex-shrink-0"
-            title="Голосовое сообщение"
+            title={t('chat.voiceMessage')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />

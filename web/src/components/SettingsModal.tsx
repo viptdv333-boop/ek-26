@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/authStore';
 import { usersApi, chatActionsApi } from '../services/api/endpoints';
 import { uploadFile } from '../services/api/upload';
 import { useChatStore } from '../stores/chatStore';
+import { useTranslation } from '../i18n';
 
 interface Props {
   onClose: () => void;
@@ -10,17 +11,18 @@ interface Props {
 }
 
 const WALLPAPER_PRESETS = [
-  { id: 'default', label: 'По умолчанию', color: '#1a1a2e' },
-  { id: 'dark-blue', label: 'Тёмно-синий', color: '#0f1b2d' },
-  { id: 'dark-green', label: 'Тёмно-зелёный', color: '#0d1f17' },
-  { id: 'dark-purple', label: 'Тёмно-фиолетовый', color: '#1a0f2e' },
-  { id: 'gradient-blue-purple', label: 'Сине-фиолетовый', gradient: 'linear-gradient(135deg, #0f1b2d, #1a0f2e)' },
-  { id: 'gradient-green-teal', label: 'Зелёно-бирюзовый', gradient: 'linear-gradient(135deg, #0d1f17, #0f2027)' },
+  { id: 'default', labelKey: 'wallpaper.default', color: '#1a1a2e' },
+  { id: 'dark-blue', labelKey: 'wallpaper.darkBlue', color: '#0f1b2d' },
+  { id: 'dark-green', labelKey: 'wallpaper.darkGreen', color: '#0d1f17' },
+  { id: 'dark-purple', labelKey: 'wallpaper.darkPurple', color: '#1a0f2e' },
+  { id: 'gradient-blue-purple', labelKey: 'wallpaper.bluePurple', gradient: 'linear-gradient(135deg, #0f1b2d, #1a0f2e)' },
+  { id: 'gradient-green-teal', labelKey: 'wallpaper.greenTeal', gradient: 'linear-gradient(135deg, #0d1f17, #0f2027)' },
 ];
 
 type SettingsTab = 'profile' | 'appearance';
 
 export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
+  const { t, lang, setLang } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const authLogout = useAuthStore((s) => s.logout);
@@ -63,7 +65,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
     e.target.value = '';
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Максимальный размер аватара — 5 МБ');
+      alert(t('settings.avatarMaxSize'));
       return;
     }
 
@@ -72,7 +74,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
       const att = await uploadFile(file);
       setAvatarUrl(att.url);
     } catch (err: any) {
-      alert(err.message || 'Ошибка загрузки');
+      alert(err.message || t('settings.uploadError'));
     } finally {
       setUploading(false);
     }
@@ -96,7 +98,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err: any) {
-      alert(err.message || 'Ошибка сохранения');
+      alert(err.message || t('settings.saveError'));
     } finally {
       setSaving(false);
     }
@@ -155,7 +157,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
     if (!file) return;
     e.target.value = '';
     if (file.size > 10 * 1024 * 1024) {
-      alert('Максимальный размер — 10 МБ');
+      alert(t('settings.wallpaperMaxSize'));
       return;
     }
     setWallpaperUploading(true);
@@ -166,20 +168,20 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
       localStorage.setItem('ek26_wallpaper', url);
       window.dispatchEvent(new Event('wallpaper-changed'));
     } catch (err: any) {
-      alert(err.message || 'Ошибка загрузки');
+      alert(err.message || t('settings.uploadError'));
     } finally {
       setWallpaperUploading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteInput !== 'УДАЛИТЬ') return;
+    if (deleteInput !== t('settings.deleteWord')) return;
     try {
       await chatActionsApi.deleteAccount();
       resetChat();
       authLogout();
     } catch (err: any) {
-      alert(err.message || 'Ошибка удаления аккаунта');
+      alert(err.message || t('settings.deleteAccountError'));
     }
   };
 
@@ -193,7 +195,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-dark-500">
-          <h2 className="text-lg font-semibold text-white">Настройки</h2>
+          <h2 className="text-lg font-semibold text-white">{t('settings.title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -209,7 +211,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               activeTab === 'profile' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
             }`}
           >
-            Профиль
+            {t('settings.profile')}
           </button>
           <button
             onClick={() => setActiveTab('appearance')}
@@ -217,7 +219,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               activeTab === 'appearance' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
             }`}
           >
-            Оформление
+            {t('settings.appearance')}
           </button>
         </div>
 
@@ -246,7 +248,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                   </div>
                   {uploading && (
                     <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
-                      <span className="text-white text-xs">Загрузка...</span>
+                      <span className="text-white text-xs">{t('settings.uploading')}</span>
                     </div>
                   )}
                 </button>
@@ -257,23 +259,23 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                   onChange={handleAvatarUpload}
                   className="hidden"
                 />
-                <p className="text-xs text-gray-500">Нажмите для смены фото</p>
+                <p className="text-xs text-gray-500">{t('settings.changePhoto')}</p>
               </div>
 
               {/* Display Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Имя</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.name')}</label>
                 <input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Ваше имя"
+                  placeholder={t('settings.namePlaceholder')}
                   className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Электронная почта</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.email')}</label>
                 <input
                   type="email"
                   value={email}
@@ -285,11 +287,11 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Статус</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.status')}</label>
                 <input
                   value={status}
                   onChange={(e) => setStatus(e.target.value.slice(0, 140))}
-                  placeholder="Чем занимаетесь?"
+                  placeholder={t('settings.statusPlaceholder')}
                   maxLength={140}
                   className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
                 />
@@ -299,7 +301,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               {/* Phone (read-only) */}
               {user?.phone && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">Телефон</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.phone')}</label>
                   <div className="w-full px-4 py-2.5 bg-dark-600/50 border border-dark-500 rounded-xl text-sm text-gray-400">
                     {user.phone}
                   </div>
@@ -312,14 +314,14 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                   onClick={onClose}
                   className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
                 >
-                  Отмена
+                  {t('settings.cancel')}
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving || !displayName.trim()}
                   className="px-6 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl disabled:opacity-50 transition-colors"
                 >
-                  {saved ? 'Сохранено' : saving ? 'Сохранение...' : 'Сохранить'}
+                  {saved ? t('settings.saved') : saving ? t('settings.saving') : t('settings.save')}
                 </button>
               </div>
 
@@ -329,7 +331,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                   onClick={() => { authLogout(); onClose(); }}
                   className="w-full py-2.5 bg-dark-600 hover:bg-dark-500 text-white font-medium rounded-xl transition-colors text-sm border border-dark-400"
                 >
-                  Выйти из аккаунта
+                  {t('settings.logout')}
                 </button>
               </div>
 
@@ -340,20 +342,20 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                     onClick={() => setShowDeleteConfirm(true)}
                     className="w-full py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 font-medium rounded-xl transition-colors text-sm border border-red-600/30"
                   >
-                    Удалить аккаунт
+                    {t('settings.deleteAccount')}
                   </button>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-sm text-red-400">
-                      Вы уверены? Все ваши данные и переписки будут удалены навсегда.
+                      {t('settings.deleteAccountConfirm')}
                     </p>
                     <p className="text-xs text-gray-400">
-                      Введите &laquo;УДАЛИТЬ&raquo; для подтверждения:
+                      {t('settings.deleteAccountHint')}
                     </p>
                     <input
                       value={deleteInput}
                       onChange={(e) => setDeleteInput(e.target.value)}
-                      placeholder="УДАЛИТЬ"
+                      placeholder={t('settings.deleteWord')}
                       className="w-full px-4 py-2.5 bg-dark-600 border border-red-500/50 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500 transition-colors"
                     />
                     <div className="flex gap-2">
@@ -361,14 +363,14 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                         onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); }}
                         className="flex-1 py-2 text-sm text-gray-400 hover:text-white transition-colors"
                       >
-                        Отмена
+                        {t('settings.cancel')}
                       </button>
                       <button
                         onClick={handleDeleteAccount}
-                        disabled={deleteInput !== 'УДАЛИТЬ'}
+                        disabled={deleteInput !== t('settings.deleteWord')}
                         className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-xl disabled:opacity-30 transition-colors"
                       >
-                        Удалить навсегда
+                        {t('settings.deleteForever')}
                       </button>
                     </div>
                   </div>
@@ -377,9 +379,52 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
             </div>
           ) : (
             <div className="px-6 py-5 space-y-6">
+              {/* Language selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.language')}</label>
+                <div className="flex gap-2">
+                  {[
+                    { code: 'ru' as const, flag: '\u{1F1F7}\u{1F1FA}', name: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439' },
+                    { code: 'en' as const, flag: '\u{1F1EC}\u{1F1E7}', name: 'English' },
+                    { code: 'zh' as const, flag: '\u{1F1E8}\u{1F1F3}', name: '\u4E2D\u6587' },
+                  ].map(item => (
+                    <button
+                      key={item.code}
+                      onClick={() => setLang(item.code)}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                        lang === item.code ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {item.flag} {item.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Auto-translate toggle */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-400">{t('settings.autoTranslate')}</label>
+                <button
+                  onClick={() => {
+                    const current = localStorage.getItem('ek26_auto_translate') === 'true';
+                    localStorage.setItem('ek26_auto_translate', current ? 'false' : 'true');
+                    window.dispatchEvent(new Event('auto-translate-changed'));
+                    // Force re-render
+                    setTheme(prev => prev);
+                  }}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    localStorage.getItem('ek26_auto_translate') === 'true' ? 'bg-accent' : 'bg-dark-500'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                    localStorage.getItem('ek26_auto_translate') === 'true' ? 'translate-x-5.5 left-[1.375rem]' : 'left-0.5'
+                  }`} />
+                </button>
+              </div>
+
               {/* Theme toggle */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-3">Тема</label>
+                <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.theme')}</label>
                 <div className="flex gap-3">
                   <button
                     onClick={() => handleThemeChange('dark')}
@@ -387,7 +432,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                       theme === 'dark' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
                     }`}
                   >
-                    Тёмная
+                    {t('settings.dark')}
                   </button>
                   <button
                     onClick={() => handleThemeChange('light')}
@@ -395,14 +440,14 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                       theme === 'light' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
                     }`}
                   >
-                    Светлая
+                    {t('settings.light')}
                   </button>
                 </div>
               </div>
 
               {/* Font size */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-3">Размер шрифта: {fontSize}</label>
+                <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.fontSize', { size: String(fontSize) })}</label>
                 <input
                   type="range"
                   min={1}
@@ -413,24 +458,24 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                   className="w-full accent-accent"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Мелкий</span>
-                  <span>Крупный</span>
+                  <span>{t('settings.fontSmall')}</span>
+                  <span>{t('settings.fontLarge')}</span>
                 </div>
                 <p className="text-sm mt-2 text-gray-300" style={{ fontSize: `${[12,13,14,15,16,17,18,19,20,22][fontSize - 1]}px` }}>
-                  Пример текста сообщения
+                  {t('settings.sampleText')}
                 </p>
               </div>
 
               {/* Bubble shape */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-3">Форма сообщений</label>
+                <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.bubbleShape')}</label>
                 <div className="flex gap-3">
                   {([
-                    { id: 'rounded', label: 'Скруглённые',
+                    { id: 'rounded', label: t('settings.bubbleRounded'),
                       path: "M 18,5 C 8,6 3,13 3,22 L 2,72 C 2,83 7,91 18,91 L 162,91 L 184,114 L 173,91 L 182,91 C 193,91 198,83 198,72 L 198,22 C 198,13 193,5 182,5 Z" },
-                    { id: 'square', label: 'Квадратные',
+                    { id: 'square', label: t('settings.bubbleSquare'),
                       path: "M 6,3 L 194,3 C 197,3 199,5 199,8 L 199,83 C 199,87 197,89 194,89 L 175,89 L 186,114 L 160,89 L 6,89 C 3,89 1,87 1,83 L 1,8 C 1,5 3,3 6,3 Z" },
-                    { id: 'cloud', label: 'Облачко',
+                    { id: 'cloud', label: t('settings.bubbleCloud'),
                       path: "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z" },
                   ] as const).map((shape) => (
                     <button
@@ -445,7 +490,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                           <path d={shape.path} fill={bubbleColor} />
                         </svg>
                         <span className="absolute inset-0 flex items-center justify-center text-xs text-white" style={{ zIndex: 1, paddingBottom: '6px' }}>
-                          Привет
+                          {t('settings.bubbleHello')}
                         </span>
                       </div>
                       <span className="text-xs text-gray-400">{shape.label}</span>
@@ -456,7 +501,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
 
               {/* Bubble color — own */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-3">Цвет ваших сообщений</label>
+                <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.ownBubbleColor')}</label>
                 <div className="flex items-center gap-2 flex-wrap">
                   {['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'].map((color) => (
                     <button
@@ -486,7 +531,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
 
               {/* Bubble color — other */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-3">Цвет сообщений собеседника</label>
+                <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.otherBubbleColor')}</label>
                 <div className="flex items-center gap-2 flex-wrap">
                   {['#22222f', '#1e3a5f', '#2d1b3d', '#1a3327', '#3d2b1a', '#3b1a1a', '#1a2f3d', '#2a2a38'].map((color) => (
                     <button
@@ -516,7 +561,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
 
               {/* Wallpapers */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-3">Фон чата</label>
+                <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.chatBackground')}</label>
                 <div className="grid grid-cols-4 gap-3">
                   {WALLPAPER_PRESETS.map((preset) => (
                     <button
@@ -528,7 +573,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                       style={{
                         background: preset.gradient || preset.color,
                       }}
-                      title={preset.label}
+                      title={t(preset.labelKey)}
                     >
                       {wallpaper === preset.id && (
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -548,7 +593,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                         ? 'border-accent'
                         : 'border-dark-500 hover:border-gray-400'
                     } bg-dark-600`}
-                    title="Загрузить своё изображение"
+                    title={t('settings.uploadWallpaper')}
                   >
                     {wallpaperUploading ? (
                       <span className="text-xs text-gray-400">...</span>
@@ -577,7 +622,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                   onChange={handleWallpaperUpload}
                   className="hidden"
                 />
-                <p className="text-xs text-gray-500 mt-2">Выберите фон для области сообщений</p>
+                <p className="text-xs text-gray-500 mt-2">{t('settings.bgSelectHint')}</p>
               </div>
             </div>
           )}

@@ -84,6 +84,12 @@ export const contactsApi = {
     api.patch<any>(`/contacts/${contactUserId}`, data),
 };
 
+// Translate
+export const translateApi = {
+  translate: (text: string, to: string, from?: string) =>
+    api.post<{ translated: string; detectedLang?: string }>('/translate', { text, from, to }),
+};
+
 // Search
 export const searchApi = {
   messages: (q: string) => api.get<{ results: any[] }>(`/messages/search?q=${encodeURIComponent(q)}`),

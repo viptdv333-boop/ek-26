@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { formatFileSize, isImageFile, isVideoFile } from '../services/api/upload';
 import { MessageContextMenu } from './MessageContextMenu';
 import { ImageLightbox } from './ImageLightbox';
 import { VoicePlayer } from './VoicePlayer';
+import { useTranslation } from '../i18n';
+import { translateApi } from '../services/api/endpoints';
 
 interface Attachment {
   fileId: string;
@@ -57,13 +59,55 @@ interface Props {
   bubbleColorOther?: string;
 }
 
+// Global translate cache per session
+const translatedCache = new Map<string, string>();
+
 export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'rounded', bubbleColor = '#6366f1', bubbleColorOther = '#22222f' }: Props) {
+  const { t, lang, locale } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);
   const [showReactionBar, setShowReactionBar] = useState(false);
+  const [translatedText, setTranslatedText] = useState<string | null>(() => translatedCache.get(message.id) || null);
+  const [translating, setTranslating] = useState(false);
   const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🔥','👎','🎉'];
 
-  const time = new Date(message.createdAt).toLocaleTimeString('ru', {
+  // Auto-translate incoming messages
+  useEffect(() => {
+    if (isMine || !message.text || translatedText) return;
+    const autoTranslate = localStorage.getItem('ek26_auto_translate') === 'true';
+    if (!autoTranslate) return;
+    // Simple heuristic: check if text appears to be in a different language
+    const hasLatin = /[a-zA-Z]/.test(message.text);
+    const hasCyrillic = /[\u0400-\u04FF]/.test(message.text);
+    const hasChinese = /[\u4E00-\u9FFF]/.test(message.text);
+    const isCurrentLangText =
+      (lang === 'ru' && hasCyrillic) ||
+      (lang === 'en' && hasLatin && !hasCyrillic && !hasChinese) ||
+      (lang === 'zh' && hasChinese);
+    if (isCurrentLangText) return;
+    handleTranslate();
+  }, [message.id]);
+
+  const handleTranslate = async () => {
+    if (!message.text) return;
+    if (translatedCache.has(message.id)) {
+      setTranslatedText(translatedCache.get(message.id)!);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const res = await translateApi.translate(message.text, lang);
+      const translated = (res as any).translated || message.text;
+      translatedCache.set(message.id, translated);
+      setTranslatedText(translated);
+    } catch {
+      // silently fail
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const time = new Date(message.createdAt).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -87,11 +131,12 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
 
   const getContextMenuItems = () => {
     const items = [];
-    if (onReply) items.push({ label: 'Ответить', icon: 'reply', onClick: () => onReply(message) });
-    if (onForward) items.push({ label: 'Переслать', icon: 'forward', onClick: () => onForward(message) });
-    if (isMine && onEdit && message.text) items.push({ label: 'Редактировать', icon: 'edit', onClick: () => onEdit(message) });
-    if (onPin) items.push({ label: 'Закрепить', icon: 'pin', onClick: () => onPin(message) });
-    if (onDelete) items.push({ label: 'Удалить', icon: 'delete', onClick: () => onDelete(message), danger: true });
+    if (onReply) items.push({ label: t('menu.reply'), icon: 'reply', onClick: () => onReply(message) });
+    if (onForward) items.push({ label: t('menu.forward'), icon: 'forward', onClick: () => onForward(message) });
+    if (isMine && onEdit && message.text) items.push({ label: t('menu.edit'), icon: 'edit', onClick: () => onEdit(message) });
+    if (onPin) items.push({ label: t('menu.pin'), icon: 'pin', onClick: () => onPin(message) });
+    if (message.text && !isMine) items.push({ label: t('menu.translate'), icon: 'forward', onClick: () => handleTranslate() });
+    if (onDelete) items.push({ label: t('menu.delete'), icon: 'delete', onClick: () => onDelete(message), danger: true });
     return items;
   };
 
@@ -159,14 +204,14 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
 
           {message.forwardedFrom && (
             <div className={`text-[11px] mb-1 ${isMine ? 'text-white/60' : 'text-gray-400'}`}>
-              Переслано от {message.forwardedFrom.originalSenderName}
+              {t('message.forwardedFrom', { name: message.forwardedFrom.originalSenderName })}
             </div>
           )}
 
           {message.replyTo && (
             <div className={`border-l-2 pl-2 mb-1.5 py-0.5 ${isMine ? 'border-white/40' : 'border-accent'}`}>
               <p className={`text-[11px] font-medium ${isMine ? 'text-white/70' : 'text-accent'}`}>{message.replyTo.senderName}</p>
-              <p className={`text-[11px] truncate ${isMine ? 'text-white/50' : 'text-gray-400'}`}>{message.replyTo.text || 'Сообщение'}</p>
+              <p className={`text-[11px] truncate ${isMine ? 'text-white/50' : 'text-gray-400'}`}>{message.replyTo.text || t('message.message')}</p>
             </div>
           )}
 
@@ -183,8 +228,24 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
             <p className={`whitespace-pre-wrap break-words ${hasAttachments ? 'px-3.5 pt-1' : ''}`} style={{ fontSize: `${fontSize}px` }}>{message.text}</p>
           )}
 
+          {/* Translated text */}
+          {translatedText && (
+            <div className={`mt-1 ${hasAttachments ? 'px-3.5' : ''}`}>
+              <p className="whitespace-pre-wrap break-words italic text-gray-300" style={{ fontSize: `${Math.max(fontSize - 2, 11)}px` }}>{translatedText}</p>
+              <button
+                onClick={(e) => { e.stopPropagation(); setTranslatedText(null); translatedCache.delete(message.id); }}
+                className={`text-[10px] mt-0.5 ${isMine ? 'text-white/40 hover:text-white/70' : 'text-gray-500 hover:text-gray-300'} transition-colors`}
+              >
+                {t('translate.hide')}
+              </button>
+            </div>
+          )}
+          {translating && (
+            <p className={`text-[10px] mt-0.5 italic ${isMine ? 'text-white/40' : 'text-gray-500'}`}>...</p>
+          )}
+
           <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''} ${isMine ? 'text-white/50' : 'text-gray-500'}`}>
-            {message.editedAt && <span className="text-[9px] italic">ред.</span>}
+            {message.editedAt && <span className="text-[9px] italic">{t('message.edited')}</span>}
             <span className="text-[10px]">{time}</span>
             {statusIcon()}
           </div>

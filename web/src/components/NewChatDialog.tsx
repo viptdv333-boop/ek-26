@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { usersApi, conversationsApi } from '../services/api/endpoints';
 import { useChatStore } from '../stores/chatStore';
 import { useContactsStore, Contact } from '../stores/contactsStore';
+import { useTranslation } from '../i18n';
 
 interface Props {
   onClose: () => void;
@@ -18,6 +19,7 @@ interface UserResult {
 type Tab = 'direct' | 'group';
 
 export function NewChatDialog({ onClose }: Props) {
+  const { t } = useTranslation();
   const contacts = useContactsStore((s) => s.contacts);
   const fetchContacts = useContactsStore((s) => s.fetchContacts);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
@@ -47,9 +49,9 @@ export function NewChatDialog({ onClose }: Props) {
     try {
       const users = await usersApi.search(search);
       setSearchResults(users || []);
-      if (!users || users.length === 0) setError('Не найдено');
+      if (!users || users.length === 0) setError(t('newChat.notFound'));
     } catch {
-      setError('Ошибка поиска');
+      setError(t('newChat.searchError'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +65,7 @@ export function NewChatDialog({ onClose }: Props) {
       setActive(conv.id);
       onClose();
     } catch {
-      setError('Ошибка создания чата');
+      setError(t('newChat.createError'));
     } finally {
       setLoading(false);
     }
@@ -87,7 +89,7 @@ export function NewChatDialog({ onClose }: Props) {
   };
 
   const handleCreateGroup = async () => {
-    if (!groupName.trim()) { setError('Введите название группы'); return; }
+    if (!groupName.trim()) { setError(t('newChat.groupNameRequired')); return; }
     setLoading(true);
     setError('');
     try {
@@ -96,7 +98,7 @@ export function NewChatDialog({ onClose }: Props) {
       setActive(conv.id);
       onClose();
     } catch {
-      setError('Ошибка создания группы');
+      setError(t('newChat.groupCreateError'));
     } finally {
       setLoading(false);
     }
@@ -120,7 +122,7 @@ export function NewChatDialog({ onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-dark-600">
-          <h2 className="text-lg font-semibold text-white mb-3">Новый чат</h2>
+          <h2 className="text-lg font-semibold text-white mb-3">{t('newChat.title')}</h2>
 
           {/* Tab switcher */}
           <div className="flex gap-1 mb-3 bg-dark-800 rounded-xl p-1">
@@ -128,13 +130,13 @@ export function NewChatDialog({ onClose }: Props) {
               onClick={() => { setTab('direct'); resetTabState(); }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'direct' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
             >
-              Личный чат
+              {t('newChat.direct')}
             </button>
             <button
               onClick={() => { setTab('group'); resetTabState(); }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'group' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
             >
-              Группа
+              {t('newChat.group')}
             </button>
           </div>
 
@@ -144,7 +146,7 @@ export function NewChatDialog({ onClose }: Props) {
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Название группы"
+              placeholder={t('newChat.groupName')}
               className="w-full px-4 py-2.5 bg-dark-800 border border-dark-500 rounded-xl text-white text-sm focus:outline-none focus:border-accent transition-colors mb-3"
             />
           )}
@@ -154,7 +156,7 @@ export function NewChatDialog({ onClose }: Props) {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setSearchResults([]); setError(''); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Поиск по контактам или +7..."
+            placeholder={t('newChat.searchPlaceholder')}
             className="w-full px-4 py-2.5 bg-dark-800 border border-dark-500 rounded-xl text-white text-sm focus:outline-none focus:border-accent transition-colors"
             autoFocus
           />
@@ -243,7 +245,7 @@ export function NewChatDialog({ onClose }: Props) {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-sm text-white truncate">{user.displayName || 'Без имени'}</p>
+                <p className="text-sm text-white truncate">{user.displayName || t('newChat.noName')}</p>
                 <p className="text-xs text-gray-500">{user.phone || ''}</p>
               </div>
             </button>
@@ -251,7 +253,7 @@ export function NewChatDialog({ onClose }: Props) {
 
           {filteredContacts.length === 0 && searchResults.length === 0 && !error && (
             <p className="text-center text-gray-500 text-sm py-8">
-              {search ? 'Нет совпадений в контактах' : 'Нет контактов'}
+              {search ? t('newChat.noContactsMatch') : t('newChat.noContacts')}
             </p>
           )}
 
@@ -264,7 +266,7 @@ export function NewChatDialog({ onClose }: Props) {
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-dark-500 text-gray-400 hover:text-white transition-colors text-sm"
           >
-            Отмена
+            {t('newChat.cancel')}
           </button>
           {search.length >= 2 && searchResults.length === 0 && (
             <button
@@ -272,7 +274,7 @@ export function NewChatDialog({ onClose }: Props) {
               disabled={loading}
               className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-medium transition-colors text-sm"
             >
-              {loading ? '...' : 'Искать на сервере'}
+              {loading ? '...' : t('newChat.searchServer')}
             </button>
           )}
           {tab === 'group' && (
@@ -281,7 +283,7 @@ export function NewChatDialog({ onClose }: Props) {
               disabled={loading || !groupName.trim()}
               className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-medium transition-colors text-sm"
             >
-              {loading ? '...' : `Создать группу${selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}`}
+              {loading ? '...' : `${t('newChat.createGroup')}${selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}`}
             </button>
           )}
         </div>

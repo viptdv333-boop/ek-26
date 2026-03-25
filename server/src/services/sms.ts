@@ -51,18 +51,27 @@ async function sendCodeViaNumCheck(phone: string): Promise<string> {
 
   console.log(`[NumCheck] Calling ${cleanPhone}...`);
 
-  const url = `https://api.numcheckapi.com/ru/init-call?phone=${cleanPhone}`;
-  const agent = new https.Agent({ rejectUnauthorized: false });
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'X-AUTH-Token': config.NUMCHECK_TOKEN,
-    },
-    // @ts-ignore — Node fetch supports agent for TLS override
-    agent,
+  const data = await new Promise<NumCheckResponse>((resolve, reject) => {
+    const req = https.request(
+      `https://api.numcheckapi.com/ru/init-call?phone=${cleanPhone}`,
+      {
+        method: 'POST',
+        headers: { 'X-AUTH-Token': config.NUMCHECK_TOKEN },
+        rejectUnauthorized: false, // NumCheck SSL cert expired
+        timeout: 15000,
+      },
+      (res) => {
+        let body = '';
+        res.on('data', (chunk) => (body += chunk));
+        res.on('end', () => {
+          try { resolve(JSON.parse(body)); } catch { reject(new Error(`Invalid JSON: ${body}`)); }
+        });
+      },
+    );
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('NumCheck timeout')); });
+    req.end();
   });
-
-  const data = (await res.json()) as NumCheckResponse;
   console.log(`[NumCheck] Response:`, JSON.stringify(data));
 
   if (data.errorCode) {

@@ -1,45 +1,46 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 import { useTranslation } from '../i18n';
 
-function generateSliderTarget() {
-  return Math.floor(Math.random() * 60) + 20; // 20-80%
-}
-
 const COUNTRIES = [
-  { code: '+7', flag: '\u{1F1F7}\u{1F1FA}', nameKey: 'country.russia' },
-  { code: '+7', flag: '\u{1F1F0}\u{1F1FF}', nameKey: 'country.kazakhstan' },
-  { code: '+375', flag: '\u{1F1E7}\u{1F1FE}', nameKey: 'country.belarus' },
-  { code: '+380', flag: '\u{1F1FA}\u{1F1E6}', nameKey: 'country.ukraine' },
-  { code: '+998', flag: '\u{1F1FA}\u{1F1FF}', nameKey: 'country.uzbekistan' },
-  { code: '+996', flag: '\u{1F1F0}\u{1F1EC}', nameKey: 'country.kyrgyzstan' },
-  { code: '+992', flag: '\u{1F1F9}\u{1F1EF}', nameKey: 'country.tajikistan' },
-  { code: '+993', flag: '\u{1F1F9}\u{1F1F2}', nameKey: 'country.turkmenistan' },
-  { code: '+374', flag: '\u{1F1E6}\u{1F1F2}', nameKey: 'country.armenia' },
-  { code: '+995', flag: '\u{1F1EC}\u{1F1EA}', nameKey: 'country.georgia' },
-  { code: '+994', flag: '\u{1F1E6}\u{1F1FF}', nameKey: 'country.azerbaijan' },
-  { code: '+373', flag: '\u{1F1F2}\u{1F1E9}', nameKey: 'country.moldova' },
-  { code: '+370', flag: '\u{1F1F1}\u{1F1F9}', nameKey: 'country.lithuania' },
-  { code: '+371', flag: '\u{1F1F1}\u{1F1FB}', nameKey: 'country.latvia' },
-  { code: '+372', flag: '\u{1F1EA}\u{1F1EA}', nameKey: 'country.estonia' },
-  { code: '+1', flag: '\u{1F1FA}\u{1F1F8}', nameKey: 'country.usa' },
-  { code: '+44', flag: '\u{1F1EC}\u{1F1E7}', nameKey: 'country.uk' },
-  { code: '+49', flag: '\u{1F1E9}\u{1F1EA}', nameKey: 'country.germany' },
-  { code: '+33', flag: '\u{1F1EB}\u{1F1F7}', nameKey: 'country.france' },
-  { code: '+39', flag: '\u{1F1EE}\u{1F1F9}', nameKey: 'country.italy' },
-  { code: '+34', flag: '\u{1F1EA}\u{1F1F8}', nameKey: 'country.spain' },
-  { code: '+90', flag: '\u{1F1F9}\u{1F1F7}', nameKey: 'country.turkey' },
-  { code: '+971', flag: '\u{1F1E6}\u{1F1EA}', nameKey: 'country.uae' },
-  { code: '+972', flag: '\u{1F1EE}\u{1F1F1}', nameKey: 'country.israel' },
-  { code: '+86', flag: '\u{1F1E8}\u{1F1F3}', nameKey: 'country.china' },
-  { code: '+82', flag: '\u{1F1F0}\u{1F1F7}', nameKey: 'country.southKorea' },
-  { code: '+81', flag: '\u{1F1EF}\u{1F1F5}', nameKey: 'country.japan' },
-  { code: '+91', flag: '\u{1F1EE}\u{1F1F3}', nameKey: 'country.india' },
-  { code: '+55', flag: '\u{1F1E7}\u{1F1F7}', nameKey: 'country.brazil' },
-  { code: '+52', flag: '\u{1F1F2}\u{1F1FD}', nameKey: 'country.mexico' },
-  { code: '+61', flag: '\u{1F1E6}\u{1F1FA}', nameKey: 'country.australia' },
+  { code: '+7', flag: '\u{1F1F7}\u{1F1FA}', nameKey: 'country.russia', isoCode: 'RU' },
+  { code: '+7', flag: '\u{1F1F0}\u{1F1FF}', nameKey: 'country.kazakhstan', isoCode: 'KZ' },
+  { code: '+375', flag: '\u{1F1E7}\u{1F1FE}', nameKey: 'country.belarus', isoCode: 'BY' },
+  { code: '+998', flag: '\u{1F1FA}\u{1F1FF}', nameKey: 'country.uzbekistan', isoCode: 'UZ' },
+  { code: '+996', flag: '\u{1F1F0}\u{1F1EC}', nameKey: 'country.kyrgyzstan', isoCode: 'KG' },
+  { code: '+992', flag: '\u{1F1F9}\u{1F1EF}', nameKey: 'country.tajikistan', isoCode: 'TJ' },
+  { code: '+993', flag: '\u{1F1F9}\u{1F1F2}', nameKey: 'country.turkmenistan', isoCode: 'TM' },
+  { code: '+374', flag: '\u{1F1E6}\u{1F1F2}', nameKey: 'country.armenia', isoCode: 'AM' },
+  { code: '+995', flag: '\u{1F1EC}\u{1F1EA}', nameKey: 'country.georgia', isoCode: 'GE' },
+  { code: '+994', flag: '\u{1F1E6}\u{1F1FF}', nameKey: 'country.azerbaijan', isoCode: 'AZ' },
+  { code: '+373', flag: '\u{1F1F2}\u{1F1E9}', nameKey: 'country.moldova', isoCode: 'MD' },
+  { code: '+370', flag: '\u{1F1F1}\u{1F1F9}', nameKey: 'country.lithuania', isoCode: 'LT' },
+  { code: '+371', flag: '\u{1F1F1}\u{1F1FB}', nameKey: 'country.latvia', isoCode: 'LV' },
+  { code: '+372', flag: '\u{1F1EA}\u{1F1EA}', nameKey: 'country.estonia', isoCode: 'EE' },
+  { code: '+1', flag: '\u{1F1FA}\u{1F1F8}', nameKey: 'country.usa', isoCode: 'US' },
+  { code: '+44', flag: '\u{1F1EC}\u{1F1E7}', nameKey: 'country.uk', isoCode: 'GB' },
+  { code: '+49', flag: '\u{1F1E9}\u{1F1EA}', nameKey: 'country.germany', isoCode: 'DE' },
+  { code: '+33', flag: '\u{1F1EB}\u{1F1F7}', nameKey: 'country.france', isoCode: 'FR' },
+  { code: '+39', flag: '\u{1F1EE}\u{1F1F9}', nameKey: 'country.italy', isoCode: 'IT' },
+  { code: '+34', flag: '\u{1F1EA}\u{1F1F8}', nameKey: 'country.spain', isoCode: 'ES' },
+  { code: '+90', flag: '\u{1F1F9}\u{1F1F7}', nameKey: 'country.turkey', isoCode: 'TR' },
+  { code: '+971', flag: '\u{1F1E6}\u{1F1EA}', nameKey: 'country.uae', isoCode: 'AE' },
+  { code: '+972', flag: '\u{1F1EE}\u{1F1F1}', nameKey: 'country.israel', isoCode: 'IL' },
+  { code: '+86', flag: '\u{1F1E8}\u{1F1F3}', nameKey: 'country.china', isoCode: 'CN' },
+  { code: '+82', flag: '\u{1F1F0}\u{1F1F7}', nameKey: 'country.southKorea', isoCode: 'KR' },
+  { code: '+81', flag: '\u{1F1EF}\u{1F1F5}', nameKey: 'country.japan', isoCode: 'JP' },
+  { code: '+91', flag: '\u{1F1EE}\u{1F1F3}', nameKey: 'country.india', isoCode: 'IN' },
+  { code: '+55', flag: '\u{1F1E7}\u{1F1F7}', nameKey: 'country.brazil', isoCode: 'BR' },
+  { code: '+52', flag: '\u{1F1F2}\u{1F1FD}', nameKey: 'country.mexico', isoCode: 'MX' },
+  { code: '+61', flag: '\u{1F1E6}\u{1F1FA}', nameKey: 'country.australia', isoCode: 'AU' },
 ];
+
+// ── Puzzle Captcha Constants ──────────────────────────────────────
+const PUZZLE_W = 280;
+const PUZZLE_H = 100;
+const PIECE_SIZE = 40;
+const PIECE_TOLERANCE = 6;
 
 type Tab = 'login' | 'register';
 type Step = 'phone' | 'code' | 'setPassword' | 'created' | 'linkEmail';
@@ -80,20 +81,144 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Slider captcha
-  const [sliderTarget, setSliderTarget] = useState(generateSliderTarget);
-  const [sliderValue, setSliderValue] = useState(0);
+  // Puzzle captcha
+  const puzzleCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [puzzleTargetX, setPuzzleTargetX] = useState(() => Math.floor(Math.random() * (PUZZLE_W - PIECE_SIZE - 60)) + 50);
+  const [puzzleDragX, setPuzzleDragX] = useState(0);
   const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef(0);
+  const dragStartXRef = useRef(0);
 
-  const checkSlider = (val: number) => {
-    setSliderValue(val);
-    const diff = Math.abs(val - sliderTarget);
-    setCaptchaVerified(diff <= 3); // tolerance ±3%
+  const drawPuzzle = useCallback((ctx: CanvasRenderingContext2D, targetX: number, dragX: number, verified: boolean) => {
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, PUZZLE_W, PUZZLE_H);
+    grad.addColorStop(0, '#4f46e5');
+    grad.addColorStop(0.5, '#7c3aed');
+    grad.addColorStop(1, '#2563eb');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, PUZZLE_W, PUZZLE_H);
+
+    // Decorative circles
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath();
+      ctx.arc((i * 41 + 20) % PUZZLE_W, (i * 17 + 10) % PUZZLE_H, 15 + (i % 3) * 8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,0.${6 + i % 4})`;
+      ctx.fill();
+    }
+
+    // Cutout hole
+    const y = (PUZZLE_H - PIECE_SIZE) / 2;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(targetX, y, PIECE_SIZE, PIECE_SIZE);
+    // Puzzle tab on right
+    ctx.arc(targetX + PIECE_SIZE, y + PIECE_SIZE / 2, 8, -Math.PI / 2, Math.PI / 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draggable piece
+    const pieceX = dragX;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+
+    // Draw piece shape
+    ctx.beginPath();
+    ctx.rect(pieceX, y, PIECE_SIZE, PIECE_SIZE);
+    ctx.arc(pieceX + PIECE_SIZE, y + PIECE_SIZE / 2, 8, -Math.PI / 2, Math.PI / 2);
+    ctx.clip();
+
+    // Sample the background at target position for the piece texture
+    const pieceGrad = ctx.createLinearGradient(pieceX, 0, pieceX + PIECE_SIZE, PUZZLE_H);
+    pieceGrad.addColorStop(0, '#6366f1');
+    pieceGrad.addColorStop(1, '#4338ca');
+    ctx.fillStyle = pieceGrad;
+    ctx.fillRect(pieceX - 10, y - 10, PIECE_SIZE + 20, PIECE_SIZE + 20);
+
+    // Decorative circles on piece
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath();
+      const cx = (i * 41 + 20) % PUZZLE_W;
+      const cy = (i * 17 + 10) % PUZZLE_H;
+      ctx.arc(cx - targetX + pieceX, cy, 15 + (i % 3) * 8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,0.${6 + i % 4})`;
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Piece border
+    ctx.beginPath();
+    ctx.rect(pieceX, y, PIECE_SIZE, PIECE_SIZE);
+    ctx.arc(pieceX + PIECE_SIZE, y + PIECE_SIZE / 2, 8, -Math.PI / 2, Math.PI / 2);
+    ctx.strokeStyle = verified ? '#22c55e' : 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (verified) {
+      ctx.fillStyle = '#22c55e';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('\u2713', pieceX + PIECE_SIZE / 2, y + PIECE_SIZE / 2 + 7);
+    }
+  }, []);
+
+  useEffect(() => {
+    const canvas = puzzleCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, PUZZLE_W, PUZZLE_H);
+    drawPuzzle(ctx, puzzleTargetX, puzzleDragX, captchaVerified);
+  }, [puzzleTargetX, puzzleDragX, captchaVerified, drawPuzzle]);
+
+  const handlePuzzlePointerDown = (e: React.PointerEvent) => {
+    if (captchaVerified) return;
+    const canvas = puzzleCanvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (PUZZLE_W / rect.width);
+    const y = (PUZZLE_H - PIECE_SIZE) / 2;
+    if (x >= puzzleDragX && x <= puzzleDragX + PIECE_SIZE + 10 && e.clientY - rect.top >= 0) {
+      setIsDragging(true);
+      dragStartRef.current = e.clientX;
+      dragStartXRef.current = puzzleDragX;
+      canvas.setPointerCapture(e.pointerId);
+    }
+  };
+
+  const handlePuzzlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const canvas = puzzleCanvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const scale = PUZZLE_W / rect.width;
+    const dx = (e.clientX - dragStartRef.current) * scale;
+    const newX = Math.max(0, Math.min(PUZZLE_W - PIECE_SIZE - 10, dragStartXRef.current + dx));
+    setPuzzleDragX(newX);
+  };
+
+  const handlePuzzlePointerUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    const diff = Math.abs(puzzleDragX - puzzleTargetX);
+    if (diff <= PIECE_TOLERANCE) {
+      setCaptchaVerified(true);
+      setPuzzleDragX(puzzleTargetX);
+    }
   };
 
   const refreshCaptcha = () => {
-    setSliderTarget(generateSliderTarget());
-    setSliderValue(0);
+    const newTarget = Math.floor(Math.random() * (PUZZLE_W - PIECE_SIZE - 60)) + 50;
+    setPuzzleTargetX(newTarget);
+    setPuzzleDragX(0);
     setCaptchaVerified(false);
   };
 
@@ -101,6 +226,19 @@ export function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
+
+  // Auto-detect country by IP
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then(r => r.json())
+      .then(data => {
+        if (data.country_code) {
+          const match = COUNTRIES.find(c => c.isoCode === data.country_code);
+          if (match) setSelectedCountry(match);
+        }
+      })
+      .catch(() => {}); // silently fallback to default
+  }, []);
 
   // Close country picker on click outside
   useEffect(() => {
@@ -407,23 +545,8 @@ export function AuthPage() {
   // ── Render ─────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark-900 relative">
-      {/* Top bar: language + theme */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        {/* Language selector */}
-        {(['ru', 'en', 'zh'] as const).map((l) => (
-          <button
-            key={l}
-            onClick={() => setLang(l)}
-            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-              lang === l
-                ? 'bg-accent text-white'
-                : 'bg-dark-700 text-gray-400 hover:text-white'
-            }`}
-          >
-            {l === 'ru' ? 'Рус' : l === 'en' ? 'Eng' : '中文'}
-          </button>
-        ))}
-        {/* Theme toggle */}
+      {/* Top bar: theme toggle only */}
+      <div className="absolute top-4 right-4">
         <button
           onClick={toggleTheme}
           className="p-2 rounded-full bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
@@ -474,6 +597,23 @@ export function AuthPage() {
               </button>
             </div>
 
+            {/* Language selector */}
+            <div className="flex justify-center gap-3 mb-4">
+              {(['ru', 'en', 'zh'] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    lang === l
+                      ? 'bg-accent/20 text-accent border border-accent/40'
+                      : 'bg-dark-700 text-gray-400 hover:text-white border border-transparent'
+                  }`}
+                >
+                  {l === 'ru' ? '\u{1F1F7}\u{1F1FA} Рус' : l === 'en' ? '\u{1F1EC}\u{1F1E7} Eng' : '\u{1F1E8}\u{1F1F3} \u4E2D\u6587'}
+                </button>
+              ))}
+            </div>
+
             {/* ── Login form ──────────────────────────────────── */}
             {tab === 'login' && (
               <div className="space-y-4">
@@ -505,28 +645,27 @@ export function AuthPage() {
                   <label className="block text-sm text-gray-400 mb-2">{t('auth.phone')}</label>
                   {phoneInput(true)}
                 </div>
-                {/* Slider captcha */}
+                {/* Puzzle captcha */}
                 <div>
-                  <p className="text-sm text-gray-400 mb-2">{t('auth.slideCaptcha')}</p>
-                  <div className="relative">
-                    {/* Target marker */}
-                    <div
-                      className="absolute top-0 h-full w-0.5 bg-accent z-10 pointer-events-none"
-                      style={{ left: `${sliderTarget}%` }}
-                    >
-                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs text-accent">▼</div>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={sliderValue}
-                      onChange={(e) => checkSlider(Number(e.target.value))}
-                      className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${captchaVerified ? 'accent-green-500' : 'accent-gray-400'}`}
-                    />
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-gray-400">{t('auth.puzzleCaptcha')}</p>
+                    <button onClick={refreshCaptcha} className="text-xs text-gray-500 hover:text-accent transition-colors">
+                      {t('auth.captchaRefresh')}
+                    </button>
                   </div>
+                  <canvas
+                    ref={puzzleCanvasRef}
+                    width={PUZZLE_W}
+                    height={PUZZLE_H}
+                    onPointerDown={handlePuzzlePointerDown}
+                    onPointerMove={handlePuzzlePointerMove}
+                    onPointerUp={handlePuzzlePointerUp}
+                    onPointerLeave={handlePuzzlePointerUp}
+                    className="w-full rounded-xl cursor-grab active:cursor-grabbing touch-none"
+                    style={{ aspectRatio: `${PUZZLE_W}/${PUZZLE_H}` }}
+                  />
                   <p className={`text-xs mt-1 ${captchaVerified ? 'text-green-500' : 'text-gray-500'}`}>
-                    {captchaVerified ? '✓ ' + (t('auth.captchaOk') || 'Подтверждено') : t('auth.slideHint') || 'Передвиньте на отметку'}
+                    {captchaVerified ? '\u2713 ' + t('auth.captchaOk') : t('auth.puzzleHint')}
                   </p>
                 </div>
 

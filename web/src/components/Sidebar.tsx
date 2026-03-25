@@ -8,6 +8,52 @@ import { SettingsModal } from './SettingsModal';
 import { ContactsPanel } from './ContactsPanel';
 import { MessageContextMenu } from './MessageContextMenu';
 
+function WeatherWidget() {
+  const [weather, setWeather] = useState<{ temp: string; icon: string; desc: string } | null>(null);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch('https://wttr.in/?format=j1');
+        const data = await res.json();
+        const current = data.current_condition?.[0];
+        if (current) {
+          const temp = current.temp_C;
+          const code = parseInt(current.weatherCode);
+          const desc = current.lang_ru?.[0]?.value || current.weatherDesc?.[0]?.value || '';
+          // Map weather code to emoji
+          let icon = '☀️';
+          if (code >= 200 && code < 300) icon = '⛈️';
+          else if (code >= 300 && code < 400) icon = '🌧️';
+          else if (code >= 400 && code < 600) icon = '🌧️';
+          else if (code >= 600 && code < 700) icon = '❄️';
+          else if (code >= 700 && code < 800) icon = '🌫️';
+          else if (code === 113) icon = '☀️';
+          else if (code === 116) icon = '⛅';
+          else if (code === 119 || code === 122) icon = '☁️';
+          else if (code >= 176) icon = '🌧️';
+          setWeather({ temp: `${temp}°`, icon, desc });
+        }
+      } catch {
+        // silently fail
+      }
+    };
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 30 * 60_000); // refresh every 30min
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!weather) return <span className="text-sm text-gray-400">...</span>;
+
+  return (
+    <div className="flex items-center gap-1.5 text-sm" title={weather.desc}>
+      <span>{weather.icon}</span>
+      <span className="text-white font-medium">{weather.temp}</span>
+      <span className="text-gray-400 text-xs truncate max-w-[80px]">{weather.desc}</span>
+    </div>
+  );
+}
+
 interface SearchResult {
   messageId: string;
   conversationId: string;
@@ -269,7 +315,7 @@ export function Sidebar() {
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
         <div className="flex items-center gap-2">
           <img src="/logo-f.png" alt="F" className="h-7 w-7" />
-          <h1 className="text-lg font-semibold text-white">FOMO Chat</h1>
+          <WeatherWidget />
         </div>
         <button
           onClick={() => setShowSettings('appearance')}

@@ -487,6 +487,29 @@ export async function authRoutes(app: FastifyInstance) {
     };
   });
 
+  // ─── Link email to account (send verification email) ─────────────
+  app.post('/api/auth/link-email', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { email } = request.body as { email?: string };
+    if (!email || !email.includes('@')) {
+      return reply.code(400).send({ error: 'Введите корректный email' });
+    }
+
+    // Check if email already taken by another user
+    const existing = await User.findOne({ email, _id: { $ne: request.userId } });
+    if (existing) {
+      return reply.code(409).send({ error: 'Этот email уже привязан к другому аккаунту' });
+    }
+
+    // Save email to user (not verified yet)
+    await User.findByIdAndUpdate(request.userId, { email, emailVerified: false });
+
+    // Send verification email
+    const token = await signEmailVerificationToken(request.userId);
+    await sendVerificationEmail(email, token);
+
+    return { success: true };
+  });
+
   // ─── Verify email (GET — user clicks link from email) ──────────────
   app.get('/auth/verify-email', async (request, reply) => {
     const { token } = request.query as { token?: string };

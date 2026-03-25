@@ -58,6 +58,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.sendEmailCode': 'Отправить код',
     'auth.emailConfirmed': 'Почта подтверждена!',
     'auth.enterEmail': 'Введите email',
+    'auth.emailSentTitle': 'Письмо отправлено!',
+    'auth.emailSentDesc': 'Мы отправили ссылку для подтверждения на {email}. Перейдите по ней чтобы привязать почту.',
+    'auth.emailAlreadyTaken': 'Этот email уже привязан к другому аккаунту',
     'auth.verifying': 'Проверка...',
 
     // ── Sidebar ───────────────────────────────────────────────────
@@ -405,6 +408,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.sendEmailCode': 'Send code',
     'auth.emailConfirmed': 'Email confirmed!',
     'auth.enterEmail': 'Enter email',
+    'auth.emailSentTitle': 'Email sent!',
+    'auth.emailSentDesc': 'We sent a confirmation link to {email}. Click it to link your email.',
+    'auth.emailAlreadyTaken': 'This email is already linked to another account',
     'auth.verifying': 'Verifying...',
 
     // ── Sidebar ───────────────────────────────────────────────────
@@ -752,6 +758,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.sendEmailCode': '\u53D1\u9001\u9A8C\u8BC1\u7801',
     'auth.emailConfirmed': '\u90AE\u7BB1\u5DF2\u9A8C\u8BC1\uFF01',
     'auth.enterEmail': '\u8F93\u5165\u90AE\u7BB1',
+    'auth.emailSentTitle': '\u90AE\u4EF6\u5DF2\u53D1\u9001\uFF01',
+    'auth.emailSentDesc': '\u6211\u4EEC\u5DF2\u5411 {email} \u53D1\u9001\u4E86\u786E\u8BA4\u94FE\u63A5\u3002\u8BF7\u70B9\u51FB\u94FE\u63A5\u7ED1\u5B9A\u90AE\u7BB1\u3002',
+    'auth.emailAlreadyTaken': '\u8BE5\u90AE\u7BB1\u5DF2\u7ED1\u5B9A\u5230\u5176\u4ED6\u8D26\u6237',
     'auth.verifying': '\u9A8C\u8BC1\u4E2D...',
 
     // ── Sidebar ───────────────────────────────────────────────────

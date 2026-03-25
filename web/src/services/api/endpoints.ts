@@ -23,6 +23,8 @@ export const authApi = {
     api.post<{ accessToken: string; refreshToken: string; user: any }>('/auth/login', { phone, password }),
   setPassword: (password: string, confirmPassword: string) =>
     api.post<{ success: boolean }>('/auth/set-password', { password, confirmPassword }),
+  linkEmail: (email: string) =>
+    api.post<{ success: boolean }>('/auth/link-email', { email }),
 };
 
 // Users

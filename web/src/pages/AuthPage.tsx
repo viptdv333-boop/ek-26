@@ -266,10 +266,7 @@ export function AuthPage() {
   };
 
   // ── Link email (optional) ────────────────────────────────────
-  const [emailCode, setEmailCode] = useState(['', '', '', '']);
-  const emailCodeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [emailSent, setEmailSent] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
 
   const handleSendEmailCode = async () => {
     if (!email || !email.includes('@')) {
@@ -279,9 +276,7 @@ export function AuthPage() {
     setError('');
     setLoading(true);
     try {
-      // Use the existing link-phone-like mechanism but for email
-      // For now, we mark email sent and show code input
-      // The actual email verification happens via the existing verify-email link flow
+      await authApi.linkEmail(email);
       setEmailSent(true);
     } catch (e: any) {
       setError(e.message || t('auth.error'));
@@ -642,13 +637,14 @@ export function AuthPage() {
         {/* ── LINK EMAIL step (optional) ─────────────────────────── */}
         {step === 'linkEmail' && (
           <div className="space-y-4">
-            {!emailVerified ? (
+            {!emailSent ? (
               <>
                 <p className="text-center text-gray-400 text-sm">{t('auth.enterEmail')}</p>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendEmailCode()}
                   placeholder="you@example.com"
                   className={inputClass}
                   autoFocus
@@ -656,11 +652,6 @@ export function AuthPage() {
                 <button onClick={handleSendEmailCode} disabled={loading} className={btnClass}>
                   {loading ? t('auth.sending') : t('auth.sendEmailCode')}
                 </button>
-                {emailSent && (
-                  <p className="text-center text-green-400 text-sm">
-                    {t('auth.sendEmailCode')} &#10003;
-                  </p>
-                )}
                 <button
                   onClick={handleFinishRegistration}
                   className="w-full py-3 bg-dark-700 hover:bg-dark-600 rounded-xl text-gray-400 font-medium transition-colors"
@@ -670,8 +661,11 @@ export function AuthPage() {
               </>
             ) : (
               <div className="text-center space-y-4">
-                <div className="text-5xl mb-2">&#10003;</div>
-                <p className="text-xl text-white font-medium">{t('auth.emailConfirmed')}</p>
+                <div className="text-5xl mb-2">&#9993;</div>
+                <p className="text-lg text-white font-medium">{t('auth.emailSentTitle')}</p>
+                <p className="text-sm text-gray-400">
+                  {t('auth.emailSentDesc', { email })}
+                </p>
                 <button onClick={handleFinishRegistration} className={btnClass}>
                   {t('auth.continue')}
                 </button>

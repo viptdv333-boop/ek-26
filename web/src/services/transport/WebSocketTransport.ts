@@ -105,6 +105,9 @@ class WebSocketTransport {
   send(event: string, data: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ event, data }));
+      if (event.startsWith('call:')) console.log(`[WS] Sent: ${event}`);
+    } else {
+      console.error(`[WS] Cannot send ${event} — socket not open (state=${this.ws?.readyState})`);
     }
   }
 

@@ -272,9 +272,9 @@ export function AppSettingsModal({ onClose }: Props) {
         <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.bubbleShape')}</label>
         <div className="flex gap-3">
           {([
-            { id: 'cloud', label: t('settings.bubbleCloud'), borderRadius: '35% 25% 20% 30% / 40% 35% 25% 30%' },
             { id: 'rounded', label: t('settings.bubbleRounded'), borderRadius: '10px' },
             { id: 'square', label: t('settings.bubbleSquare'), borderRadius: '2px' },
+            { id: 'cloud', label: t('settings.bubbleCloud'), borderRadius: '50%' },
           ] as const).map((shape) => (
             <button
               key={shape.id}

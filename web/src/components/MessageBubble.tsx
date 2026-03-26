@@ -199,33 +199,45 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
         {!isMine && renderAvatar()}
 
         <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
-          {/* CSS bubble */}
+          {/* SVG cloud background */}
+          {bubbleShape === 'cloud' && (
+            <svg
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 200 120"
+              preserveAspectRatio="none"
+              style={{ zIndex: 0 }}
+            >
+              <path d={isMine
+                ? "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z"
+                : "M 28,10 C 55,-4 140,-4 165,8 C 198,20 202,50 194,70 C 200,83 192,89 175,91 L 55,93 Q 45,100 26,114 Q 30,105 42,91 L 28,91 C 8,89 -2,76 4,58 C -2,42 2,20 28,10 Z"
+              } fill={isMine ? bubbleColor : bubbleColorOther} />
+            </svg>
+          )}
           <div
             className="relative px-3 py-2 overflow-hidden"
-            style={{
+            style={bubbleShape === 'cloud' ? {
+              zIndex: 1,
+              padding: '14px 22px 24px 22px',
+            } : {
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-              borderRadius: bubbleShape === 'cloud'
-                ? (isMine
-                  ? '35% 25% 20% 30% / 40% 35% 25% 30%'
-                  : '25% 35% 30% 20% / 35% 40% 30% 25%')
-                : bubbleShape === 'square'
-                  ? '2px'
-                  : '10px', // rounded
+              borderRadius: bubbleShape === 'square' ? '2px' : '10px',
             }}
           >
-            {/* Tail triangle */}
-            <div
-              className="absolute bottom-0"
-              style={{
-                [isMine ? 'right' : 'left']: '-6px',
-                width: 0, height: 0,
-                borderStyle: 'solid',
-                borderWidth: isMine ? '0 0 12px 12px' : '0 12px 12px 0',
-                borderColor: isMine
-                  ? `transparent transparent ${bubbleColor} transparent`
-                  : `transparent transparent ${bubbleColorOther} transparent`,
-              }}
-            />
+            {/* Tail for non-cloud */}
+            {bubbleShape !== 'cloud' && (
+              <div
+                className="absolute bottom-0"
+                style={{
+                  [isMine ? 'right' : 'left']: '-6px',
+                  width: 0, height: 0,
+                  borderStyle: 'solid',
+                  borderWidth: isMine ? '0 0 12px 12px' : '0 12px 12px 0',
+                  borderColor: isMine
+                    ? `transparent transparent ${bubbleColor} transparent`
+                    : `transparent transparent ${bubbleColorOther} transparent`,
+                }}
+              />
+            )}
           {showSender && !isMine && message.senderName && (
             <p className="text-xs font-medium text-accent mb-0.5">{message.senderName}</p>
           )}

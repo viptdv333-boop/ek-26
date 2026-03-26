@@ -262,6 +262,7 @@ function HeaderWidget() {
   switch (widget) {
     case 'weather': return <WeatherWidget />;
     case 'quote': return <QuoteWidget />;
+    case 'reminders': return <RemindersWidget />;
     case 'none': return null;
     default: return <WeatherWidget />;
   }
@@ -532,9 +533,7 @@ export function Sidebar() {
           <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain shrink-0" />
           <HeaderWidget />
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <RemindersWidget />
-          <button
+        <button
           onClick={() => setShowAppSettings(true)}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
           title={t('sidebar.settingsApp')}
@@ -544,7 +543,6 @@ export function Sidebar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </button>
-        </div>
       </div>
 
       {/* Search */}

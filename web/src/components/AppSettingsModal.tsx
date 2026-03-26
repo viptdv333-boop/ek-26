@@ -442,6 +442,7 @@ export function AppSettingsModal({ onClose }: Props) {
       {[
         { id: 'weather', labelKey: 'appSettings.widgetWeather' },
         { id: 'quote', labelKey: 'appSettings.widgetQuote' },
+        { id: 'reminders', labelKey: 'appSettings.widgetReminders' },
         { id: 'none', labelKey: 'appSettings.widgetNone' },
       ].map(option => (
         <button

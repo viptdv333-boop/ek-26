@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { uploadFile } from '../services/api/upload';
 import { useTranslation } from '../i18n';
 

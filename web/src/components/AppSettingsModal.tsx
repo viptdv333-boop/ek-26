@@ -10,9 +10,10 @@ const WALLPAPER_PRESETS = [
   { id: 'default', labelKey: 'wallpaper.default', color: '#1a1a2e' },
   { id: 'dark-blue', labelKey: 'wallpaper.darkBlue', color: '#0f1b2d' },
   { id: 'dark-green', labelKey: 'wallpaper.darkGreen', color: '#0d1f17' },
-  { id: 'dark-purple', labelKey: 'wallpaper.darkPurple', color: '#1a0f2e' },
-  { id: 'gradient-blue-purple', labelKey: 'wallpaper.bluePurple', gradient: 'linear-gradient(135deg, #0f1b2d, #1a0f2e)' },
-  { id: 'gradient-green-teal', labelKey: 'wallpaper.greenTeal', gradient: 'linear-gradient(135deg, #0d1f17, #0f2027)' },
+  { id: 'light-beige', labelKey: 'wallpaper.lightBeige', color: '#f5f0e8' },
+  { id: 'light-blue', labelKey: 'wallpaper.lightBlue', color: '#e8f0f8' },
+  { id: 'light-mint', labelKey: 'wallpaper.lightMint', color: '#e8f5f0' },
+  { id: 'gradient-sunset', labelKey: 'wallpaper.sunset', gradient: 'linear-gradient(135deg, #1a0f2e, #2d1b0f)' },
 ];
 
 type Section = 'language' | 'appearance' | 'devices' | 'widget' | 'faq' | 'about';
@@ -303,7 +304,7 @@ export function AppSettingsModal({ onClose }: Props) {
       <div>
         <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.ownBubbleColor')}</label>
         <div className="flex items-center gap-2 flex-wrap">
-          {['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'].map((color) => (
+          {['#6366f1', '#10b981', '#ef4444', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#22222f', '#1e3a5f', '#2d1b3d', '#1a3327'].map((color) => (
             <button
               key={color}
               onClick={() => handleBubbleColorChange(color)}
@@ -333,7 +334,7 @@ export function AppSettingsModal({ onClose }: Props) {
       <div>
         <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.otherBubbleColor')}</label>
         <div className="flex items-center gap-2 flex-wrap">
-          {['#22222f', '#1e3a5f', '#2d1b3d', '#1a3327', '#3d2b1a', '#3b1a1a', '#1a2f3d', '#2a2a38'].map((color) => (
+          {['#6366f1', '#10b981', '#ef4444', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#22222f', '#1e3a5f', '#2d1b3d', '#1a3327'].map((color) => (
             <button
               key={color}
               onClick={() => handleBubbleColorOtherChange(color)}

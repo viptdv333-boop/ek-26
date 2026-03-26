@@ -203,9 +203,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'wallpaper.default': 'По умолчанию',
     'wallpaper.darkBlue': 'Тёмно-синий',
     'wallpaper.darkGreen': 'Тёмно-зелёный',
-    'wallpaper.darkPurple': 'Тёмно-фиолетовый',
-    'wallpaper.bluePurple': 'Сине-фиолетовый',
-    'wallpaper.greenTeal': 'Зелёно-бирюзовый',
+    'wallpaper.lightBeige': 'Бежевый',
+    'wallpaper.lightBlue': 'Голубой',
+    'wallpaper.lightMint': 'Мятный',
+    'wallpaper.sunset': 'Закат',
 
     // ── New chat dialog ───────────────────────────────────────────
     'newChat.title': 'Новый чат',
@@ -580,9 +581,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'wallpaper.default': 'Default',
     'wallpaper.darkBlue': 'Dark blue',
     'wallpaper.darkGreen': 'Dark green',
-    'wallpaper.darkPurple': 'Dark purple',
-    'wallpaper.bluePurple': 'Blue-purple',
-    'wallpaper.greenTeal': 'Green-teal',
+    'wallpaper.lightBeige': 'Beige',
+    'wallpaper.lightBlue': 'Light blue',
+    'wallpaper.lightMint': 'Mint',
+    'wallpaper.sunset': 'Sunset',
 
     // ── New chat dialog ───────────────────────────────────────────
     'newChat.title': 'New chat',
@@ -957,9 +959,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     'wallpaper.default': '\u9ED8\u8BA4',
     'wallpaper.darkBlue': '\u6DF1\u84DD',
     'wallpaper.darkGreen': '\u6DF1\u7EFF',
-    'wallpaper.darkPurple': '\u6DF1\u7D2B',
-    'wallpaper.bluePurple': '\u84DD\u7D2B',
-    'wallpaper.greenTeal': '\u7EFF\u9752',
+    'wallpaper.lightBeige': '\u7C73\u8272',
+    'wallpaper.lightBlue': '\u6D45\u84DD',
+    'wallpaper.lightMint': '\u8584\u8377',
+    'wallpaper.sunset': '\u65E5\u843D',
 
     // ── New chat dialog ───────────────────────────────────────────
     'newChat.title': '\u65B0\u804A\u5929',

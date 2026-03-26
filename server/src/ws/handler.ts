@@ -189,20 +189,20 @@ async function handleEvent(
       const sender = await User.findById(client.userId).select('displayName avatarUrl');
       if (!sender) return;
 
+      // Load conversation for participants (needed for push + auto-subscribe)
+      const conv = await Conversation.findById(conversationId).select('participants');
+
       // Auto-subscribe participants if not yet subscribed (new conversations)
-      if (!conversationSubscribers.has(conversationId)) {
-        const conv = await Conversation.findById(conversationId).select('participants');
-        if (conv) {
-          conversationSubscribers.set(conversationId, new Set());
-          for (const p of conv.participants) {
-            const pid = p.toString();
-            conversationSubscribers.get(conversationId)!.add(pid);
-            // Also add to client's conversationIds
-            const userClients = clients.get(pid);
-            if (userClients) {
-              for (const c of userClients) {
-                c.conversationIds.add(conversationId);
-              }
+      if (conv && !conversationSubscribers.has(conversationId)) {
+        conversationSubscribers.set(conversationId, new Set());
+        for (const p of conv.participants) {
+          const pid = p.toString();
+          conversationSubscribers.get(conversationId)!.add(pid);
+          // Also add to client's conversationIds
+          const userClients = clients.get(pid);
+          if (userClients) {
+            for (const c of userClients) {
+              c.conversationIds.add(conversationId);
             }
           }
         }

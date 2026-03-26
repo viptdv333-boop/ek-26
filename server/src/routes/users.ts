@@ -142,18 +142,6 @@ export async function userRoutes(app: FastifyInstance) {
       .select('deviceId deviceName ip lastActiveAt createdAt')
       .lean();
 
-    // Determine current session deviceId from token
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    let currentDeviceId: string | null = null;
-    if (token) {
-      try {
-        const { verifyAccess } = await import('../services/jwt.js');
-        const payload = verifyAccess(token) as any;
-        // Find session matching this user's most recent activity
-        // We'll mark the session that was last active within 1 minute as "current"
-      } catch {}
-    }
-
     return sessions.map(s => ({
       id: s._id.toString(),
       deviceId: s.deviceId,

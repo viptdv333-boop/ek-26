@@ -274,7 +274,7 @@ export function AppSettingsModal({ onClose }: Props) {
           {([
             { id: 'rounded', label: t('settings.bubbleRounded'), borderRadius: '10px' },
             { id: 'square', label: t('settings.bubbleSquare'), borderRadius: '2px' },
-            { id: 'cloud', label: t('settings.bubbleCloud'), borderRadius: '50%' },
+            { id: 'cloud', label: t('settings.bubbleCloud'), borderRadius: '30% 50% 40% 55% / 55% 40% 50% 35%' },
           ] as const).map((shape) => (
             <button
               key={shape.id}

@@ -484,7 +484,11 @@ export function AppSettingsModal({ onClose }: Props) {
               <p className="text-sm text-white font-medium">{s.deviceName}</p>
               <p className="text-xs text-gray-400">
                 {s.ip && `${s.ip} · `}
-                {new Date(s.lastActiveAt).toLocaleDateString()} {new Date(s.lastActiveAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {s.lastActiveAt && !isNaN(new Date(s.lastActiveAt).getTime())
+                  ? `${new Date(s.lastActiveAt).toLocaleDateString()} ${new Date(s.lastActiveAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  : s.createdAt && !isNaN(new Date(s.createdAt).getTime())
+                    ? new Date(s.createdAt).toLocaleDateString()
+                    : ''}
               </p>
             </div>
             <button

@@ -62,7 +62,7 @@ interface Props {
 // Global translate cache per session
 const translatedCache = new Map<string, string>();
 
-export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'rounded', bubbleColor = '#6366f1', bubbleColorOther = '#22222f' }: Props) {
+export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'cloud', bubbleColor = '#6366f1', bubbleColorOther = '#22222f' }: Props) {
   const { t, lang, locale } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);
@@ -182,18 +182,18 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
             style={{ zIndex: 0 }}
           >
             <path d={
-              bubbleShape === 'square' ? (
+              bubbleShape === 'oval' ? (
                 isMine
-                  ? "M 6,3 L 194,3 C 197,3 199,5 199,8 L 199,83 C 199,87 197,89 194,89 L 175,89 L 186,114 L 160,89 L 6,89 C 3,89 1,87 1,83 L 1,8 C 1,5 3,3 6,3 Z"
-                  : "M 6,3 L 194,3 C 197,3 199,5 199,8 L 199,83 C 199,87 197,89 194,89 L 40,89 L 14,114 L 25,89 L 6,89 C 3,89 1,87 1,83 L 1,8 C 1,5 3,3 6,3 Z"
-              ) : bubbleShape === 'cloud' ? (
+                  ? "M 100,5 C 155,5 198,22 198,48 C 198,74 155,91 100,91 C 75,91 53,86 38,78 L 180,114 L 168,80 C 188,71 198,60 198,48 C 155,91 100,91 100,5 Z M 100,5 C 155,5 198,22 198,48 C 198,74 155,91 100,91 C 45,91 2,74 2,48 C 2,22 45,5 100,5 Z"
+                  : "M 100,5 C 155,5 198,22 198,48 C 198,74 155,91 100,91 C 45,91 2,74 2,48 C 2,22 45,5 100,5 Z"
+              ) : bubbleShape === 'burst' ? (
+                isMine
+                  ? "M 100,2 L 120,18 L 145,4 L 142,28 L 170,22 L 158,44 L 190,48 L 162,62 L 185,80 L 155,78 L 165,100 L 140,88 L 135,108 L 115,92 L 100,110 L 85,92 L 65,108 L 60,88 L 35,100 L 45,78 L 15,80 L 38,62 L 10,48 L 42,44 L 30,22 L 58,28 L 55,4 L 80,18 Z"
+                  : "M 100,2 L 120,18 L 145,4 L 142,28 L 170,22 L 158,44 L 190,48 L 162,62 L 185,80 L 155,78 L 165,100 L 140,88 L 135,108 L 115,92 L 100,110 L 85,92 L 65,108 L 60,88 L 35,100 L 45,78 L 15,80 L 38,62 L 10,48 L 42,44 L 30,22 L 58,28 L 55,4 L 80,18 Z"
+              ) : (
                 isMine
                   ? "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z"
                   : "M 28,10 C 55,-4 140,-4 165,8 C 198,20 202,50 194,70 C 200,83 192,89 175,91 L 55,93 Q 45,100 26,114 Q 30,105 42,91 L 28,91 C 8,89 -2,76 4,58 C -2,42 2,20 28,10 Z"
-              ) : (
-                isMine
-                  ? "M 18,5 C 8,6 3,13 3,22 L 2,72 C 2,83 7,91 18,91 L 162,91 L 184,114 L 173,91 L 182,91 C 193,91 198,83 198,72 L 198,22 C 198,13 193,5 182,5 Z"
-                  : "M 18,5 C 8,6 3,13 3,22 L 2,72 C 2,83 7,91 18,91 L 27,91 L 16,114 L 38,91 L 182,91 C 193,91 198,83 198,72 L 198,22 C 198,13 193,5 182,5 Z"
               )
             } fill={isMine ? bubbleColor : bubbleColorOther} />
           </svg>
@@ -203,9 +203,11 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
               zIndex: 1,
               padding: bubbleShape === 'cloud'
                 ? '14px 22px 24px 22px'
-                : bubbleShape === 'square'
-                  ? '8px 14px 22px 14px'
-                  : '10px 16px 22px 16px',
+                : bubbleShape === 'burst'
+                  ? '18px 26px 28px 26px'
+                  : bubbleShape === 'oval'
+                    ? '16px 28px 26px 28px'
+                    : '10px 16px 22px 16px',
             }}
           >
           {showSender && !isMine && message.senderName && (

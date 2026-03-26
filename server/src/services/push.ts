@@ -58,11 +58,9 @@ export async function sendPushNotification(
   try {
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
-      // Include notification field for reliable Android delivery
-      notification: {
-        title: payload.title,
-        body: payload.body.slice(0, 200),
-      },
+      // Data-only message — SW handles display with vibration & heads-up
+      // Do NOT include top-level `notification` field, otherwise browser
+      // shows its own notification and SW push handler is skipped.
       data: {
         title: payload.title,
         body: payload.body.slice(0, 200),
@@ -74,16 +72,9 @@ export async function sendPushNotification(
       webpush: {
         headers: {
           Urgency: 'high',
+          TTL: '86400',
         },
-        // Override browser notification to use our custom one
-        notification: {
-          title: payload.title,
-          body: payload.body.slice(0, 200),
-          icon: '/icon-192.png',
-          badge: '/icon-192.png',
-          tag: payload.data?.conversationId || 'default',
-          renotify: true,
-        },
+        fcmOptions: {},
       },
     });
 
@@ -105,6 +96,9 @@ export async function sendPushNotification(
     const successCount = response.responses.filter(r => r.success).length;
     if (successCount > 0) {
       console.log(`[Push] Sent to ${successCount}/${tokens.length} devices for user ${userId}`);
+    } else {
+      const errors = response.responses.filter(r => !r.success).map(r => r.error?.message);
+      console.error(`[Push] All failed for user ${userId}:`, errors);
     }
   } catch (err) {
     console.error('[Push] Send failed:', err);

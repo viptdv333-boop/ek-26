@@ -10,29 +10,35 @@ self.addEventListener('push', (event) => {
     try { data = { body: event.data?.text() }; } catch {}
   }
 
-  // FCM wraps data in notification or data fields
-  const notification = data.notification || {};
-  const fcmData = data.data || {};
+  // FCM data-only messages put everything in `data` field
+  const fcmData = data.data || data;
 
-  const title = notification.title || fcmData.title || 'FOMO Chat';
-  const body = notification.body || fcmData.body || 'Новое сообщение';
+  const title = fcmData.title || 'FOMO Chat';
+  const body = fcmData.body || 'Новое сообщение';
+  const isCall = fcmData.type === 'call';
+
+  const options = {
+    body,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    data: fcmData,
+    tag: isCall ? 'incoming-call' : (fcmData.conversationId || 'msg-' + Date.now()),
+    renotify: true,
+    requireInteraction: isCall,
+    vibrate: isCall
+      ? [500, 200, 500, 200, 500, 200, 500, 200, 500]  // Long vibration for calls
+      : [300, 100, 300],  // Short vibration for messages
+  };
 
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      data: fcmData,
-      tag: fcmData.conversationId || 'default',
-      renotify: true,
-      vibrate: [200, 100, 200],
-    })
+    self.registration.showNotification(title, options)
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const conversationId = event.notification.data?.conversationId;
+  const data = event.notification.data || {};
+  const conversationId = data.conversationId;
   const url = conversationId ? `/?chat=${conversationId}` : '/';
 
   event.waitUntil(
@@ -48,7 +54,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // ── PWA caching ─────────────────────────────────────────────────
-const CACHE_NAME = 'fomo-chat-v3';
+const CACHE_NAME = 'fomo-chat-v4';
 const STATIC_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {

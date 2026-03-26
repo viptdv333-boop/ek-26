@@ -373,13 +373,20 @@ async function handleEvent(
     case 'call:offer': {
       const { targetUserId, callId, type, offer } = data;
       const caller = await User.findById(client.userId).select('displayName avatarUrl').lean();
+      const callerName = caller?.displayName || 'Пользователь';
       sendToUser(targetUserId, 'call:incoming', {
         callId,
         callerId: client.userId,
-        callerName: caller?.displayName || 'Пользователь',
+        callerName,
         callerAvatar: caller?.avatarUrl || null,
         type,
         offer,
+      });
+      // Send push notification for incoming call (wakes up PWA in background)
+      sendPushNotification(targetUserId, {
+        title: callerName,
+        body: type === 'video' ? 'Видеозвонок...' : 'Аудиозвонок...',
+        data: { type: 'call', callId, callerId: client.userId },
       });
       break;
     }

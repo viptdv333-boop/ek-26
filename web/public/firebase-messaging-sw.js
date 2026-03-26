@@ -18,8 +18,8 @@ self.addEventListener('push', (event) => {
   const isCall = fcmData.type === 'call';
 
   if (isCall) {
-    // Call notification with Accept/Decline actions
-    const options = {
+    // Call notification with Accept/Decline actions + repeating vibration
+    const callOptions = {
       body,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
@@ -27,11 +27,7 @@ self.addEventListener('push', (event) => {
       tag: 'incoming-call',
       renotify: true,
       requireInteraction: true,
-      // Long repeating vibration pattern (20 seconds total)
-      vibrate: [
-        800, 400, 800, 400, 800, 400, 800, 400, 800, 400,
-        800, 400, 800, 400, 800, 400, 800, 400, 800, 400,
-      ],
+      vibrate: [800, 400, 800, 400, 800, 400],
       actions: [
         { action: 'accept', title: '✓ Принять' },
         { action: 'decline', title: '✕ Отклонить' },
@@ -39,9 +35,19 @@ self.addEventListener('push', (event) => {
       silent: false,
     };
 
-    event.waitUntil(
-      self.registration.showNotification('📞 ' + title, options)
-    );
+    // Re-show notification every 3s to keep vibrating (Android ignores long patterns)
+    const callId = fcmData.callId || '';
+    self._activeCallId = callId;
+
+    const keepVibrating = async () => {
+      for (let i = 0; i < 10; i++) { // 30 seconds max
+        if (self._activeCallId !== callId) break;
+        await self.registration.showNotification('📞 ' + title, callOptions);
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    };
+
+    event.waitUntil(keepVibrating());
   } else {
     // Regular message notification
     const options = {
@@ -66,6 +72,8 @@ self.addEventListener('notificationclick', (event) => {
   const isCall = data.type === 'call';
 
   event.notification.close();
+  // Stop vibration loop
+  self._activeCallId = null;
 
   if (isCall) {
     // Handle call notification actions
@@ -116,7 +124,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // ── PWA caching ─────────────────────────────────────────────────
-const CACHE_NAME = 'fomo-chat-v5';
+const CACHE_NAME = 'fomo-chat-v6';
 const STATIC_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {

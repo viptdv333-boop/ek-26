@@ -56,57 +56,74 @@ function WeatherWidget() {
   );
 }
 
-// ── Fallback quotes (used when API unavailable) ─────────────────
-const FALLBACK_QUOTES = [
-  { text: 'Единственный способ делать великую работу — любить то, что делаешь.', author: 'Стив Джобс' },
-  { text: 'Будь собой, остальные роли уже заняты.', author: 'Оскар Уайльд' },
-  { text: 'Успех — это способность идти от неудачи к неудаче не теряя энтузиазма.', author: 'У. Черчилль' },
-  { text: 'Не бойся идти медленно, бойся стоять на месте.', author: 'Китайская мудрость' },
-  { text: 'Будущее принадлежит тем, кто верит в красоту своей мечты.', author: 'Э. Рузвельт' },
-  { text: 'Каждый день — это маленькая жизнь.', author: 'А. Шопенгауэр' },
-  { text: 'Простота — это высшая утончённость.', author: 'Леонардо да Винчи' },
-  { text: 'Действие — это основной ключ к успеху.', author: 'Пабло Пикассо' },
+// ── Quotes database ──────────────────────────────────────────────
+const QUOTES = [
+  { t: 'Единственный способ делать великую работу — любить то, что делаешь.', a: 'Стив Джобс' },
+  { t: 'Будь собой, остальные роли уже заняты.', a: 'Оскар Уайльд' },
+  { t: 'Успех — это способность идти от неудачи к неудаче не теряя энтузиазма.', a: 'У. Черчилль' },
+  { t: 'Не бойся идти медленно, бойся стоять на месте.', a: 'Китайская мудрость' },
+  { t: 'Будущее принадлежит тем, кто верит в красоту своей мечты.', a: 'Э. Рузвельт' },
+  { t: 'Каждый день — это маленькая жизнь.', a: 'А. Шопенгауэр' },
+  { t: 'Простота — это высшая утончённость.', a: 'Леонардо да Винчи' },
+  { t: 'Действие — это основной ключ к успеху.', a: 'Пабло Пикассо' },
+  { t: 'Жизнь — это то, что случается с тобой, пока ты строишь другие планы.', a: 'Дж. Леннон' },
+  { t: 'Лучшее время посадить дерево было 20 лет назад. Второе лучшее — сейчас.', a: '' },
+  { t: 'Стремитесь не к успеху, а к ценностям, которые он даёт.', a: 'А. Эйнштейн' },
+  { t: 'Ты не можешь вернуться назад и изменить начало, но можешь начать там, где ты есть.', a: 'К. С. Льюис' },
+  { t: 'Делай то, что можешь, с тем, что имеешь, там, где находишься.', a: 'Т. Рузвельт' },
+  { t: 'Воображение важнее знания.', a: 'А. Эйнштейн' },
+  { t: 'Величайшая слава не в том, чтобы никогда не падать, а в том, чтобы подниматься каждый раз.', a: 'Конфуций' },
+  { t: 'Познай самого себя.', a: 'Сократ' },
+  { t: 'Счастье зависит от нас самих.', a: 'Аристотель' },
+  { t: 'Лучше сделать и пожалеть, чем не сделать и пожалеть.', a: 'Боккаччо' },
+  { t: 'В середине каждой трудности кроется возможность.', a: 'А. Эйнштейн' },
+  { t: 'Никто не может заставить тебя чувствовать себя неполноценным без твоего согласия.', a: 'Э. Рузвельт' },
+  { t: 'Тот, кто не рискует, не пьёт шампанского.', a: 'Русская пословица' },
+  { t: 'Дорога в тысячу ли начинается с первого шага.', a: 'Лао-цзы' },
+  { t: 'Мы то, что мы делаем постоянно. Совершенство — не действие, а привычка.', a: 'Аристотель' },
+  { t: 'Знание — сила.', a: 'Ф. Бэкон' },
+  { t: 'Границы существуют только в умах тех, кому не хватает воображения.', a: '' },
+  { t: 'Учитесь так, словно вы постоянно ощущаете нехватку знаний.', a: 'Конфуций' },
+  { t: 'Жизнь измеряется не числом вдохов, а моментами, когда захватывает дух.', a: '' },
+  { t: 'Мечтай так, будто будешь жить вечно. Живи так, будто умрёшь сегодня.', a: 'Дж. Дин' },
+  { t: 'Нет ничего невозможного. Само слово говорит: Я возможно!', a: 'О. Хепбёрн' },
+  { t: 'Не ошибается тот, кто ничего не делает.', a: 'Т. Рузвельт' },
+  { t: 'Свобода — это то, что ты делаешь с тем, что сделали с тобой.', a: 'Ж.-П. Сартр' },
+  { t: 'Любая достаточно развитая технология неотличима от магии.', a: 'А. Кларк' },
+  { t: 'Думай иначе.', a: 'Стив Джобс' },
+  { t: 'Только те, кто рискует зайти слишком далеко, узнают, как далеко можно зайти.', a: 'Т. С. Элиот' },
+  { t: 'Будь изменением, которое хочешь видеть в мире.', a: 'М. Ганди' },
+  { t: 'Мы должны стать теми переменами, которые хотим видеть в мире.', a: 'М. Ганди' },
+  { t: 'Время — самый ценный ресурс. Его нельзя купить, одолжить или сохранить.', a: '' },
+  { t: 'Делай каждый день одну вещь, которая тебя пугает.', a: 'Э. Рузвельт' },
+  { t: 'Талант выигрывает игры, а командная работа — чемпионаты.', a: 'М. Джордан' },
+  { t: 'Верь, что можешь — и ты уже на полпути.', a: 'Т. Рузвельт' },
 ];
 
-let quoteCounter = 0;
-
 function QuoteWidget() {
-  const [quote, setQuote] = useState<{ text: string; author: string } | null>(null);
+  const [quote, setQuote] = useState<{ t: string; a: string }>(
+    () => QUOTES[Math.floor(Math.random() * QUOTES.length)]
+  );
+  const [key, setKey] = useState(0); // force re-render for animation restart
 
-  const fetchQuote = useCallback(async () => {
-    try {
-      const res = await fetch('https://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=ru&key=' + Date.now());
-      const data = await res.json();
-      if (data.quoteText) {
-        setQuote({ text: data.quoteText.trim(), author: data.quoteAuthor?.trim() || '' });
-        return;
-      }
-    } catch {}
-    // Fallback: cycle through built-in quotes
-    setQuote(FALLBACK_QUOTES[quoteCounter++ % FALLBACK_QUOTES.length]);
-  }, []);
-
-  // Fetch new quote every time sidebar becomes visible (chat list shown)
   useEffect(() => {
-    fetchQuote();
-    const handler = () => fetchQuote();
+    const handler = () => {
+      setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+      setKey(k => k + 1);
+    };
     window.addEventListener('sidebar-shown', handler);
     return () => window.removeEventListener('sidebar-shown', handler);
-  }, [fetchQuote]);
+  }, []);
 
-  if (!quote) return null;
-
-  const fullText = quote.author ? `${quote.text} — ${quote.author}` : quote.text;
-  // Calculate animation duration based on text length (roughly 40px/sec)
-  const duration = Math.max(8, fullText.length * 0.2);
+  const fullText = quote.a ? `${quote.t} — ${quote.a}` : quote.t;
+  const duration = Math.max(10, fullText.length * 0.18);
 
   return (
-    <div className="flex-1 overflow-hidden relative h-5" title={fullText}>
+    <div className="flex-1 overflow-hidden relative h-5 min-w-0" title={fullText}>
       <div
+        key={key}
         className="absolute whitespace-nowrap text-xs text-gray-300 italic leading-5"
-        style={{
-          animation: `marquee ${duration}s linear infinite`,
-        }}
+        style={{ animation: `marquee ${duration}s linear infinite` }}
       >
         <span className="text-accent mr-1.5">💬</span>
         {fullText}
@@ -245,7 +262,6 @@ function HeaderWidget() {
   switch (widget) {
     case 'weather': return <WeatherWidget />;
     case 'quote': return <QuoteWidget />;
-    case 'reminders': return <RemindersWidget />;
     case 'none': return null;
     default: return <WeatherWidget />;
   }
@@ -512,11 +528,13 @@ export function Sidebar() {
     <div className="w-full md:w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
-        <div className="flex items-center gap-2">
-          <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain" />
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain shrink-0" />
           <HeaderWidget />
         </div>
-        <button
+        <div className="flex items-center gap-1 shrink-0">
+          <RemindersWidget />
+          <button
           onClick={() => setShowAppSettings(true)}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
           title={t('sidebar.settingsApp')}
@@ -526,6 +544,7 @@ export function Sidebar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </button>
+        </div>
       </div>
 
       {/* Search */}

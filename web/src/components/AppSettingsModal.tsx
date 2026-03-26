@@ -441,7 +441,8 @@ export function AppSettingsModal({ onClose }: Props) {
       <label className="block text-sm font-medium text-gray-400 mb-3">{t('appSettings.widgetTitle')}</label>
       {[
         { id: 'weather', labelKey: 'appSettings.widgetWeather' },
-        { id: 'clock', labelKey: 'appSettings.widgetClock' },
+        { id: 'quote', labelKey: 'appSettings.widgetQuote' },
+        { id: 'reminders', labelKey: 'appSettings.widgetReminders' },
         { id: 'none', labelKey: 'appSettings.widgetNone' },
       ].map(option => (
         <button

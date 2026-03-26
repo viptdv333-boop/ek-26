@@ -186,7 +186,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.comingSoon': 'Скоро будет доступно',
     'appSettings.widgetTitle': 'Виджет в шапке',
     'appSettings.widgetWeather': 'Погода',
-    'appSettings.widgetClock': 'Часы',
+    'appSettings.widgetQuote': 'Цитата дня',
+    'appSettings.widgetReminders': 'Напоминания',
     'appSettings.widgetNone': 'Ничего',
 
     // ── Translate ───────────────────────────────────────────────────
@@ -558,7 +559,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.comingSoon': 'Coming soon',
     'appSettings.widgetTitle': 'Header widget',
     'appSettings.widgetWeather': 'Weather',
-    'appSettings.widgetClock': 'Clock',
+    'appSettings.widgetQuote': 'Quote of the day',
+    'appSettings.widgetReminders': 'Reminders',
     'appSettings.widgetNone': 'None',
 
     // ── Translate ───────────────────────────────────────────────────
@@ -930,7 +932,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.comingSoon': '\u5373\u5C06\u63A8\u51FA',
     'appSettings.widgetTitle': '\u9876\u90E8\u5C0F\u7EC4\u4EF6',
     'appSettings.widgetWeather': '\u5929\u6C14',
-    'appSettings.widgetClock': '\u65F6\u949F',
+    'appSettings.widgetQuote': '\u6BCF\u65E5\u540D\u8A00',
+    'appSettings.widgetReminders': '\u63D0\u9192',
     'appSettings.widgetNone': '\u65E0',
 
     // ── Translate ───────────────────────────────────────────────────

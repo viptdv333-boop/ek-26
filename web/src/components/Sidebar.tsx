@@ -56,6 +56,173 @@ function WeatherWidget() {
   );
 }
 
+// ── Quotes (built-in, no API needed) ────────────────────────────
+const QUOTES = [
+  { text: 'Единственный способ делать великую работу — любить то, что делаешь.', author: 'Стив Джобс' },
+  { text: 'Будь собой, остальные роли уже заняты.', author: 'Оскар Уайльд' },
+  { text: 'Успех — это способность идти от неудачи к неудаче не теряя энтузиазма.', author: 'У. Черчилль' },
+  { text: 'Жизнь — это то, что случается с тобой, пока ты строишь другие планы.', author: 'Дж. Леннон' },
+  { text: 'Не бойся идти медленно, бойся стоять на месте.', author: 'Китайская мудрость' },
+  { text: 'Лучшее время посадить дерево было 20 лет назад. Второе лучшее — сейчас.', author: 'Китайская мудрость' },
+  { text: 'Будущее принадлежит тем, кто верит в красоту своей мечты.', author: 'Э. Рузвельт' },
+  { text: 'Начинай делать то, что нужно, потом — то, что возможно, и вдруг ты делаешь невозможное.', author: 'Франциск Ассизский' },
+  { text: 'Каждый день — это маленькая жизнь.', author: 'А. Шопенгауэр' },
+  { text: 'Ты не можешь вернуться назад и изменить начало, но можешь начать там, где ты есть, и изменить конец.', author: 'К. С. Льюис' },
+  { text: 'Простота — это высшая утончённость.', author: 'Леонардо да Винчи' },
+  { text: 'Действие — это основной ключ к успеху.', author: 'Пабло Пикассо' },
+  { text: 'Стремитесь не к успеху, а к ценностям, которые он даёт.', author: 'А. Эйнштейн' },
+  { text: 'Жизнь коротка. Улыбайся, пока у тебя ещё есть зубы.', author: 'Народная мудрость' },
+];
+
+function QuoteWidget() {
+  const [quote, setQuote] = useState<{ text: string; author: string } | null>(null);
+
+  useEffect(() => {
+    // Pick quote based on day of year for consistency within a day
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    setQuote(QUOTES[dayOfYear % QUOTES.length]);
+  }, []);
+
+  if (!quote) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 text-xs overflow-hidden" title={`${quote.text} — ${quote.author}`}>
+      <span className="text-accent">💬</span>
+      <span className="text-gray-300 truncate max-w-[180px] italic">{quote.text}</span>
+    </div>
+  );
+}
+
+function RemindersWidget() {
+  const [reminders, setReminders] = useState<{ id: string; text: string; time: string }[]>([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newText, setNewText] = useState('');
+  const [newTime, setNewTime] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('ek26_reminders');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Filter out expired reminders (keep if within last hour or future)
+        const now = Date.now() - 3600000;
+        setReminders(parsed.filter((r: any) => new Date(r.time).getTime() > now));
+      } catch {}
+    }
+  }, []);
+
+  const saveReminders = (list: typeof reminders) => {
+    setReminders(list);
+    localStorage.setItem('ek26_reminders', JSON.stringify(list));
+  };
+
+  const addReminder = () => {
+    if (!newText.trim() || !newTime) return;
+    const r = { id: Date.now().toString(), text: newText.trim(), time: newTime };
+    saveReminders([...reminders, r].sort((a, b) => a.time.localeCompare(b.time)));
+    setNewText('');
+    setNewTime('');
+    setShowAdd(false);
+  };
+
+  const removeReminder = (id: string) => {
+    saveReminders(reminders.filter(r => r.id !== id));
+  };
+
+  // Check for due reminders
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      reminders.forEach(r => {
+        const rTime = new Date(r.time);
+        if (Math.abs(rTime.getTime() - now.getTime()) < 60000) {
+          if (Notification.permission === 'granted') {
+            new Notification('FOMO Напоминание', { body: r.text });
+          }
+        }
+      });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [reminders]);
+
+  const nextReminder = reminders.find(r => new Date(r.time) > new Date());
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowAdd(!showAdd)}
+        className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+        title={nextReminder ? `${nextReminder.text} — ${new Date(nextReminder.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Добавить напоминание'}
+      >
+        <span className="text-accent">🔔</span>
+        {nextReminder ? (
+          <span className="truncate max-w-[160px]">
+            {new Date(nextReminder.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {nextReminder.text}
+          </span>
+        ) : (
+          <span className="text-gray-500">+</span>
+        )}
+      </button>
+      {showAdd && (
+        <div className="absolute top-8 left-0 w-64 bg-dark-700 border border-dark-500 rounded-xl shadow-xl z-50 p-3 space-y-2">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs font-medium text-white">Напоминания</span>
+            <button onClick={() => setShowAdd(false)} className="text-gray-400 hover:text-white text-xs">✕</button>
+          </div>
+          {reminders.map(r => (
+            <div key={r.id} className="flex items-center gap-2 text-xs">
+              <span className="text-gray-400">{new Date(r.time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="text-white flex-1 truncate">{r.text}</span>
+              <button onClick={() => removeReminder(r.id)} className="text-red-400 hover:text-red-300">✕</button>
+            </div>
+          ))}
+          <div className="flex gap-1.5 pt-1">
+            <input
+              type="text"
+              value={newText}
+              onChange={e => setNewText(e.target.value)}
+              placeholder="Текст..."
+              className="flex-1 px-2 py-1.5 bg-dark-600 border border-dark-500 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent"
+              onKeyDown={e => e.key === 'Enter' && addReminder()}
+            />
+            <input
+              type="datetime-local"
+              value={newTime}
+              onChange={e => setNewTime(e.target.value)}
+              className="px-1.5 py-1.5 bg-dark-600 border border-dark-500 rounded-lg text-xs text-white focus:outline-none focus:border-accent w-[130px]"
+            />
+          </div>
+          <button
+            onClick={addReminder}
+            disabled={!newText.trim() || !newTime}
+            className="w-full py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg disabled:opacity-40 transition-colors"
+          >
+            Добавить
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HeaderWidget() {
+  const [widget, setWidget] = useState(() => localStorage.getItem('ek26_header_widget') || 'weather');
+
+  useEffect(() => {
+    const handler = () => setWidget(localStorage.getItem('ek26_header_widget') || 'weather');
+    window.addEventListener('widget-changed', handler);
+    return () => window.removeEventListener('widget-changed', handler);
+  }, []);
+
+  switch (widget) {
+    case 'weather': return <WeatherWidget />;
+    case 'quote': return <QuoteWidget />;
+    case 'reminders': return <RemindersWidget />;
+    case 'none': return null;
+    default: return <WeatherWidget />;
+  }
+}
+
 interface SearchResult {
   messageId: string;
   conversationId: string;
@@ -319,7 +486,7 @@ export function Sidebar() {
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
         <div className="flex items-center gap-2">
           <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain" />
-          <WeatherWidget />
+          <HeaderWidget />
         </div>
         <button
           onClick={() => setShowAppSettings(true)}

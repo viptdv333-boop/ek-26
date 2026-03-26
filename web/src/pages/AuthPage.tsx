@@ -3,37 +3,39 @@ import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 import { useTranslation } from '../i18n';
 
+const flagUrl = (iso: string) => `https://flagcdn.com/w40/${iso.toLowerCase()}.png`;
+
 const COUNTRIES = [
-  { code: '+7', flag: '\u{1F1F7}\u{1F1FA}', nameKey: 'country.russia', isoCode: 'RU' },
-  { code: '+7', flag: '\u{1F1F0}\u{1F1FF}', nameKey: 'country.kazakhstan', isoCode: 'KZ' },
-  { code: '+375', flag: '\u{1F1E7}\u{1F1FE}', nameKey: 'country.belarus', isoCode: 'BY' },
-  { code: '+998', flag: '\u{1F1FA}\u{1F1FF}', nameKey: 'country.uzbekistan', isoCode: 'UZ' },
-  { code: '+996', flag: '\u{1F1F0}\u{1F1EC}', nameKey: 'country.kyrgyzstan', isoCode: 'KG' },
-  { code: '+992', flag: '\u{1F1F9}\u{1F1EF}', nameKey: 'country.tajikistan', isoCode: 'TJ' },
-  { code: '+993', flag: '\u{1F1F9}\u{1F1F2}', nameKey: 'country.turkmenistan', isoCode: 'TM' },
-  { code: '+374', flag: '\u{1F1E6}\u{1F1F2}', nameKey: 'country.armenia', isoCode: 'AM' },
-  { code: '+995', flag: '\u{1F1EC}\u{1F1EA}', nameKey: 'country.georgia', isoCode: 'GE' },
-  { code: '+994', flag: '\u{1F1E6}\u{1F1FF}', nameKey: 'country.azerbaijan', isoCode: 'AZ' },
-  { code: '+373', flag: '\u{1F1F2}\u{1F1E9}', nameKey: 'country.moldova', isoCode: 'MD' },
-  { code: '+370', flag: '\u{1F1F1}\u{1F1F9}', nameKey: 'country.lithuania', isoCode: 'LT' },
-  { code: '+371', flag: '\u{1F1F1}\u{1F1FB}', nameKey: 'country.latvia', isoCode: 'LV' },
-  { code: '+372', flag: '\u{1F1EA}\u{1F1EA}', nameKey: 'country.estonia', isoCode: 'EE' },
-  { code: '+1', flag: '\u{1F1FA}\u{1F1F8}', nameKey: 'country.usa', isoCode: 'US' },
-  { code: '+44', flag: '\u{1F1EC}\u{1F1E7}', nameKey: 'country.uk', isoCode: 'GB' },
-  { code: '+49', flag: '\u{1F1E9}\u{1F1EA}', nameKey: 'country.germany', isoCode: 'DE' },
-  { code: '+33', flag: '\u{1F1EB}\u{1F1F7}', nameKey: 'country.france', isoCode: 'FR' },
-  { code: '+39', flag: '\u{1F1EE}\u{1F1F9}', nameKey: 'country.italy', isoCode: 'IT' },
-  { code: '+34', flag: '\u{1F1EA}\u{1F1F8}', nameKey: 'country.spain', isoCode: 'ES' },
-  { code: '+90', flag: '\u{1F1F9}\u{1F1F7}', nameKey: 'country.turkey', isoCode: 'TR' },
-  { code: '+971', flag: '\u{1F1E6}\u{1F1EA}', nameKey: 'country.uae', isoCode: 'AE' },
-  { code: '+972', flag: '\u{1F1EE}\u{1F1F1}', nameKey: 'country.israel', isoCode: 'IL' },
-  { code: '+86', flag: '\u{1F1E8}\u{1F1F3}', nameKey: 'country.china', isoCode: 'CN' },
-  { code: '+82', flag: '\u{1F1F0}\u{1F1F7}', nameKey: 'country.southKorea', isoCode: 'KR' },
-  { code: '+81', flag: '\u{1F1EF}\u{1F1F5}', nameKey: 'country.japan', isoCode: 'JP' },
-  { code: '+91', flag: '\u{1F1EE}\u{1F1F3}', nameKey: 'country.india', isoCode: 'IN' },
-  { code: '+55', flag: '\u{1F1E7}\u{1F1F7}', nameKey: 'country.brazil', isoCode: 'BR' },
-  { code: '+52', flag: '\u{1F1F2}\u{1F1FD}', nameKey: 'country.mexico', isoCode: 'MX' },
-  { code: '+61', flag: '\u{1F1E6}\u{1F1FA}', nameKey: 'country.australia', isoCode: 'AU' },
+  { code: '+7', nameKey: 'country.russia', isoCode: 'RU' },
+  { code: '+7', nameKey: 'country.kazakhstan', isoCode: 'KZ' },
+  { code: '+375', nameKey: 'country.belarus', isoCode: 'BY' },
+  { code: '+998', nameKey: 'country.uzbekistan', isoCode: 'UZ' },
+  { code: '+996', nameKey: 'country.kyrgyzstan', isoCode: 'KG' },
+  { code: '+992', nameKey: 'country.tajikistan', isoCode: 'TJ' },
+  { code: '+993', nameKey: 'country.turkmenistan', isoCode: 'TM' },
+  { code: '+374', nameKey: 'country.armenia', isoCode: 'AM' },
+  { code: '+995', nameKey: 'country.georgia', isoCode: 'GE' },
+  { code: '+994', nameKey: 'country.azerbaijan', isoCode: 'AZ' },
+  { code: '+373', nameKey: 'country.moldova', isoCode: 'MD' },
+  { code: '+370', nameKey: 'country.lithuania', isoCode: 'LT' },
+  { code: '+371', nameKey: 'country.latvia', isoCode: 'LV' },
+  { code: '+372', nameKey: 'country.estonia', isoCode: 'EE' },
+  { code: '+1', nameKey: 'country.usa', isoCode: 'US' },
+  { code: '+44', nameKey: 'country.uk', isoCode: 'GB' },
+  { code: '+49', nameKey: 'country.germany', isoCode: 'DE' },
+  { code: '+33', nameKey: 'country.france', isoCode: 'FR' },
+  { code: '+39', nameKey: 'country.italy', isoCode: 'IT' },
+  { code: '+34', nameKey: 'country.spain', isoCode: 'ES' },
+  { code: '+90', nameKey: 'country.turkey', isoCode: 'TR' },
+  { code: '+971', nameKey: 'country.uae', isoCode: 'AE' },
+  { code: '+972', nameKey: 'country.israel', isoCode: 'IL' },
+  { code: '+86', nameKey: 'country.china', isoCode: 'CN' },
+  { code: '+82', nameKey: 'country.southKorea', isoCode: 'KR' },
+  { code: '+81', nameKey: 'country.japan', isoCode: 'JP' },
+  { code: '+91', nameKey: 'country.india', isoCode: 'IN' },
+  { code: '+55', nameKey: 'country.brazil', isoCode: 'BR' },
+  { code: '+52', nameKey: 'country.mexico', isoCode: 'MX' },
+  { code: '+61', nameKey: 'country.australia', isoCode: 'AU' },
 ];
 
 // ── Puzzle Captcha Constants ──────────────────────────────────────
@@ -62,8 +64,21 @@ export function AuthPage() {
     }
   };
 
-  // Form fields
+  // GeoIP country detection
   const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.country_code) {
+          const found = COUNTRIES.find(c => c.isoCode === data.country_code);
+          if (found) setSelectedCountry(found);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Form fields
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
@@ -447,7 +462,7 @@ export function AuthPage() {
           onClick={() => { setShowCountryPicker(!showCountryPicker); setCountrySearch(''); }}
           className="flex items-center gap-1 px-3 py-3 bg-dark-700 border border-dark-500 rounded-xl text-white hover:border-accent transition-colors shrink-0"
         >
-          <span className="text-lg">{selectedCountry.flag}</span>
+          <img src={flagUrl(selectedCountry.isoCode)} alt={selectedCountry.isoCode} className="w-6 h-4 object-cover rounded-sm" />
           <span className="text-sm text-gray-400">{selectedCountry.code}</span>
           <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </button>
@@ -482,7 +497,7 @@ export function AuthPage() {
                   c.code === selectedCountry.code && c.nameKey === selectedCountry.nameKey ? 'bg-dark-600' : ''
                 }`}
               >
-                <span className="text-lg">{c.flag}</span>
+                <img src={flagUrl(c.isoCode)} alt={c.isoCode} className="w-6 h-4 object-cover rounded-sm" />
                 <span className="text-white text-sm flex-1">{t(c.nameKey)}</span>
                 <span className="text-gray-400 text-sm">{c.code}</span>
               </button>

@@ -72,11 +72,21 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
   const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🔥','👎','🎉'];
 
   // Auto-translate incoming messages
+  const [autoTranslateOn, setAutoTranslateOn] = useState(() => localStorage.getItem('ek26_auto_translate') === 'true');
+
+  useEffect(() => {
+    const handler = () => {
+      const next = localStorage.getItem('ek26_auto_translate') === 'true';
+      setAutoTranslateOn(next);
+      if (!next) setTranslatedText(null);
+    };
+    window.addEventListener('auto-translate-changed', handler);
+    return () => window.removeEventListener('auto-translate-changed', handler);
+  }, []);
+
   useEffect(() => {
     if (isMine || !message.text || translatedText) return;
-    const autoTranslate = localStorage.getItem('ek26_auto_translate') === 'true';
-    if (!autoTranslate) return;
-    // Simple heuristic: check if text appears to be in a different language
+    if (!autoTranslateOn) return;
     const hasLatin = /[a-zA-Z]/.test(message.text);
     const hasCyrillic = /[\u0400-\u04FF]/.test(message.text);
     const hasChinese = /[\u4E00-\u9FFF]/.test(message.text);
@@ -86,7 +96,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       (lang === 'zh' && hasChinese);
     if (isCurrentLangText) return;
     handleTranslate();
-  }, [message.id]);
+  }, [message.id, autoTranslateOn]);
 
   const handleTranslate = async () => {
     if (!message.text) return;

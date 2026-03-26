@@ -94,7 +94,7 @@ export function ContactsPanel() {
     setSyncResults(null);
     try {
       const deviceContacts = await (navigator as any).contacts.select(['name', 'tel'], { multiple: true });
-      const phoneMap = new Map<string, string>(); // phone → name
+      const phoneMap = new Map<string, string>();
       for (const c of deviceContacts) {
         const name = c.name?.[0] || '';
         for (const tel of (c.tel || [])) {
@@ -109,8 +109,24 @@ export function ContactsPanel() {
       const found = await usersApi.lookupByPhones(phones);
       const foundPhones = new Set((Array.isArray(found) ? found : []).map((u: any) => u.phone));
 
+      // Auto-add all registered users
+      let addedCount = 0;
+      for (const user of (Array.isArray(found) ? found : [])) {
+        try {
+          await contactsApi.add(user.id);
+          addedCount++;
+        } catch {} // ignore 409 (already in contacts)
+      }
+      if (addedCount > 0) await fetchContacts();
+
+      // Show unregistered for invite
       const results: SyncResult[] = [];
-      // Registered users first
+      for (const [ph, name] of phoneMap) {
+        if (!foundPhones.has(ph)) {
+          results.push({ name, phone: ph, registered: false });
+        }
+      }
+      // Also show registered who were just added
       for (const user of (Array.isArray(found) ? found : [])) {
         results.push({
           name: phoneMap.get(user.phone) || user.displayName,
@@ -119,12 +135,6 @@ export function ContactsPanel() {
           avatarUrl: user.avatarUrl,
           registered: true,
         });
-      }
-      // Unregistered phones
-      for (const [ph, name] of phoneMap) {
-        if (!foundPhones.has(ph)) {
-          results.push({ name, phone: ph, registered: false });
-        }
       }
       setSyncResults(results);
     } catch {} finally { setSyncing(false); }

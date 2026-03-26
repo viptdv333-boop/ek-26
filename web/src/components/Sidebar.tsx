@@ -4,7 +4,8 @@ import { useAuthStore } from '../stores/authStore';
 import { conversationsApi, searchApi, chatActionsApi } from '../services/api/endpoints';
 import { NewChatDialog } from './NewChatDialog';
 import { PhoneLinkDialog } from './PhoneLinkDialog';
-import { SettingsModal } from './SettingsModal';
+import { ProfileModal } from './ProfileModal';
+import { AppSettingsModal } from './AppSettingsModal';
 import { ContactsPanel } from './ContactsPanel';
 import { MessageContextMenu } from './MessageContextMenu';
 import { useTranslation } from '../i18n';
@@ -75,7 +76,8 @@ export function Sidebar() {
   const resetChat = useChatStore((s) => s.reset);
   const [showNewChat, setShowNewChat] = useState(false);
   const [showPhoneLink, setShowPhoneLink] = useState(false);
-  const [showSettings, setShowSettings] = useState<'profile' | 'appearance' | false>(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showAppSettings, setShowAppSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<'chats' | 'contacts'>('chats');
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
@@ -320,7 +322,7 @@ export function Sidebar() {
           <WeatherWidget />
         </div>
         <button
-          onClick={() => setShowSettings('appearance')}
+          onClick={() => setShowAppSettings(true)}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
           title={t('sidebar.settingsApp')}
         >
@@ -590,7 +592,7 @@ export function Sidebar() {
             )}
           </div>
           <button
-            onClick={() => setShowSettings('profile')}
+            onClick={() => setShowProfile(true)}
             className="p-2 text-gray-400 hover:text-white hover:bg-dark-600 rounded-lg transition-colors"
             title={t('sidebar.settingsProfile')}
           >
@@ -604,7 +606,8 @@ export function Sidebar() {
 
       {showNewChat && <NewChatDialog onClose={() => setShowNewChat(false)} />}
       {showPhoneLink && <PhoneLinkDialog onClose={() => setShowPhoneLink(false)} />}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} initialTab={showSettings} />}
+      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+      {showAppSettings && <AppSettingsModal onClose={() => setShowAppSettings(false)} />}
 
       {chatMenu && (
         <MessageContextMenu

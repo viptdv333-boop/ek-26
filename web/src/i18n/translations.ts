@@ -175,6 +175,20 @@ export const translations: Record<Lang, Record<string, string>> = {
     'settings.autoTranslate': 'Автоперевод сообщений',
     'settings.deleteWord': 'УДАЛИТЬ',
 
+    // ── App Settings ────────────────────────────────────────────────
+    'appSettings.title': 'Настройки приложения',
+    'appSettings.language': 'Язык и Переводчик',
+    'appSettings.appearance': 'Оформление',
+    'appSettings.devices': 'Устройства',
+    'appSettings.widget': 'Виджет',
+    'appSettings.faq': 'FAQ',
+    'appSettings.about': 'О приложении',
+    'appSettings.comingSoon': 'Скоро будет доступно',
+    'appSettings.widgetTitle': 'Виджет в шапке',
+    'appSettings.widgetWeather': 'Погода',
+    'appSettings.widgetClock': 'Часы',
+    'appSettings.widgetNone': 'Ничего',
+
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': 'Перевести',
     'translate.hide': 'Скрыть перевод',
@@ -533,6 +547,20 @@ export const translations: Record<Lang, Record<string, string>> = {
     'settings.autoTranslate': 'Auto-translate messages',
     'settings.deleteWord': 'DELETE',
 
+    // ── App Settings ────────────────────────────────────────────────
+    'appSettings.title': 'App Settings',
+    'appSettings.language': 'Language & Translator',
+    'appSettings.appearance': 'Appearance',
+    'appSettings.devices': 'Devices',
+    'appSettings.widget': 'Widget',
+    'appSettings.faq': 'FAQ',
+    'appSettings.about': 'About',
+    'appSettings.comingSoon': 'Coming soon',
+    'appSettings.widgetTitle': 'Header widget',
+    'appSettings.widgetWeather': 'Weather',
+    'appSettings.widgetClock': 'Clock',
+    'appSettings.widgetNone': 'None',
+
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': 'Translate',
     'translate.hide': 'Hide translation',
@@ -890,6 +918,20 @@ export const translations: Record<Lang, Record<string, string>> = {
     'settings.language': '\u754C\u9762\u8BED\u8A00',
     'settings.autoTranslate': '\u81EA\u52A8\u7FFB\u8BD1\u6D88\u606F',
     'settings.deleteWord': '\u5220\u9664',
+
+    // ── App Settings ────────────────────────────────────────────────
+    'appSettings.title': '\u5E94\u7528\u8BBE\u7F6E',
+    'appSettings.language': '\u8BED\u8A00\u548C\u7FFB\u8BD1',
+    'appSettings.appearance': '\u5916\u89C2',
+    'appSettings.devices': '\u8BBE\u5907',
+    'appSettings.widget': '\u5C0F\u7EC4\u4EF6',
+    'appSettings.faq': 'FAQ',
+    'appSettings.about': '\u5173\u4E8E',
+    'appSettings.comingSoon': '\u5373\u5C06\u63A8\u51FA',
+    'appSettings.widgetTitle': '\u9876\u90E8\u5C0F\u7EC4\u4EF6',
+    'appSettings.widgetWeather': '\u5929\u6C14',
+    'appSettings.widgetClock': '\u65F6\u949F',
+    'appSettings.widgetNone': '\u65E0',
 
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': '\u7FFB\u8BD1',

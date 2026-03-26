@@ -206,30 +206,24 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
               borderRadius: bubbleShape === 'cloud'
                 ? '18px'
-                : bubbleShape === 'burst'
+                : bubbleShape === 'square'
                   ? '2px'
-                  : '12px',
-              ...(bubbleShape === 'burst' ? {
-                clipPath: 'polygon(0% 8%, 4% 0%, 10% 10%, 18% 2%, 24% 12%, 32% 0%, 38% 8%, 50% 0%, 62% 8%, 68% 0%, 76% 12%, 82% 2%, 90% 10%, 96% 0%, 100% 8%, 98% 20%, 100% 32%, 96% 42%, 100% 52%, 98% 62%, 100% 72%, 96% 82%, 100% 92%, 96% 100%, 88% 94%, 80% 100%, 72% 94%, 64% 100%, 56% 94%, 50% 100%, 44% 94%, 36% 100%, 28% 94%, 20% 100%, 12% 94%, 4% 100%, 0% 92%, 4% 82%, 0% 72%, 4% 62%, 0% 52%, 4% 42%, 0% 32%, 4% 20%)',
-                padding: '14px 16px',
-              } : {}),
+                  : '10px', // rounded
             }}
           >
-            {/* Tail */}
-            {bubbleShape !== 'burst' && (
-              <div
-                className="absolute bottom-0"
-                style={{
-                  [isMine ? 'right' : 'left']: '-6px',
-                  width: 0, height: 0,
-                  borderStyle: 'solid',
-                  borderWidth: isMine ? '0 0 12px 12px' : '0 12px 12px 0',
-                  borderColor: isMine
-                    ? `transparent transparent ${bubbleColor} transparent`
-                    : `transparent transparent ${bubbleColorOther} transparent`,
-                }}
-              />
-            )}
+            {/* Tail triangle */}
+            <div
+              className="absolute bottom-0"
+              style={{
+                [isMine ? 'right' : 'left']: '-6px',
+                width: 0, height: 0,
+                borderStyle: 'solid',
+                borderWidth: isMine ? '0 0 12px 12px' : '0 12px 12px 0',
+                borderColor: isMine
+                  ? `transparent transparent ${bubbleColor} transparent`
+                  : `transparent transparent ${bubbleColorOther} transparent`,
+              }}
+            />
           {showSender && !isMine && message.senderName && (
             <p className="text-xs font-medium text-accent mb-0.5">{message.senderName}</p>
           )}
@@ -276,9 +270,9 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
             <p className={`text-[10px] mt-0.5 italic ${isMine ? 'text-white/40' : 'text-gray-500'}`}>...</p>
           )}
 
-          <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''} ${isMine ? 'text-white/50' : 'text-gray-500'}`}>
-            {message.editedAt && <span className="text-[9px] italic">{t('message.edited')}</span>}
-            <span className="text-[10px]">{time}</span>
+          <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''} ${isMine ? 'text-white/50' : 'text-gray-500'}`} style={{ fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
+            {message.editedAt && <span className="italic">{t('message.edited')}</span>}
+            <span>{time}</span>
             {statusIcon()}
           </div>
         </div>

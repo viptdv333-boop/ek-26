@@ -272,12 +272,9 @@ export function AppSettingsModal({ onClose }: Props) {
         <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.bubbleShape')}</label>
         <div className="flex gap-3">
           {([
-            { id: 'cloud', label: t('settings.bubbleCloud'),
-              path: "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z" },
-            { id: 'rounded', label: t('settings.bubbleRounded'),
-              path: "M 12,3 L 188,3 C 194,3 199,8 199,14 L 199,78 C 199,84 194,89 188,89 L 170,89 L 180,114 L 150,89 L 12,89 C 6,89 1,84 1,78 L 1,14 C 1,8 6,3 12,3 Z" },
-            { id: 'burst', label: t('settings.bubbleBurst'),
-              path: "M 100,2 L 120,18 L 145,4 L 142,28 L 170,22 L 158,44 L 190,48 L 162,62 L 185,80 L 155,78 L 165,100 L 140,88 L 135,108 L 115,92 L 100,110 L 85,92 L 65,108 L 60,88 L 35,100 L 45,78 L 15,80 L 38,62 L 10,48 L 42,44 L 30,22 L 58,28 L 55,4 L 80,18 Z" },
+            { id: 'cloud', label: t('settings.bubbleCloud'), borderRadius: '18px' },
+            { id: 'rounded', label: t('settings.bubbleRounded'), borderRadius: '10px' },
+            { id: 'square', label: t('settings.bubbleSquare'), borderRadius: '2px' },
           ] as const).map((shape) => (
             <button
               key={shape.id}
@@ -286,13 +283,11 @@ export function AppSettingsModal({ onClose }: Props) {
                 bubbleShape === shape.id ? 'border-accent bg-accent/10' : 'border-dark-500 hover:border-gray-400'
               }`}
             >
-              <div className="relative w-20 h-10">
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="none">
-                  <path d={shape.path} fill={bubbleColor} />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs text-white" style={{ zIndex: 1, paddingBottom: '6px' }}>
-                  {t('settings.bubbleHello')}
-                </span>
+              <div
+                className="px-3 py-1.5 text-xs text-white"
+                style={{ backgroundColor: bubbleColor, borderRadius: shape.borderRadius }}
+              >
+                {t('settings.bubbleHello')}
               </div>
               <span className="text-xs text-gray-400">{shape.label}</span>
             </button>

@@ -20,13 +20,16 @@ interface ConnectedClient {
 const clients = new Map<string, Set<ConnectedClient>>();
 // Map: conversationId -> Set of userIds currently subscribed
 const conversationSubscribers = new Map<string, Set<string>>();
-// Map: callId -> call metadata (for call reports)
+// Map: callId -> call metadata (for call reports + pending call delivery)
 const activeCalls = new Map<string, {
   callerId: string;
   targetUserId: string;
   callType: 'audio' | 'video';
   startedAt: number; // timestamp when offer sent
   answeredAt: number | null; // timestamp when answered
+  offer: any; // SDP offer for re-delivery on reconnect
+  callerName: string;
+  callerAvatar: string | null;
 }>();
 
 async function saveCallReport(
@@ -176,6 +179,27 @@ export async function setupWebSocket(app: FastifyInstance) {
     const onlineIds = getOnlineUserIds().filter(id => id !== userId);
     if (onlineIds.length > 0) {
       socket.send(JSON.stringify({ event: 'online:list', data: { userIds: onlineIds } }));
+    }
+
+    // Re-deliver pending call if user reconnects while being called
+    for (const [callId, call] of activeCalls) {
+      if (call.targetUserId === userId && !call.answeredAt) {
+        const elapsed = Date.now() - call.startedAt;
+        if (elapsed < 30000) { // Only if call is still ringing (< 30s)
+          console.log(`[Call] Re-delivering pending call ${callId} to reconnected user ${userId}`);
+          socket.send(JSON.stringify({
+            event: 'call:incoming',
+            data: {
+              callId,
+              callerId: call.callerId,
+              callerName: call.callerName,
+              callerAvatar: call.callerAvatar,
+              type: call.callType,
+              offer: call.offer,
+            },
+          }));
+        }
+      }
     }
 
     // Handle messages
@@ -438,13 +462,16 @@ async function handleEvent(
       const caller = await User.findById(client.userId).select('displayName avatarUrl').lean();
       const callerName = caller?.displayName || 'Пользователь';
 
-      // Track call for reports
+      // Track call for reports + pending delivery on reconnect
       activeCalls.set(callId, {
         callerId: client.userId,
         targetUserId,
         callType: type,
         startedAt: Date.now(),
         answeredAt: null,
+        offer,
+        callerName,
+        callerAvatar: caller?.avatarUrl || null,
       });
 
       sendToUser(targetUserId, 'call:incoming', {

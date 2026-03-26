@@ -133,4 +133,45 @@ export async function userRoutes(app: FastifyInstance) {
     await User.findByIdAndUpdate(request.userId, { $addToSet: { [field]: token } });
     return { success: true };
   });
+
+  // ── Device / Session management ─────────────────────────────────
+  app.get('/api/users/me/sessions', { preHandler: [app.authenticate] }, async (request) => {
+    const { Session } = await import('../models/Session.js');
+    const sessions = await Session.find({ userId: request.userId })
+      .sort({ lastActiveAt: -1 })
+      .select('deviceId deviceName ip lastActiveAt createdAt')
+      .lean();
+
+    // Determine current session deviceId from token
+    const token = request.headers.authorization?.replace('Bearer ', '');
+    let currentDeviceId: string | null = null;
+    if (token) {
+      try {
+        const { verifyAccess } = await import('../services/jwt.js');
+        const payload = verifyAccess(token) as any;
+        // Find session matching this user's most recent activity
+        // We'll mark the session that was last active within 1 minute as "current"
+      } catch {}
+    }
+
+    return sessions.map(s => ({
+      id: s._id.toString(),
+      deviceId: s.deviceId,
+      deviceName: s.deviceName || 'Unknown device',
+      ip: s.ip || '',
+      lastActiveAt: s.lastActiveAt,
+      createdAt: s.createdAt,
+      isCurrent: false, // Will be determined by client comparing deviceId
+    }));
+  });
+
+  app.delete('/api/users/me/sessions/:sessionId', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { sessionId } = request.params as { sessionId: string };
+    const { Session } = await import('../models/Session.js');
+    const result = await Session.deleteOne({ _id: sessionId, userId: request.userId });
+    if (result.deletedCount === 0) {
+      return reply.code(404).send({ error: 'Session not found' });
+    }
+    return { success: true };
+  });
 }

@@ -189,6 +189,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.widgetQuote': 'Цитата дня',
     'appSettings.widgetReminders': 'Напоминания',
     'appSettings.widgetNone': 'Ничего',
+    'appSettings.loading': 'Загрузка...',
+    'appSettings.noSessions': 'Нет активных сессий',
+    'appSettings.terminateSession': 'Завершить',
 
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': 'Перевести',
@@ -562,6 +565,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.widgetQuote': 'Quote of the day',
     'appSettings.widgetReminders': 'Reminders',
     'appSettings.widgetNone': 'None',
+    'appSettings.loading': 'Loading...',
+    'appSettings.noSessions': 'No active sessions',
+    'appSettings.terminateSession': 'Terminate',
 
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': 'Translate',
@@ -935,6 +941,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.widgetQuote': '\u6BCF\u65E5\u540D\u8A00',
     'appSettings.widgetReminders': '\u63D0\u9192',
     'appSettings.widgetNone': '\u65E0',
+    'appSettings.loading': '\u52A0\u8F7D\u4E2D...',
+    'appSettings.noSessions': '\u6CA1\u6709\u6D3B\u52A8\u4F1A\u8BDD',
+    'appSettings.terminateSession': '\u7EC8\u6B62',
 
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': '\u7FFB\u8BD1',

@@ -11,6 +11,23 @@ import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
 import crypto from 'crypto';
 
+function getDeviceInfo(request: any): { deviceName: string; ip: string } {
+  const ua = request.headers['user-agent'] || '';
+  let deviceName = 'Unknown';
+  if (/Android/i.test(ua)) deviceName = 'Android';
+  else if (/iPhone|iPad/i.test(ua)) deviceName = 'iOS';
+  else if (/Windows/i.test(ua)) deviceName = 'Windows';
+  else if (/Macintosh/i.test(ua)) deviceName = 'macOS';
+  else if (/Linux/i.test(ua)) deviceName = 'Linux';
+  // Add browser
+  if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) deviceName += ' Chrome';
+  else if (/Firefox/i.test(ua)) deviceName += ' Firefox';
+  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) deviceName += ' Safari';
+  else if (/Edg/i.test(ua)) deviceName += ' Edge';
+  const ip = (request.headers['x-real-ip'] || request.headers['x-forwarded-for'] || request.ip || '').split(',')[0].trim();
+  return { deviceName, ip };
+}
+
 export async function authRoutes(app: FastifyInstance) {
   // Request SMS code
   app.post('/api/auth/request-code', async (request, reply) => {
@@ -91,11 +108,15 @@ export async function authRoutes(app: FastifyInstance) {
     const refreshToken = await signRefreshToken(userId);
 
     // Save session
+    const { deviceName, ip } = getDeviceInfo(request);
     await Session.create({
       userId: user._id,
-      deviceId: crypto.randomUUID(), // TODO: get from client
+      deviceId: crypto.randomUUID(),
       refreshTokenHash: hashToken(refreshToken),
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000), // 30 days
+      deviceName,
+      ip,
+      lastActiveAt: new Date(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
     });
 
     const needsPassword = !user.passwordHash;

@@ -427,12 +427,76 @@ export function AppSettingsModal({ onClose }: Props) {
     </div>
   );
 
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [terminatingId, setTerminatingId] = useState<string | null>(null);
+
+  const loadSessions = async () => {
+    setSessionsLoading(true);
+    try {
+      const token = localStorage.getItem('ek26_token');
+      const res = await fetch('/api/users/me/sessions', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setSessions(await res.json());
+    } catch {} finally { setSessionsLoading(false); }
+  };
+
+  const terminateSession = async (sessionId: string) => {
+    setTerminatingId(sessionId);
+    try {
+      const token = localStorage.getItem('ek26_token');
+      await fetch(`/api/users/me/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+    } catch {} finally { setTerminatingId(null); }
+  };
+
+  // Load sessions when devices tab is opened
+  useEffect(() => {
+    if (activeSection === 'devices') loadSessions();
+  }, [activeSection]);
+
+  const deviceIcon = (name: string) => {
+    if (/android/i.test(name)) return '📱';
+    if (/ios|iphone|ipad/i.test(name)) return '📱';
+    if (/windows/i.test(name)) return '💻';
+    if (/mac/i.test(name)) return '🖥️';
+    if (/linux/i.test(name)) return '🐧';
+    return '📟';
+  };
+
   const renderDevicesSection = () => (
-    <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-      <svg className="w-12 h-12 mb-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-      </svg>
-      <p className="text-sm">{t('appSettings.comingSoon')}</p>
+    <div className="space-y-3">
+      {sessionsLoading ? (
+        <div className="flex justify-center py-12">
+          <span className="text-gray-400 text-sm">{t('appSettings.loading')}</span>
+        </div>
+      ) : sessions.length === 0 ? (
+        <p className="text-gray-500 text-sm text-center py-12">{t('appSettings.noSessions')}</p>
+      ) : (
+        sessions.map(s => (
+          <div key={s.id} className="flex items-center gap-3 p-3 bg-dark-600 rounded-xl">
+            <span className="text-2xl">{deviceIcon(s.deviceName)}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white font-medium">{s.deviceName}</p>
+              <p className="text-xs text-gray-400">
+                {s.ip && `${s.ip} · `}
+                {new Date(s.lastActiveAt).toLocaleDateString()} {new Date(s.lastActiveAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+            <button
+              onClick={() => terminateSession(s.id)}
+              disabled={terminatingId === s.id}
+              className="px-3 py-1.5 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {terminatingId === s.id ? '...' : t('appSettings.terminateSession')}
+            </button>
+          </div>
+        ))
+      )}
     </div>
   );
 

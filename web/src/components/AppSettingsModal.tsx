@@ -289,7 +289,6 @@ export function AppSettingsModal({ onClose }: Props) {
               >
                 {t('settings.bubbleHello')}
               </div>
-              <span className="text-xs text-gray-400">{shape.label}</span>
             </button>
           ))}
         </div>

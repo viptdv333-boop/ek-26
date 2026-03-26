@@ -313,17 +313,16 @@ async function handleEvent(
 
       broadcastToConversation(conversationId, 'message:new', messageData, client.userId);
 
-      // Send push notifications to offline participants
+      // Send push notifications to all other participants
+      // Always send push — on Android PWA, background tabs throttle WebSocket
       for (const p of (conv?.participants || []) as any[]) {
         const pid = p._id ? p._id.toString() : p.toString();
         if (pid === client.userId) continue;
-        if (!clients.has(pid)) {
-          sendPushNotification(pid, {
-            title: sender.displayName || 'FOMO Chat',
-            body: (messageData as any).text || 'Новое сообщение',
-            data: { conversationId, messageId: (messageData as any).id },
-          });
-        }
+        sendPushNotification(pid, {
+          title: sender.displayName || 'FOMO Chat',
+          body: (messageData as any).text || 'Новое сообщение',
+          data: { conversationId, messageId: (messageData as any).id },
+        });
       }
       break;
     }

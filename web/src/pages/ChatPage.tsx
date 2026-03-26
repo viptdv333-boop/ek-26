@@ -85,6 +85,7 @@ export function ChatPage() {
       // Android back button triggers popstate — go back to chat list
       if (useChatStore.getState().activeConversationId) {
         setActiveConversation(null);
+        window.dispatchEvent(new Event('sidebar-shown'));
       }
     };
     window.addEventListener('popstate', handlePopState);

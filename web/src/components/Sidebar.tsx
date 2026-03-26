@@ -56,39 +56,67 @@ function WeatherWidget() {
   );
 }
 
-// ── Quotes (built-in, no API needed) ────────────────────────────
-const QUOTES = [
+// ── Fallback quotes (used when API unavailable) ─────────────────
+const FALLBACK_QUOTES = [
   { text: 'Единственный способ делать великую работу — любить то, что делаешь.', author: 'Стив Джобс' },
   { text: 'Будь собой, остальные роли уже заняты.', author: 'Оскар Уайльд' },
   { text: 'Успех — это способность идти от неудачи к неудаче не теряя энтузиазма.', author: 'У. Черчилль' },
-  { text: 'Жизнь — это то, что случается с тобой, пока ты строишь другие планы.', author: 'Дж. Леннон' },
   { text: 'Не бойся идти медленно, бойся стоять на месте.', author: 'Китайская мудрость' },
-  { text: 'Лучшее время посадить дерево было 20 лет назад. Второе лучшее — сейчас.', author: 'Китайская мудрость' },
   { text: 'Будущее принадлежит тем, кто верит в красоту своей мечты.', author: 'Э. Рузвельт' },
-  { text: 'Начинай делать то, что нужно, потом — то, что возможно, и вдруг ты делаешь невозможное.', author: 'Франциск Ассизский' },
   { text: 'Каждый день — это маленькая жизнь.', author: 'А. Шопенгауэр' },
-  { text: 'Ты не можешь вернуться назад и изменить начало, но можешь начать там, где ты есть, и изменить конец.', author: 'К. С. Льюис' },
   { text: 'Простота — это высшая утончённость.', author: 'Леонардо да Винчи' },
   { text: 'Действие — это основной ключ к успеху.', author: 'Пабло Пикассо' },
-  { text: 'Стремитесь не к успеху, а к ценностям, которые он даёт.', author: 'А. Эйнштейн' },
-  { text: 'Жизнь коротка. Улыбайся, пока у тебя ещё есть зубы.', author: 'Народная мудрость' },
 ];
+
+let quoteCounter = 0;
 
 function QuoteWidget() {
   const [quote, setQuote] = useState<{ text: string; author: string } | null>(null);
 
-  useEffect(() => {
-    // Pick quote based on day of year for consistency within a day
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    setQuote(QUOTES[dayOfYear % QUOTES.length]);
+  const fetchQuote = useCallback(async () => {
+    try {
+      const res = await fetch('https://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=ru&key=' + Date.now());
+      const data = await res.json();
+      if (data.quoteText) {
+        setQuote({ text: data.quoteText.trim(), author: data.quoteAuthor?.trim() || '' });
+        return;
+      }
+    } catch {}
+    // Fallback: cycle through built-in quotes
+    setQuote(FALLBACK_QUOTES[quoteCounter++ % FALLBACK_QUOTES.length]);
   }, []);
+
+  // Fetch new quote every time sidebar becomes visible (chat list shown)
+  useEffect(() => {
+    fetchQuote();
+    const handler = () => fetchQuote();
+    window.addEventListener('sidebar-shown', handler);
+    return () => window.removeEventListener('sidebar-shown', handler);
+  }, [fetchQuote]);
 
   if (!quote) return null;
 
+  const fullText = quote.author ? `${quote.text} — ${quote.author}` : quote.text;
+  // Calculate animation duration based on text length (roughly 40px/sec)
+  const duration = Math.max(8, fullText.length * 0.2);
+
   return (
-    <div className="flex items-center gap-1.5 text-xs overflow-hidden" title={`${quote.text} — ${quote.author}`}>
-      <span className="text-accent">💬</span>
-      <span className="text-gray-300 truncate max-w-[180px] italic">{quote.text}</span>
+    <div className="flex-1 overflow-hidden relative h-5" title={fullText}>
+      <div
+        className="absolute whitespace-nowrap text-xs text-gray-300 italic leading-5"
+        style={{
+          animation: `marquee ${duration}s linear infinite`,
+        }}
+      >
+        <span className="text-accent mr-1.5">💬</span>
+        {fullText}
+      </div>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -431,7 +431,7 @@ export function ChatRoom({ conversationId }: Props) {
       <div className="h-14 px-4 md:px-6 flex items-center border-b border-dark-600 bg-dark-800">
         {/* Back button — mobile only */}
         <button
-          onClick={() => setActiveConversation(null)}
+          onClick={() => { setActiveConversation(null); window.dispatchEvent(new Event('sidebar-shown')); }}
           className="md:hidden mr-2 p-1 text-gray-400 hover:text-white"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

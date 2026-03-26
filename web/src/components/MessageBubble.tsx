@@ -205,7 +205,9 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
             style={{
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
               borderRadius: bubbleShape === 'cloud'
-                ? (isMine ? '22px 18px 4px 24px' : '18px 22px 24px 4px')
+                ? (isMine
+                  ? '35% 25% 20% 30% / 40% 35% 25% 30%'
+                  : '25% 35% 30% 20% / 35% 40% 30% 25%')
                 : bubbleShape === 'square'
                   ? '2px'
                   : '10px', // rounded

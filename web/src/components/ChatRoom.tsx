@@ -189,9 +189,10 @@ export function ChatRoom({ conversationId }: Props) {
           encrypted,
           status: m.status,
           createdAt: m.createdAt,
+          callData: m.callData || null,
         };
       }));
-      const decrypted = normalized.filter(m => m.text || (m.attachments && m.attachments.length > 0));
+      const decrypted = normalized.filter(m => m.text || (m.attachments && m.attachments.length > 0) || m.type === 'call');
       setMessages(conversationId, decrypted.reverse());
     } catch {} finally {
       if (showLoading) setLoading(false);
@@ -538,6 +539,14 @@ export function ChatRoom({ conversationId }: Props) {
         )}
         {messages.map((msg) => (
           <div key={msg.id} id={`msg-${msg.id}`} className="transition-all duration-300">
+          {msg.type === 'call' && msg.callData ? (
+            <CallReportMessage
+              callData={msg.callData}
+              isMine={msg.senderId === userId}
+              isCaller={msg.callData.callerId === userId}
+              createdAt={msg.createdAt}
+            />
+          ) : (
           <MessageBubble
             message={msg}
             isMine={msg.senderId === userId}
@@ -558,6 +567,7 @@ export function ChatRoom({ conversationId }: Props) {
             bubbleColor={bubbleColor}
             bubbleColorOther={bubbleColorOther}
           />
+          )}
           </div>
         ))}
         <div ref={messagesEndRef} />
@@ -754,6 +764,65 @@ export function ChatRoom({ conversationId }: Props) {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function CallReportMessage({ callData, isMine, isCaller, createdAt }: {
+  callData: { callType: string; status: string; duration: number | null; callerId: string };
+  isMine: boolean;
+  isCaller: boolean;
+  createdAt: string;
+}) {
+  const formatDuration = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m > 0 ? `${m}:${s.toString().padStart(2, '0')}` : `0:${s.toString().padStart(2, '0')}`;
+  };
+
+  const isVideo = callData.callType === 'video';
+  const icon = isVideo ? '📹' : '📞';
+
+  let label: string;
+  let color: string;
+  switch (callData.status) {
+    case 'completed':
+      label = isCaller ? 'Исходящий звонок' : 'Входящий звонок';
+      color = 'text-green-400';
+      break;
+    case 'missed':
+      label = isCaller ? 'Звонок без ответа' : 'Пропущенный звонок';
+      color = 'text-red-400';
+      break;
+    case 'declined':
+      label = isCaller ? 'Звонок отклонён' : 'Отклонённый звонок';
+      color = 'text-orange-400';
+      break;
+    case 'no-answer':
+      label = isCaller ? 'Нет ответа' : 'Пропущенный звонок';
+      color = 'text-red-400';
+      break;
+    default:
+      label = 'Звонок';
+      color = 'text-gray-400';
+  }
+
+  const time = new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div className="flex justify-center my-2">
+      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-700/60 border border-dark-600">
+        <span className="text-lg">{icon}</span>
+        <div className="flex flex-col">
+          <span className={`text-sm font-medium ${color}`}>
+            {label}
+            {callData.duration != null && (
+              <span className="text-gray-400 font-normal ml-1">({formatDuration(callData.duration)})</span>
+            )}
+          </span>
+          <span className="text-[10px] text-gray-500">{time}</span>
+        </div>
+      </div>
     </div>
   );
 }

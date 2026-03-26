@@ -17,44 +17,106 @@ self.addEventListener('push', (event) => {
   const body = fcmData.body || 'Новое сообщение';
   const isCall = fcmData.type === 'call';
 
-  const options = {
-    body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    data: fcmData,
-    tag: isCall ? 'incoming-call' : (fcmData.conversationId || 'msg-' + Date.now()),
-    renotify: true,
-    requireInteraction: isCall,
-    vibrate: isCall
-      ? [500, 200, 500, 200, 500, 200, 500, 200, 500]  // Long vibration for calls
-      : [300, 100, 300],  // Short vibration for messages
-  };
+  if (isCall) {
+    // Call notification with Accept/Decline actions
+    const options = {
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: fcmData,
+      tag: 'incoming-call',
+      renotify: true,
+      requireInteraction: true,
+      // Long repeating vibration pattern (20 seconds total)
+      vibrate: [
+        800, 400, 800, 400, 800, 400, 800, 400, 800, 400,
+        800, 400, 800, 400, 800, 400, 800, 400, 800, 400,
+      ],
+      actions: [
+        { action: 'accept', title: '✓ Принять' },
+        { action: 'decline', title: '✕ Отклонить' },
+      ],
+      silent: false,
+    };
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+    event.waitUntil(
+      self.registration.showNotification('📞 ' + title, options)
+    );
+  } else {
+    // Regular message notification
+    const options = {
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: fcmData,
+      tag: fcmData.conversationId || 'msg-' + Date.now(),
+      renotify: true,
+      vibrate: [300, 100, 300],
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(title, options)
+    );
+  }
 });
 
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
   const data = event.notification.data || {};
-  const conversationId = data.conversationId;
-  const url = conversationId ? `/?chat=${conversationId}` : '/';
+  const action = event.action;
+  const isCall = data.type === 'call';
 
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
-        if (client.url.includes(self.location.origin)) {
-          return client.focus();
+  event.notification.close();
+
+  if (isCall) {
+    // Handle call notification actions
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+        const appClient = windowClients.find((c) => c.url.includes(self.location.origin));
+
+        if (action === 'accept') {
+          // Tell the app to accept the call
+          if (appClient) {
+            appClient.postMessage({ type: 'call:accept', data });
+            return appClient.focus();
+          }
+          // App not open — open it with call params
+          return clients.openWindow('/?callAction=accept&callId=' + (data.callId || ''));
+        } else if (action === 'decline') {
+          // Tell the app to decline the call
+          if (appClient) {
+            appClient.postMessage({ type: 'call:decline', data });
+          }
+          return; // Don't open the app on decline
+        } else {
+          // Tapped notification body — open/focus app
+          if (appClient) {
+            appClient.postMessage({ type: 'call:accept', data });
+            return appClient.focus();
+          }
+          return clients.openWindow('/?callAction=accept&callId=' + (data.callId || ''));
         }
-      }
-      return clients.openWindow(url);
-    })
-  );
+      })
+    );
+  } else {
+    // Regular message — open/focus app
+    const conversationId = data.conversationId;
+    const url = conversationId ? `/?chat=${conversationId}` : '/';
+
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+        for (const client of windowClients) {
+          if (client.url.includes(self.location.origin)) {
+            return client.focus();
+          }
+        }
+        return clients.openWindow(url);
+      })
+    );
+  }
 });
 
 // ── PWA caching ─────────────────────────────────────────────────
-const CACHE_NAME = 'fomo-chat-v4';
+const CACHE_NAME = 'fomo-chat-v5';
 const STATIC_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {

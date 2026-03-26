@@ -7,7 +7,7 @@ import { useTranslation } from '../i18n';
 
 interface Props {
   onClose: () => void;
-  initialTab?: 'profile' | 'appearance';
+  initialTab?: 'profile' | 'appearance' | 'notifications';
 }
 
 const WALLPAPER_PRESETS = [
@@ -19,7 +19,7 @@ const WALLPAPER_PRESETS = [
   { id: 'gradient-green-teal', labelKey: 'wallpaper.greenTeal', gradient: 'linear-gradient(135deg, #0d1f17, #0f2027)' },
 ];
 
-type SettingsTab = 'profile' | 'appearance';
+type SettingsTab = 'profile' | 'appearance' | 'notifications';
 
 export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   const { t, lang, setLang } = useTranslation();
@@ -47,6 +47,11 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
 
   // Auto-translate
   const [autoTranslate, setAutoTranslate] = useState(() => localStorage.getItem('ek26_auto_translate') === 'true');
+
+  // Notifications
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => localStorage.getItem('ek26_notifications') !== 'false');
+  const [messageSound, setMessageSound] = useState(() => localStorage.getItem('ek26_msg_sound') || 'default');
+  const [callSound, setCallSound] = useState(() => localStorage.getItem('ek26_call_sound') || 'default');
 
   // Delete account
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -224,10 +229,115 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
           >
             {t('settings.appearance')}
           </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === 'notifications' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Уведомления
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {activeTab === 'profile' ? (
+          {activeTab === 'notifications' ? (
+            <div className="px-6 py-5 space-y-6">
+              {/* Notifications toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white">Уведомления</p>
+                  <p className="text-xs text-gray-500">Push-уведомления о сообщениях и звонках</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const next = !notificationsEnabled;
+                    setNotificationsEnabled(next);
+                    localStorage.setItem('ek26_notifications', next ? 'true' : 'false');
+                  }}
+                  className={`w-11 h-6 rounded-full transition-colors ${notificationsEnabled ? 'bg-accent' : 'bg-dark-500'}`}
+                >
+                  <div className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${notificationsEnabled ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+
+              {/* Message sound */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Звук сообщения</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'default', label: 'Стандартный' },
+                    { id: 'chime', label: 'Перезвон' },
+                    { id: 'pop', label: 'Поп' },
+                    { id: 'ding', label: 'Динь' },
+                    { id: 'bubble', label: 'Пузырь' },
+                    { id: 'none', label: 'Без звука' },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        setMessageSound(s.id);
+                        localStorage.setItem('ek26_msg_sound', s.id);
+                      }}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        messageSound === s.id
+                          ? 'bg-accent text-white'
+                          : 'bg-dark-600 text-gray-300 hover:bg-dark-500'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Call ringtone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Мелодия звонка</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'default', label: 'Стандартная' },
+                    { id: 'classic', label: 'Классика' },
+                    { id: 'digital', label: 'Цифровая' },
+                    { id: 'soft', label: 'Мягкая' },
+                    { id: 'urgent', label: 'Срочная' },
+                    { id: 'none', label: 'Без звука' },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        setCallSound(s.id);
+                        localStorage.setItem('ek26_call_sound', s.id);
+                      }}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        callSound === s.id
+                          ? 'bg-accent text-white'
+                          : 'bg-dark-600 text-gray-300 hover:bg-dark-500'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vibration toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white">Вибрация</p>
+                  <p className="text-xs text-gray-500">Вибрация при входящих</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const current = localStorage.getItem('ek26_vibration') !== 'false';
+                    localStorage.setItem('ek26_vibration', current ? 'false' : 'true');
+                  }}
+                  className={`w-11 h-6 rounded-full transition-colors ${localStorage.getItem('ek26_vibration') !== 'false' ? 'bg-accent' : 'bg-dark-500'}`}
+                >
+                  <div className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${localStorage.getItem('ek26_vibration') !== 'false' ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+            </div>
+          ) : activeTab === 'profile' ? (
             <div className="px-6 py-5 space-y-5">
               {/* Avatar */}
               <div className="flex flex-col items-center gap-3">

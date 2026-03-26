@@ -20,6 +20,65 @@ interface ConnectedClient {
 const clients = new Map<string, Set<ConnectedClient>>();
 // Map: conversationId -> Set of userIds currently subscribed
 const conversationSubscribers = new Map<string, Set<string>>();
+// Map: callId -> call metadata (for call reports)
+const activeCalls = new Map<string, {
+  callerId: string;
+  targetUserId: string;
+  callType: 'audio' | 'video';
+  startedAt: number; // timestamp when offer sent
+  answeredAt: number | null; // timestamp when answered
+}>();
+
+async function saveCallReport(
+  callId: string,
+  status: 'missed' | 'declined' | 'completed' | 'no-answer',
+) {
+  const call = activeCalls.get(callId);
+  if (!call) return;
+  activeCalls.delete(callId);
+
+  const duration = (call.answeredAt && status === 'completed')
+    ? Math.round((Date.now() - call.answeredAt) / 1000)
+    : null;
+
+  // Find conversation between caller and target
+  const conv = await Conversation.findOne({
+    participants: { $all: [call.callerId, call.targetUserId] },
+    isGroup: { $ne: true },
+  });
+  if (!conv) return;
+
+  const msg = await Message.create({
+    conversationId: conv._id,
+    senderId: call.callerId,
+    type: 'call',
+    callData: {
+      callType: call.callType,
+      status,
+      duration,
+      callerId: call.callerId,
+    },
+  });
+
+  // Broadcast call report message to both users
+  const populated = {
+    _id: msg._id,
+    conversationId: conv._id.toString(),
+    senderId: call.callerId,
+    type: 'call',
+    callData: msg.callData,
+    createdAt: msg.createdAt,
+  };
+
+  sendToUser(call.callerId, 'message:new', populated);
+  sendToUser(call.targetUserId, 'message:new', populated);
+
+  // Update conversation lastMessage
+  await Conversation.findByIdAndUpdate(conv._id, {
+    lastMessage: msg._id,
+    lastMessageAt: msg.createdAt,
+  });
+}
 
 export function getOnlineUserIds(): string[] {
   return Array.from(clients.keys());
@@ -378,6 +437,16 @@ async function handleEvent(
       console.log(`[Call] Incoming call from ${client.userId} to ${targetUserId}, type=${type}`);
       const caller = await User.findById(client.userId).select('displayName avatarUrl').lean();
       const callerName = caller?.displayName || 'Пользователь';
+
+      // Track call for reports
+      activeCalls.set(callId, {
+        callerId: client.userId,
+        targetUserId,
+        callType: type,
+        startedAt: Date.now(),
+        answeredAt: null,
+      });
+
       sendToUser(targetUserId, 'call:incoming', {
         callId,
         callerId: client.userId,
@@ -398,6 +467,9 @@ async function handleEvent(
 
     case 'call:answer': {
       const { callerId, callId, answer } = data;
+      // Mark call as answered for duration tracking
+      const activeCall = activeCalls.get(callId);
+      if (activeCall) activeCall.answeredAt = Date.now();
       sendToUser(callerId, 'call:answer', { callId, answer });
       break;
     }
@@ -411,18 +483,26 @@ async function handleEvent(
     case 'call:end': {
       const { targetUserId, callId, reason } = data;
       sendToUser(targetUserId, 'call:end', { callId, reason: reason || 'ended' });
+      // Save call report
+      const endedCall = activeCalls.get(callId);
+      if (endedCall) {
+        const status = endedCall.answeredAt ? 'completed' : 'no-answer';
+        saveCallReport(callId, status).catch(console.error);
+      }
       break;
     }
 
     case 'call:decline': {
       const { callerId, callId } = data;
       sendToUser(callerId, 'call:decline', { callId });
+      saveCallReport(callId, 'declined').catch(console.error);
       break;
     }
 
     case 'call:busy': {
       const { callerId, callId } = data;
       sendToUser(callerId, 'call:busy', { callId });
+      saveCallReport(callId, 'missed').catch(console.error);
       break;
     }
   }

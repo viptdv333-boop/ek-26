@@ -3,8 +3,14 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export interface IMessage extends Document {
   conversationId: Types.ObjectId;
   senderId: Types.ObjectId;
-  type: 'text' | 'image' | 'file' | 'voice' | 'system';
+  type: 'text' | 'image' | 'file' | 'voice' | 'system' | 'call';
   text: string | null;
+  callData: {
+    callType: 'audio' | 'video';
+    status: 'missed' | 'declined' | 'completed' | 'no-answer';
+    duration: number | null; // seconds
+    callerId: Types.ObjectId;
+  } | null;
   encryptedPayload: Buffer | null;
   iv: Buffer | null;
   senderRatchetKey: Buffer | null;
@@ -34,8 +40,17 @@ const messageSchema = new Schema<IMessage>(
   {
     conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true, index: true },
     senderId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    type: { type: String, enum: ['text', 'image', 'file', 'voice', 'system'], default: 'text' },
+    type: { type: String, enum: ['text', 'image', 'file', 'voice', 'system', 'call'], default: 'text' },
     text: { type: String, default: null },
+    callData: {
+      type: {
+        callType: { type: String, enum: ['audio', 'video'] },
+        status: { type: String, enum: ['missed', 'declined', 'completed', 'no-answer'] },
+        duration: { type: Number, default: null },
+        callerId: { type: Schema.Types.ObjectId, ref: 'User' },
+      },
+      default: null,
+    },
     encryptedPayload: { type: Buffer, default: null },
     iv: { type: Buffer, default: null },
     senderRatchetKey: { type: Buffer, default: null },

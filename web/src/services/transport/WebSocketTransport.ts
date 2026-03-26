@@ -174,9 +174,12 @@ class WebSocketTransport {
           encrypted,
           status: data.status || 'sent',
           createdAt: data.createdAt,
+          callData: data.callData || null,
         };
         store.addMessage(data.conversationId, msg);
-        const lastText = encrypted ? (text || 'Зашифрованное сообщение') : (hasAttachments ? (text || '📎 Файл') : (text || ''));
+        const lastText = data.type === 'call'
+          ? (data.callData?.callType === 'video' ? '📹 Видеозвонок' : '📞 Звонок')
+          : encrypted ? (text || 'Зашифрованное сообщение') : (hasAttachments ? (text || '📎 Файл') : (text || ''));
         store.updateLastMessage(data.conversationId, {
           text: lastText,
           senderId: msg.senderId,

@@ -9,6 +9,7 @@ import { wsTransport } from '../services/transport/WebSocketTransport';
 import { keyManager } from '../services/crypto';
 import { requestNotificationPermission, onForegroundMessage } from '../services/firebase';
 import { CallOverlay } from '../components/CallOverlay';
+import { callManager } from '../services/webrtc/CallManager';
 
 export function ChatPage() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
@@ -53,6 +54,17 @@ export function ChatPage() {
       }
     });
 
+    // Listen for SW messages (notification action buttons)
+    const handleSWMessage = (event: MessageEvent) => {
+      const { type } = event.data || {};
+      if (type === 'call:accept') {
+        callManager.acceptCall();
+      } else if (type === 'call:decline') {
+        callManager.declineCall();
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handleSWMessage);
+
     // Reload conversations when app returns to foreground
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -68,6 +80,7 @@ export function ChatPage() {
     return () => {
       wsTransport.disconnect();
       document.removeEventListener('visibilitychange', handleVisibility);
+      navigator.serviceWorker?.removeEventListener('message', handleSWMessage);
     };
   }, [setConversations]);
 

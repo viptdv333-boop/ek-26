@@ -29,8 +29,8 @@ self.addEventListener('push', (event) => {
       requireInteraction: true,
       vibrate: [800, 400, 800, 400, 800, 400],
       actions: [
-        { action: 'accept', title: '✓ Принять' },
-        { action: 'decline', title: '✕ Отклонить' },
+        { action: 'accept', title: '🟢 Принять' },
+        { action: 'decline', title: '🔴 Отклонить' },
       ],
       silent: false,
     };
@@ -124,7 +124,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // ── PWA caching ─────────────────────────────────────────────────
-const CACHE_NAME = 'fomo-chat-v6';
+const CACHE_NAME = 'fomo-chat-v7';
 const STATIC_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {

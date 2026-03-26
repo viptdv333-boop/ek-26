@@ -70,7 +70,7 @@ export function ProfileModal({ onClose }: Props) {
         status: (updated as any).status,
       });
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setTimeout(() => onClose(), 1200);
     } catch (err: any) {
       alert(err.message || t('settings.saveError'));
     } finally {

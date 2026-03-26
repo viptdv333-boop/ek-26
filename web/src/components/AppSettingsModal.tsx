@@ -536,6 +536,14 @@ export function AppSettingsModal({ onClose }: Props) {
           <div className="flex-1 overflow-y-auto px-6 py-5">
             {renderContent()}
           </div>
+          <div className="px-6 py-3 border-t border-dark-500 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-8 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl transition-colors"
+            >
+              OK
+            </button>
+          </div>
         </div>
       </div>
     </div>

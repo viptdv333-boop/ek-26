@@ -16,7 +16,7 @@ const WALLPAPER_PRESETS = [
   { id: 'gradient-sunset', labelKey: 'wallpaper.sunset', gradient: 'linear-gradient(135deg, #1a0f2e, #2d1b0f)' },
 ];
 
-type Section = 'language' | 'appearance' | 'devices' | 'widget' | 'faq' | 'about';
+type Section = 'language' | 'appearance' | 'notifications' | 'devices' | 'widget' | 'faq' | 'about';
 
 const LANGUAGES = [
   { code: 'ru' as const, label: 'Русский', flag: 'https://flagcdn.com/w40/ru.png' },
@@ -45,6 +45,12 @@ export function AppSettingsModal({ onClose }: Props) {
   const [wallpaperUploading, setWallpaperUploading] = useState(false);
   // Widget
   const [headerWidget, setHeaderWidget] = useState(() => localStorage.getItem('ek26_header_widget') || 'weather');
+
+  // Notifications
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => localStorage.getItem('ek26_notifications') !== 'false');
+  const [messageSound, setMessageSound] = useState(() => localStorage.getItem('ek26_msg_sound') || 'default');
+  const [callSound, setCallSound] = useState(() => localStorage.getItem('ek26_call_sound') || 'default');
+  const [vibrationEnabled, setVibrationEnabled] = useState(() => localStorage.getItem('ek26_vibration') !== 'false');
 
   // --- Handlers (identical to SettingsModal) ---
 
@@ -134,6 +140,15 @@ export function AppSettingsModal({ onClose }: Props) {
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'notifications',
+      labelKey: 'appSettings.notifications',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
         </svg>
       ),
     },
@@ -463,6 +478,106 @@ export function AppSettingsModal({ onClose }: Props) {
     return '📟';
   };
 
+  const renderNotificationsSection = () => (
+    <div className="space-y-6">
+      {/* Notifications toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-white">Уведомления</p>
+          <p className="text-xs text-gray-500">Push-уведомления о сообщениях и звонках</p>
+        </div>
+        <button
+          onClick={() => {
+            const next = !notificationsEnabled;
+            setNotificationsEnabled(next);
+            localStorage.setItem('ek26_notifications', next ? 'true' : 'false');
+          }}
+          className={`relative w-11 h-6 rounded-full transition-colors ${notificationsEnabled ? 'bg-accent' : 'bg-dark-500'}`}
+        >
+          <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${notificationsEnabled ? 'left-[22px]' : 'left-0.5'}`} />
+        </button>
+      </div>
+
+      {/* Message sound */}
+      <div>
+        <label className="block text-sm font-medium text-gray-400 mb-2">Звук сообщения</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { id: 'default', label: 'Стандартный' },
+            { id: 'chime', label: 'Перезвон' },
+            { id: 'pop', label: 'Поп' },
+            { id: 'ding', label: 'Динь' },
+            { id: 'bubble', label: 'Пузырь' },
+            { id: 'none', label: 'Без звука' },
+          ].map((s) => (
+            <button
+              key={s.id}
+              onClick={() => {
+                setMessageSound(s.id);
+                localStorage.setItem('ek26_msg_sound', s.id);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                messageSound === s.id
+                  ? 'bg-accent text-white'
+                  : 'bg-dark-600 text-gray-300 hover:bg-dark-500'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Call ringtone */}
+      <div>
+        <label className="block text-sm font-medium text-gray-400 mb-2">Мелодия звонка</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { id: 'default', label: 'Стандартная' },
+            { id: 'classic', label: 'Классика' },
+            { id: 'digital', label: 'Цифровая' },
+            { id: 'soft', label: 'Мягкая' },
+            { id: 'urgent', label: 'Срочная' },
+            { id: 'none', label: 'Без звука' },
+          ].map((s) => (
+            <button
+              key={s.id}
+              onClick={() => {
+                setCallSound(s.id);
+                localStorage.setItem('ek26_call_sound', s.id);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                callSound === s.id
+                  ? 'bg-accent text-white'
+                  : 'bg-dark-600 text-gray-300 hover:bg-dark-500'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Vibration toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-white">Вибрация</p>
+          <p className="text-xs text-gray-500">Вибрация при входящих</p>
+        </div>
+        <button
+          onClick={() => {
+            const next = !vibrationEnabled;
+            setVibrationEnabled(next);
+            localStorage.setItem('ek26_vibration', next ? 'true' : 'false');
+          }}
+          className={`relative w-11 h-6 rounded-full transition-colors ${vibrationEnabled ? 'bg-accent' : 'bg-dark-500'}`}
+        >
+          <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${vibrationEnabled ? 'left-[22px]' : 'left-0.5'}`} />
+        </button>
+      </div>
+    </div>
+  );
+
   const renderDevicesSection = () => (
     <div className="space-y-3">
       {sessionsLoading ? (
@@ -553,6 +668,7 @@ export function AppSettingsModal({ onClose }: Props) {
     switch (activeSection) {
       case 'language': return renderLanguageSection();
       case 'appearance': return renderAppearanceSection();
+      case 'notifications': return renderNotificationsSection();
       case 'devices': return renderDevicesSection();
       case 'widget': return renderWidgetSection();
       case 'faq': return renderFaqSection();

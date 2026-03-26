@@ -285,28 +285,28 @@ async function handleEvent(
       client.ws.send(JSON.stringify({ event: 'message:sent', data: messageData }));
 
       // Broadcast to other participants (also send conversation data for new chats)
-      const conv = await Conversation.findById(conversationId)
+      const convFull = await Conversation.findById(conversationId)
         .populate('participants', 'displayName avatarUrl')
         .lean();
-      if (conv) {
+      if (convFull) {
         const lastMessageText = (messageData.text as string) || (isEncrypted ? 'Сообщение' : '');
         const convData = {
-          id: conv._id.toString(),
-          type: conv.type,
-          participants: (conv.participants as any[]).map((p: any) => ({
+          id: convFull._id.toString(),
+          type: convFull.type,
+          participants: (convFull.participants as any[]).map((p: any) => ({
             id: p._id.toString(),
             displayName: p.displayName,
             avatarUrl: p.avatarUrl,
           })),
-          groupMeta: conv.groupMeta || null,
+          groupMeta: convFull.groupMeta || null,
           lastMessage: { text: lastMessageText, senderId: client.userId, createdAt: messageData.createdAt },
           unreadCount: 1,
-          createdAt: conv.createdAt.toISOString(),
+          createdAt: convFull.createdAt.toISOString(),
           updatedAt: new Date().toISOString(),
         };
 
         // Send conversation:new event to other participants so chat appears in their sidebar
-        for (const p of conv.participants as any[]) {
+        for (const p of convFull.participants as any[]) {
           const pid = p._id.toString();
           if (pid !== client.userId) {
             sendToUser(pid, 'conversation:new', convData);

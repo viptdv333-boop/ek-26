@@ -190,7 +190,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
   return (
     <>
       <div
-        className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-1.5 relative`}
+        className={`flex ${isMine ? 'flex-row-reverse' : 'flex-row'} group items-end gap-1.5 relative`}
         onContextMenu={handleContextMenu}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -198,7 +198,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       >
         {!isMine && renderAvatar()}
 
-        <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
+        <div className={`min-w-[40%] max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
           {/* SVG bubble background — organic shapes with integrated tails */}
           <svg
             className="absolute inset-0 w-full h-full"

@@ -198,41 +198,38 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       >
         {!isMine && renderAvatar()}
 
-        <div className={`min-w-[40%] max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
-          {/* SVG bubble background — organic shapes with integrated tails */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            viewBox="0 0 200 120"
-            preserveAspectRatio="none"
-            style={{ zIndex: 0 }}
-          >
-            <path d={
-              bubbleShape === 'rounded' ? (
-                isMine
-                  ? "M 12,3 L 188,3 C 194,3 199,8 199,14 L 199,78 C 199,84 194,89 188,89 L 170,89 L 180,114 L 150,89 L 12,89 C 6,89 1,84 1,78 L 1,14 C 1,8 6,3 12,3 Z"
-                  : "M 12,3 L 188,3 C 194,3 199,8 199,14 L 199,78 C 199,84 194,89 188,89 L 50,89 L 20,114 L 30,89 L 12,89 C 6,89 1,84 1,78 L 1,14 C 1,8 6,3 12,3 Z"
-              ) : bubbleShape === 'burst' ? (
-                isMine
-                  ? "M 100,2 L 120,18 L 145,4 L 142,28 L 170,22 L 158,44 L 190,48 L 162,62 L 185,80 L 155,78 L 165,100 L 140,88 L 135,108 L 115,92 L 100,110 L 85,92 L 65,108 L 60,88 L 35,100 L 45,78 L 15,80 L 38,62 L 10,48 L 42,44 L 30,22 L 58,28 L 55,4 L 80,18 Z"
-                  : "M 100,2 L 120,18 L 145,4 L 142,28 L 170,22 L 158,44 L 190,48 L 162,62 L 185,80 L 155,78 L 165,100 L 140,88 L 135,108 L 115,92 L 100,110 L 85,92 L 65,108 L 60,88 L 35,100 L 45,78 L 15,80 L 38,62 L 10,48 L 42,44 L 30,22 L 58,28 L 55,4 L 80,18 Z"
-              ) : (
-                isMine
-                  ? "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z"
-                  : "M 28,10 C 55,-4 140,-4 165,8 C 198,20 202,50 194,70 C 200,83 192,89 175,91 L 55,93 Q 45,100 26,114 Q 30,105 42,91 L 28,91 C 8,89 -2,76 4,58 C -2,42 2,20 28,10 Z"
-              )
-            } fill={isMine ? bubbleColor : bubbleColorOther} />
-          </svg>
+        <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
+          {/* CSS bubble */}
           <div
-            className="relative overflow-hidden"
+            className="relative px-3 py-2 overflow-hidden"
             style={{
-              zIndex: 1,
-              padding: bubbleShape === 'cloud'
-                ? '14px 22px 24px 22px'
+              backgroundColor: isMine ? bubbleColor : bubbleColorOther,
+              borderRadius: bubbleShape === 'cloud'
+                ? '18px'
                 : bubbleShape === 'burst'
-                  ? '18px 26px 28px 26px'
-                  : '10px 16px 22px 16px',
+                  ? '2px'
+                  : '12px',
+              ...(bubbleShape === 'burst' ? {
+                clipPath: 'polygon(0% 8%, 4% 0%, 10% 10%, 18% 2%, 24% 12%, 32% 0%, 38% 8%, 50% 0%, 62% 8%, 68% 0%, 76% 12%, 82% 2%, 90% 10%, 96% 0%, 100% 8%, 98% 20%, 100% 32%, 96% 42%, 100% 52%, 98% 62%, 100% 72%, 96% 82%, 100% 92%, 96% 100%, 88% 94%, 80% 100%, 72% 94%, 64% 100%, 56% 94%, 50% 100%, 44% 94%, 36% 100%, 28% 94%, 20% 100%, 12% 94%, 4% 100%, 0% 92%, 4% 82%, 0% 72%, 4% 62%, 0% 52%, 4% 42%, 0% 32%, 4% 20%)',
+                padding: '14px 16px',
+              } : {}),
             }}
           >
+            {/* Tail */}
+            {bubbleShape !== 'burst' && (
+              <div
+                className="absolute bottom-0"
+                style={{
+                  [isMine ? 'right' : 'left']: '-6px',
+                  width: 0, height: 0,
+                  borderStyle: 'solid',
+                  borderWidth: isMine ? '0 0 12px 12px' : '0 12px 12px 0',
+                  borderColor: isMine
+                    ? `transparent transparent ${bubbleColor} transparent`
+                    : `transparent transparent ${bubbleColorOther} transparent`,
+                }}
+              />
+            )}
           {showSender && !isMine && message.senderName && (
             <p className="text-xs font-medium text-accent mb-0.5">{message.senderName}</p>
           )}
@@ -286,7 +283,6 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           </div>
         </div>
         </div>
-
         {/* Reaction bar removed — reactions now in context menu */}
 
         {isMine && myAvatarUrl && showAvatar && (

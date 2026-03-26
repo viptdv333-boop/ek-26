@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { uploadFile } from '../services/api/upload';
 import { useTranslation } from '../i18n';
+import { previewMessageSound, previewCallSound, uploadCustomSound, hasCustomSound, removeCustomSound } from '../services/sounds';
 
 interface Props {
   onClose: () => void;
@@ -478,6 +479,10 @@ export function AppSettingsModal({ onClose }: Props) {
     return '📟';
   };
 
+  const [callPreviewStop, setCallPreviewStop] = useState<(() => void) | null>(null);
+  const [hasCustomMsg, setHasCustomMsg] = useState(() => hasCustomSound('msg'));
+  const [hasCustomCall, setHasCustomCall] = useState(() => hasCustomSound('call'));
+
   const renderNotificationsSection = () => (
     <div className="space-y-6">
       {/* Notifications toggle */}
@@ -509,12 +514,14 @@ export function AppSettingsModal({ onClose }: Props) {
             { id: 'ding', label: 'Динь' },
             { id: 'bubble', label: 'Пузырь' },
             { id: 'none', label: 'Без звука' },
+            ...(hasCustomMsg ? [{ id: 'custom', label: 'Своя' }] : []),
           ].map((s) => (
             <button
               key={s.id}
               onClick={() => {
                 setMessageSound(s.id);
                 localStorage.setItem('ek26_msg_sound', s.id);
+                previewMessageSound(s.id);
               }}
               className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                 messageSound === s.id
@@ -526,6 +533,26 @@ export function AppSettingsModal({ onClose }: Props) {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => {
+            uploadCustomSound('msg').then(() => {
+              setHasCustomMsg(true);
+              setMessageSound('custom');
+              localStorage.setItem('ek26_msg_sound', 'custom');
+            }).catch((e) => alert(e));
+          }}
+          className="mt-2 text-xs text-accent hover:text-accent/80 transition-colors"
+        >
+          + Загрузить свою мелодию
+        </button>
+        {hasCustomMsg && messageSound === 'custom' && (
+          <button
+            onClick={() => { removeCustomSound('msg'); setHasCustomMsg(false); setMessageSound('default'); localStorage.setItem('ek26_msg_sound', 'default'); }}
+            className="ml-3 text-xs text-red-400 hover:text-red-300 transition-colors"
+          >
+            Удалить
+          </button>
+        )}
       </div>
 
       {/* Call ringtone */}
@@ -539,12 +566,17 @@ export function AppSettingsModal({ onClose }: Props) {
             { id: 'soft', label: 'Мягкая' },
             { id: 'urgent', label: 'Срочная' },
             { id: 'none', label: 'Без звука' },
+            ...(hasCustomCall ? [{ id: 'custom', label: 'Своя' }] : []),
           ].map((s) => (
             <button
               key={s.id}
               onClick={() => {
+                // Stop previous preview
+                callPreviewStop?.();
                 setCallSound(s.id);
                 localStorage.setItem('ek26_call_sound', s.id);
+                const stop = previewCallSound(s.id);
+                setCallPreviewStop(() => stop);
               }}
               className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                 callSound === s.id
@@ -556,6 +588,26 @@ export function AppSettingsModal({ onClose }: Props) {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => {
+            uploadCustomSound('call').then(() => {
+              setHasCustomCall(true);
+              setCallSound('custom');
+              localStorage.setItem('ek26_call_sound', 'custom');
+            }).catch((e) => alert(e));
+          }}
+          className="mt-2 text-xs text-accent hover:text-accent/80 transition-colors"
+        >
+          + Загрузить свою мелодию
+        </button>
+        {hasCustomCall && callSound === 'custom' && (
+          <button
+            onClick={() => { removeCustomSound('call'); setHasCustomCall(false); setCallSound('default'); localStorage.setItem('ek26_call_sound', 'default'); }}
+            className="ml-3 text-xs text-red-400 hover:text-red-300 transition-colors"
+          >
+            Удалить
+          </button>
+        )}
       </div>
 
       {/* Vibration toggle */}

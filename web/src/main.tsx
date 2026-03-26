@@ -18,9 +18,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Register unified service worker (PWA + Firebase push)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(() => {});
-  });
-}
+// Service worker registered in firebase.ts — no duplicate registration here

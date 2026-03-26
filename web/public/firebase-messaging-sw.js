@@ -1,32 +1,33 @@
-importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging-compat.js');
+// ── Push notification handler (no Firebase SDK needed in SW) ─────
+// Firebase client SDK handles token registration.
+// The SW only needs to handle 'push' and 'notificationclick' events.
 
-firebase.initializeApp({
-  apiKey: "AIzaSyCYcIFLm2y1tNZIn18TUUL5mrPJPh2kcgk",
-  authDomain: "fomo-chat-665e9.firebaseapp.com",
-  projectId: "fomo-chat-665e9",
-  storageBucket: "fomo-chat-665e9.firebasestorage.app",
-  messagingSenderId: "1041371304955",
-  appId: "1:1041371304955:web:dd695c9b8fead067ad315e",
-});
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data?.json() || {};
+  } catch {
+    try { data = { body: event.data?.text() }; } catch {}
+  }
 
-const messaging = firebase.messaging();
+  // FCM wraps data in notification or data fields
+  const notification = data.notification || {};
+  const fcmData = data.data || {};
 
-// ── Push notification handler ──────────────────────────────────
-messaging.onBackgroundMessage((payload) => {
-  const data = payload.data || {};
-  const title = data.title || 'FOMO Chat';
-  const body = data.body || 'Новое сообщение';
+  const title = notification.title || fcmData.title || 'FOMO Chat';
+  const body = notification.body || fcmData.body || 'Новое сообщение';
 
-  self.registration.showNotification(title, {
-    body: body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    data: data,
-    tag: data.conversationId || 'default',
-    renotify: true,
-    vibrate: [200, 100, 200],
-  });
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: fcmData,
+      tag: fcmData.conversationId || 'default',
+      renotify: true,
+      vibrate: [200, 100, 200],
+    })
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {
@@ -46,9 +47,9 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// ── PWA caching (merged from sw.js) ───────────────────────────
-const CACHE_NAME = 'fomo-chat-v2';
-const STATIC_ASSETS = ['/', '/logo-fomo.png'];
+// ── PWA caching ─────────────────────────────────────────────────
+const CACHE_NAME = 'fomo-chat-v3';
+const STATIC_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

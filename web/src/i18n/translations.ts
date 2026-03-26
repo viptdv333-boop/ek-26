@@ -192,6 +192,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.loading': 'Загрузка...',
     'appSettings.noSessions': 'Нет активных сессий',
     'appSettings.terminateSession': 'Завершить',
+    'appSettings.currentDevice': 'текущее',
 
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': 'Перевести',
@@ -568,6 +569,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.loading': 'Loading...',
     'appSettings.noSessions': 'No active sessions',
     'appSettings.terminateSession': 'Terminate',
+    'appSettings.currentDevice': 'current',
 
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': 'Translate',
@@ -944,6 +946,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'appSettings.loading': '\u52A0\u8F7D\u4E2D...',
     'appSettings.noSessions': '\u6CA1\u6709\u6D3B\u52A8\u4F1A\u8BDD',
     'appSettings.terminateSession': '\u7EC8\u6B62',
+    'appSettings.currentDevice': '\u5F53\u524D',
 
     // ── Translate ───────────────────────────────────────────────────
     'menu.translate': '\u7FFB\u8BD1',

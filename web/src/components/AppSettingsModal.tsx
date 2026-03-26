@@ -481,7 +481,10 @@ export function AppSettingsModal({ onClose }: Props) {
           <div key={s.id} className="flex items-center gap-3 p-3 bg-dark-600 rounded-xl">
             <span className="text-2xl">{deviceIcon(s.deviceName)}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white font-medium">{s.deviceName}</p>
+              <p className="text-sm text-white font-medium">
+                {s.deviceName}
+                {s.isCurrent && <span className="text-accent text-xs ml-1.5">({t('appSettings.currentDevice')})</span>}
+              </p>
               <p className="text-xs text-gray-400">
                 {s.ip && `${s.ip} · `}
                 {s.lastActiveAt && !isNaN(new Date(s.lastActiveAt).getTime())
@@ -491,13 +494,15 @@ export function AppSettingsModal({ onClose }: Props) {
                     : ''}
               </p>
             </div>
-            <button
-              onClick={() => terminateSession(s.id)}
-              disabled={terminatingId === s.id}
-              className="px-3 py-1.5 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors disabled:opacity-50"
-            >
-              {terminatingId === s.id ? '...' : t('appSettings.terminateSession')}
-            </button>
+            {!s.isCurrent && (
+              <button
+                onClick={() => terminateSession(s.id)}
+                disabled={terminatingId === s.id}
+                className="px-3 py-1.5 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {terminatingId === s.id ? '...' : t('appSettings.terminateSession')}
+              </button>
+            )}
           </div>
         ))
       )}

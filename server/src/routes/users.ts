@@ -1,6 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { User } from '../models/User';
 
+function getDevicePlatform(ua: string): string {
+  if (/Android/i.test(ua)) return 'Android';
+  if (/iPhone|iPad/i.test(ua)) return 'iOS';
+  if (/Windows/i.test(ua)) return 'Windows';
+  if (/Macintosh/i.test(ua)) return 'macOS';
+  if (/Linux/i.test(ua)) return 'Linux';
+  return 'Unknown';
+}
+
 export async function userRoutes(app: FastifyInstance) {
   // Get current user profile
   app.get('/api/users/me', { preHandler: [app.authenticate] }, async (request) => {
@@ -142,15 +151,23 @@ export async function userRoutes(app: FastifyInstance) {
       .select('deviceId deviceName ip lastActiveAt createdAt')
       .lean();
 
-    return sessions.map(s => ({
-      id: s._id.toString(),
-      deviceId: s.deviceId,
-      deviceName: s.deviceName || 'Unknown device',
-      ip: s.ip || '',
-      lastActiveAt: s.lastActiveAt,
-      createdAt: s.createdAt,
-      isCurrent: false, // Will be determined by client comparing deviceId
-    }));
+    const requestIp = ((request.headers as any)['x-real-ip'] || (request.headers as any)['x-forwarded-for'] || request.ip || '').split(',')[0].trim();
+    const ua = (request.headers as any)['user-agent'] || '';
+
+    return sessions.map((s, i) => {
+      // Match current session: same IP prefix in stored ip field + same device type
+      const storedIp = (s.ip || '').split(' ·')[0].trim();
+      const isCurrent = storedIp === requestIp && (s.deviceName || '').split(' ')[0] === getDevicePlatform(ua);
+      return {
+        id: s._id.toString(),
+        deviceId: s.deviceId,
+        deviceName: s.deviceName || 'Unknown device',
+        ip: s.ip || '',
+        lastActiveAt: s.lastActiveAt,
+        createdAt: s.createdAt,
+        isCurrent: isCurrent || (i === 0 && !sessions.some((ss, j) => j !== i && (ss.ip || '').startsWith(requestIp))),
+      };
+    });
   });
 
   app.delete('/api/users/me/sessions/:sessionId', { preHandler: [app.authenticate] }, async (request, reply) => {

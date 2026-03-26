@@ -176,6 +176,9 @@ async function handleEvent(
   event: string,
   data: any
 ) {
+  if (event.startsWith('call:')) {
+    console.log(`[WS] Event: ${event} from user ${client.userId}`);
+  }
   switch (event) {
     case 'message:send': {
       const { conversationId, text, type = 'text', replyToId, attachments, forwardedFrom } = data;
@@ -372,6 +375,7 @@ async function handleEvent(
 
     case 'call:offer': {
       const { targetUserId, callId, type, offer } = data;
+      console.log(`[Call] Incoming call from ${client.userId} to ${targetUserId}, type=${type}`);
       const caller = await User.findById(client.userId).select('displayName avatarUrl').lean();
       const callerName = caller?.displayName || 'Пользователь';
       sendToUser(targetUserId, 'call:incoming', {
@@ -383,6 +387,7 @@ async function handleEvent(
         offer,
       });
       // Send push notification for incoming call (wakes up PWA in background)
+      console.log(`[Call] Sending push to ${targetUserId}`);
       sendPushNotification(targetUserId, {
         title: callerName,
         body: type === 'video' ? 'Видеозвонок...' : 'Аудиозвонок...',

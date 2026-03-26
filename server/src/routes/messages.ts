@@ -75,6 +75,7 @@ export async function messageRoutes(app: FastifyInstance) {
         replyTo,
         forwardedFrom: (m as any).forwardedFrom || null,
         reactions: (m.reactions || []).map((r: any) => ({ emoji: r.emoji, userId: r.userId.toString() })),
+        callData: (m as any).callData || null,
         status: m.status,
         deliveredVia: m.deliveredVia,
         createdAt: m.createdAt.toISOString(),

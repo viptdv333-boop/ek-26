@@ -19,13 +19,24 @@ function getDeviceInfo(request: any): { deviceName: string; ip: string } {
   else if (/Windows/i.test(ua)) deviceName = 'Windows';
   else if (/Macintosh/i.test(ua)) deviceName = 'macOS';
   else if (/Linux/i.test(ua)) deviceName = 'Linux';
-  // Add browser
   if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) deviceName += ' Chrome';
   else if (/Firefox/i.test(ua)) deviceName += ' Firefox';
   else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) deviceName += ' Safari';
   else if (/Edg/i.test(ua)) deviceName += ' Edge';
   const ip = (request.headers['x-real-ip'] || request.headers['x-forwarded-for'] || request.ip || '').split(',')[0].trim();
   return { deviceName, ip };
+}
+
+// Async GeoIP lookup — enriches session with city after creation
+async function enrichSessionGeo(sessionId: string, ip: string) {
+  if (!ip || ip === '127.0.0.1' || ip.startsWith('172.') || ip.startsWith('10.') || ip.startsWith('192.168.')) return;
+  try {
+    const res = await fetch(`http://ip-api.com/json/${ip}?fields=city,country&lang=ru`);
+    const data = await res.json() as any;
+    if (data.city) {
+      await Session.findByIdAndUpdate(sessionId, { ip: `${ip} · ${data.city}, ${data.country}` });
+    }
+  } catch {}
 }
 
 export async function authRoutes(app: FastifyInstance) {
@@ -189,12 +200,16 @@ export async function authRoutes(app: FastifyInstance) {
       const accessToken = await signAccessToken(userId, user.phone || '');
       const refreshToken = await signRefreshToken(userId);
 
+      { const di = getDeviceInfo(request);
       await Session.create({
         userId: user._id,
         deviceId: crypto.randomUUID(),
         refreshTokenHash: hashToken(refreshToken),
+        deviceName: di.deviceName,
+        ip: di.ip,
+        lastActiveAt: new Date(),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
-      });
+      }); enrichSessionGeo((await Session.findOne({ userId: user._id }).sort({ createdAt: -1 }))?._id?.toString() || '', di.ip); }
 
       return {
         accessToken,
@@ -495,12 +510,16 @@ export async function authRoutes(app: FastifyInstance) {
     const accessToken = await signAccessToken(userId, user.phone || '');
     const refreshToken = await signRefreshToken(userId);
 
+    { const di = getDeviceInfo(request);
     await Session.create({
       userId: user._id,
       deviceId: crypto.randomUUID(),
       refreshTokenHash: hashToken(refreshToken),
+      deviceName: di.deviceName,
+      ip: di.ip,
+      lastActiveAt: new Date(),
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
-    });
+    }); }
 
     return {
       accessToken,
@@ -564,12 +583,16 @@ export async function authRoutes(app: FastifyInstance) {
       const accessToken = await signAccessToken(userId, user.phone || '');
       const refreshToken = await signRefreshToken(userId);
 
+      { const di = getDeviceInfo(request);
       await Session.create({
         userId: user._id,
         deviceId: crypto.randomUUID(),
         refreshTokenHash: hashToken(refreshToken),
+        deviceName: di.deviceName,
+        ip: di.ip,
+        lastActiveAt: new Date(),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
-      });
+      }); }
 
       const html = `<!DOCTYPE html>
 <html lang="ru">
@@ -633,12 +656,16 @@ export async function authRoutes(app: FastifyInstance) {
     const accessToken = await signAccessToken(userId, user.phone || '');
     const refreshToken = await signRefreshToken(userId);
 
+    { const di = getDeviceInfo(request);
     await Session.create({
       userId: user._id,
       deviceId: crypto.randomUUID(),
       refreshTokenHash: hashToken(refreshToken),
+      deviceName: di.deviceName,
+      ip: di.ip,
+      lastActiveAt: new Date(),
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
-    });
+    }); }
 
     return {
       accessToken,

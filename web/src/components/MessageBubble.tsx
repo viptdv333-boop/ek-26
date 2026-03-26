@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { formatFileSize, isImageFile, isVideoFile } from '../services/api/upload';
 import { MessageContextMenu } from './MessageContextMenu';
 import { ImageLightbox } from './ImageLightbox';
@@ -66,7 +66,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
   const { t, lang, locale } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);
-  const [showReactionBar, setShowReactionBar] = useState(false);
+  // showReactionBar removed — reactions now in context menu
   const [translatedText, setTranslatedText] = useState<string | null>(() => translatedCache.get(message.id) || null);
   const [translating, setTranslating] = useState(false);
   const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🔥','👎','🎉'];
@@ -143,9 +143,24 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
   const hasAttachments = message.attachments && message.attachments.length > 0;
   const avatarUrl = isMine ? myAvatarUrl : message.senderAvatarUrl;
 
-  const handleContextMenu = (e: React.MouseEvent) => {
+  const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY });
+    if ('clientX' in e) {
+      setContextMenu({ x: e.clientX, y: e.clientY });
+    } else if (e.touches?.length) {
+      setContextMenu({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    }
+  };
+
+  // Long-press for touch devices
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    longPressRef.current = setTimeout(() => {
+      handleContextMenu(e);
+    }, 500);
+  };
+  const handleTouchEnd = () => {
+    if (longPressRef.current) clearTimeout(longPressRef.current);
   };
 
   const getContextMenuItems = () => {
@@ -177,8 +192,9 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       <div
         className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-1.5 relative`}
         onContextMenu={handleContextMenu}
-        onMouseEnter={() => setShowReactionBar(true)}
-        onMouseLeave={() => setShowReactionBar(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchEnd}
       >
         {!isMine && renderAvatar()}
 
@@ -271,20 +287,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
         </div>
         </div>
 
-        {/* Reaction bar on hover */}
-        {showReactionBar && onReact && (
-          <div className={`absolute ${isMine ? 'right-8' : 'left-8'} -top-8 flex gap-0.5 bg-dark-700 border border-dark-500 rounded-full px-1.5 py-0.5 shadow-lg z-10`}>
-            {REACTION_EMOJIS.map(emoji => (
-              <button
-                key={emoji}
-                onClick={(e) => { e.stopPropagation(); onReact(message, emoji); }}
-                className="w-7 h-7 flex items-center justify-center text-sm hover:scale-125 transition-transform rounded-full hover:bg-dark-500"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Reaction bar removed — reactions now in context menu */}
 
         {isMine && myAvatarUrl && showAvatar && (
           <img src={myAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
@@ -322,6 +325,8 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           y={contextMenu.y}
           items={getContextMenuItems()}
           onClose={() => setContextMenu(null)}
+          reactions={onReact ? REACTION_EMOJIS : undefined}
+          onReact={onReact ? (emoji) => onReact(message, emoji) : undefined}
         />
       )}
 

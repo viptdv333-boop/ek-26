@@ -10,6 +10,8 @@ interface Props {
   y: number;
   items: MenuItem[];
   onClose: () => void;
+  reactions?: string[];
+  onReact?: (emoji: string) => void;
 }
 
 const ICONS: Record<string, JSX.Element> = {
@@ -24,12 +26,11 @@ const ICONS: Record<string, JSX.Element> = {
   block: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />,
 };
 
-export function MessageContextMenu({ x, y, items, onClose }: Props) {
-  // Adjust position to stay within viewport
+export function MessageContextMenu({ x, y, items, onClose, reactions, onReact }: Props) {
   const menuWidth = 200;
-  const menuHeight = items.length * 40;
+  const menuHeight = (reactions ? 44 : 0) + items.length * 40;
   const adjustedX = Math.min(x, window.innerWidth - menuWidth - 10);
-  const adjustedY = Math.min(y, window.innerHeight - menuHeight - 10);
+  const adjustedY = Math.min(Math.max(y, 10), window.innerHeight - menuHeight - 10);
 
   return (
     <div className="fixed inset-0 z-40" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }}>
@@ -38,6 +39,19 @@ export function MessageContextMenu({ x, y, items, onClose }: Props) {
         style={{ left: adjustedX, top: adjustedY }}
         onClick={(e) => e.stopPropagation()}
       >
+        {reactions && onReact && (
+          <div className="flex gap-0.5 px-2 py-1.5 border-b border-dark-500">
+            {reactions.map(emoji => (
+              <button
+                key={emoji}
+                onClick={() => { onReact(emoji); onClose(); }}
+                className="w-7 h-7 flex items-center justify-center text-sm hover:scale-125 transition-transform rounded-full hover:bg-dark-500"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
         {items.map((item, i) => (
           <button
             key={i}

@@ -98,6 +98,13 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
     handleTranslate();
   }, [message.id, autoTranslateOn]);
 
+  const detectLang = (text: string): string => {
+    if (/[\u4E00-\u9FFF]/.test(text)) return 'кит.';
+    if (/[\u0400-\u04FF]/.test(text)) return 'рус.';
+    if (/[a-zA-Z]/.test(text)) return 'англ.';
+    return '';
+  };
+
   const handleTranslate = async () => {
     if (!message.text) return;
     if (translatedCache.has(message.id)) {
@@ -106,10 +113,12 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
     }
     setTranslating(true);
     try {
+      const sourceLang = detectLang(message.text);
       const res = await translateApi.translate(message.text, lang);
       const translated = (res as any).translated || message.text;
-      translatedCache.set(message.id, translated);
-      setTranslatedText(translated);
+      const withLang = sourceLang ? `${translated} (${sourceLang})` : translated;
+      translatedCache.set(message.id, withLang);
+      setTranslatedText(withLang);
     } catch {
       // silently fail
     } finally {
@@ -182,10 +191,10 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
             style={{ zIndex: 0 }}
           >
             <path d={
-              bubbleShape === 'oval' ? (
+              bubbleShape === 'rounded' ? (
                 isMine
-                  ? "M 100,5 C 155,5 198,22 198,48 C 198,74 155,91 100,91 C 75,91 53,86 38,78 L 180,114 L 168,80 C 188,71 198,60 198,48 C 155,91 100,91 100,5 Z M 100,5 C 155,5 198,22 198,48 C 198,74 155,91 100,91 C 45,91 2,74 2,48 C 2,22 45,5 100,5 Z"
-                  : "M 100,5 C 155,5 198,22 198,48 C 198,74 155,91 100,91 C 45,91 2,74 2,48 C 2,22 45,5 100,5 Z"
+                  ? "M 12,3 L 188,3 C 194,3 199,8 199,14 L 199,78 C 199,84 194,89 188,89 L 170,89 L 180,114 L 150,89 L 12,89 C 6,89 1,84 1,78 L 1,14 C 1,8 6,3 12,3 Z"
+                  : "M 12,3 L 188,3 C 194,3 199,8 199,14 L 199,78 C 199,84 194,89 188,89 L 50,89 L 20,114 L 30,89 L 12,89 C 6,89 1,84 1,78 L 1,14 C 1,8 6,3 12,3 Z"
               ) : bubbleShape === 'burst' ? (
                 isMine
                   ? "M 100,2 L 120,18 L 145,4 L 142,28 L 170,22 L 158,44 L 190,48 L 162,62 L 185,80 L 155,78 L 165,100 L 140,88 L 135,108 L 115,92 L 100,110 L 85,92 L 65,108 L 60,88 L 35,100 L 45,78 L 15,80 L 38,62 L 10,48 L 42,44 L 30,22 L 58,28 L 55,4 L 80,18 Z"
@@ -205,9 +214,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
                 ? '14px 22px 24px 22px'
                 : bubbleShape === 'burst'
                   ? '18px 26px 28px 26px'
-                  : bubbleShape === 'oval'
-                    ? '16px 28px 26px 28px'
-                    : '10px 16px 22px 16px',
+                  : '10px 16px 22px 16px',
             }}
           >
           {showSender && !isMine && message.senderName && (

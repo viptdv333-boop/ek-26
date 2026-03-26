@@ -274,8 +274,8 @@ export function AppSettingsModal({ onClose }: Props) {
           {([
             { id: 'cloud', label: t('settings.bubbleCloud'),
               path: "M 35,10 C 60,-4 145,-4 172,8 C 198,20 202,42 196,58 C 202,76 192,89 172,91 L 158,91 Q 170,105 174,114 Q 155,100 145,93 C 115,96 50,96 25,87 C 2,76 -2,50 6,30 C 12,14 24,12 35,10 Z" },
-            { id: 'oval', label: t('settings.bubbleOval'),
-              path: "M 100,5 C 155,5 198,22 198,48 C 198,74 155,91 100,91 C 75,91 53,86 38,78 L 20,114 L 32,80 C 12,71 2,60 2,48 C 2,22 45,5 100,5 Z" },
+            { id: 'rounded', label: t('settings.bubbleRounded'),
+              path: "M 12,3 L 188,3 C 194,3 199,8 199,14 L 199,78 C 199,84 194,89 188,89 L 170,89 L 180,114 L 150,89 L 12,89 C 6,89 1,84 1,78 L 1,14 C 1,8 6,3 12,3 Z" },
             { id: 'burst', label: t('settings.bubbleBurst'),
               path: "M 100,2 L 120,18 L 145,4 L 142,28 L 170,22 L 158,44 L 190,48 L 162,62 L 185,80 L 155,78 L 165,100 L 140,88 L 135,108 L 115,92 L 100,110 L 85,92 L 65,108 L 60,88 L 35,100 L 45,78 L 15,80 L 38,62 L 10,48 L 42,44 L 30,22 L 58,28 L 55,4 L 80,18 Z" },
           ] as const).map((shape) => (

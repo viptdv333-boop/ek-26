@@ -11,7 +11,7 @@ import { MessageContextMenu } from './MessageContextMenu';
 import { useTranslation } from '../i18n';
 
 function WeatherWidget() {
-  const [weather, setWeather] = useState<{ temp: string; icon: string; desc: string } | null>(null);
+  const [weather, setWeather] = useState<{ temp: string; icon: string; desc: string; city: string } | null>(null);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -19,11 +19,11 @@ function WeatherWidget() {
         const res = await fetch('https://wttr.in/?format=j1');
         const data = await res.json();
         const current = data.current_condition?.[0];
+        const city = data.nearest_area?.[0]?.areaName?.[0]?.value || '';
         if (current) {
           const temp = current.temp_C;
           const code = parseInt(current.weatherCode);
           const desc = current.lang_ru?.[0]?.value || current.weatherDesc?.[0]?.value || '';
-          // Map weather code to emoji
           let icon = '☀️';
           if (code >= 200 && code < 300) icon = '⛈️';
           else if (code >= 300 && code < 400) icon = '🌧️';
@@ -34,24 +34,22 @@ function WeatherWidget() {
           else if (code === 116) icon = '⛅';
           else if (code === 119 || code === 122) icon = '☁️';
           else if (code >= 176) icon = '🌧️';
-          setWeather({ temp: `${temp}°`, icon, desc });
+          setWeather({ temp: `${temp}°`, icon, desc, city });
         }
-      } catch {
-        // silently fail
-      }
+      } catch {}
     };
     fetchWeather();
-    const interval = setInterval(fetchWeather, 30 * 60_000); // refresh every 30min
+    const interval = setInterval(fetchWeather, 30 * 60_000);
     return () => clearInterval(interval);
   }, []);
 
   if (!weather) return <span className="text-sm text-gray-400">...</span>;
 
   return (
-    <div className="flex items-center gap-1.5 text-sm" title={weather.desc}>
+    <div className="flex items-center gap-1.5 text-sm" title={`${weather.city}: ${weather.desc}`}>
       <span>{weather.icon}</span>
       <span className="text-white font-medium">{weather.temp}</span>
-      <span className="text-gray-400 text-xs truncate max-w-[80px]">{weather.desc}</span>
+      <span className="text-gray-400 text-xs truncate max-w-[100px]">{weather.city}</span>
     </div>
   );
 }

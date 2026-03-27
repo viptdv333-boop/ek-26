@@ -103,7 +103,13 @@ export function AdminPage() {
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'dashboard' | 'users'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'users' | 'sms'>('dashboard');
+  // SMS settings state
+  const [smsProvider, setSmsProvider] = useState<'numcheck' | 'ucaller' | 'dev'>('dev');
+  const [smsKeys, setSmsKeys] = useState({ numcheckToken: '', ucallerServiceId: '', ucallerSecretKey: '' });
+  const [smsSaving, setSmsSaving] = useState(false);
+  const [smsTestPhone, setSmsTestPhone] = useState('');
+  const [smsTestResult, setSmsTestResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.isAdmin) {
@@ -128,6 +134,65 @@ export function AdminPage() {
       setLoading(false);
     }
   }, []);
+
+  const loadSmsSettings = useCallback(async () => {
+    try {
+      const data = await adminFetch('/admin/sms');
+      setSmsProvider(data.activeProvider);
+      setSmsKeys({
+        numcheckToken: data.numcheckToken || '',
+        ucallerServiceId: data.ucallerServiceId || '',
+        ucallerSecretKey: data.ucallerSecretKey || '',
+      });
+    } catch (err) {
+      console.error('SMS settings load failed:', err);
+    }
+  }, []);
+
+  const saveSmsSettings = async () => {
+    setSmsSaving(true);
+    try {
+      const token = useAuthStore.getState().token;
+      const body: any = { activeProvider: smsProvider };
+      // Only send keys that were changed (not masked)
+      if (!smsKeys.numcheckToken.startsWith('***')) body.numcheckToken = smsKeys.numcheckToken;
+      if (!smsKeys.ucallerSecretKey.startsWith('***')) body.ucallerSecretKey = smsKeys.ucallerSecretKey;
+      body.ucallerServiceId = smsKeys.ucallerServiceId;
+
+      await fetch(`${BASE}/admin/sms`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setSmsTestResult('Saved!');
+      setTimeout(() => setSmsTestResult(null), 2000);
+    } catch (err) {
+      setSmsTestResult('Save failed');
+    } finally {
+      setSmsSaving(false);
+    }
+  };
+
+  const testSms = async () => {
+    if (!smsTestPhone) return;
+    setSmsTestResult('Sending...');
+    try {
+      const token = useAuthStore.getState().token;
+      const res = await fetch(`${BASE}/admin/sms/test`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: smsTestPhone }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSmsTestResult(`Code: ${data.code} sent to ${smsTestPhone}`);
+      } else {
+        setSmsTestResult(`Error: ${data.error}`);
+      }
+    } catch {
+      setSmsTestResult('Test failed');
+    }
+  };
 
   const loadUserDetail = async (id: string) => {
     try {
@@ -187,6 +252,10 @@ export function AdminPage() {
               onClick={() => setTab('users')}
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'users' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
             >Users</button>
+            <button
+              onClick={() => { setTab('sms'); loadSmsSettings(); }}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'sms' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
+            >SMS</button>
           </div>
           <button onClick={loadData} className="text-gray-400 hover:text-white text-sm">Refresh</button>
         </div>
@@ -374,6 +443,121 @@ export function AdminPage() {
                 )}
               </div>
             )}
+          </div>
+        )}
+        {tab === 'sms' && (
+          <div className="max-w-xl">
+            <h3 className="text-sm font-medium text-gray-400 mb-4">SMS Provider</h3>
+
+            {/* Provider selection */}
+            <div className="space-y-3 mb-6">
+              {[
+                { id: 'numcheck' as const, name: 'NumCheck', desc: 'Flash-call verification' },
+                { id: 'ucaller' as const, name: 'uCaller', desc: 'Flash-call verification' },
+                { id: 'dev' as const, name: 'Dev Mode', desc: 'Code: 1945, no real sending' },
+              ].map(p => (
+                <div
+                  key={p.id}
+                  onClick={() => setSmsProvider(p.id)}
+                  className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${
+                    smsProvider === p.id
+                      ? 'border-accent bg-accent/10'
+                      : 'border-dark-600 bg-dark-700 hover:border-dark-500'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    smsProvider === p.id ? 'border-accent' : 'border-gray-500'
+                  }`}>
+                    {smsProvider === p.id && <div className="w-2 h-2 rounded-full bg-accent" />}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-white">{p.name}</div>
+                    <div className="text-xs text-gray-500">{p.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Credentials */}
+            {smsProvider === 'numcheck' && (
+              <div className="space-y-3 mb-6">
+                <label className="block">
+                  <span className="text-xs text-gray-400">Token</span>
+                  <input
+                    type="text"
+                    value={smsKeys.numcheckToken}
+                    onChange={e => setSmsKeys(k => ({ ...k, numcheckToken: e.target.value }))}
+                    onFocus={e => { if (e.target.value.startsWith('***')) setSmsKeys(k => ({ ...k, numcheckToken: '' })); }}
+                    placeholder="NumCheck API token"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+              </div>
+            )}
+
+            {smsProvider === 'ucaller' && (
+              <div className="space-y-3 mb-6">
+                <label className="block">
+                  <span className="text-xs text-gray-400">Service ID</span>
+                  <input
+                    type="text"
+                    value={smsKeys.ucallerServiceId}
+                    onChange={e => setSmsKeys(k => ({ ...k, ucallerServiceId: e.target.value }))}
+                    placeholder="uCaller Service ID"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-gray-400">Secret Key</span>
+                  <input
+                    type="text"
+                    value={smsKeys.ucallerSecretKey}
+                    onChange={e => setSmsKeys(k => ({ ...k, ucallerSecretKey: e.target.value }))}
+                    onFocus={e => { if (e.target.value.startsWith('***')) setSmsKeys(k => ({ ...k, ucallerSecretKey: '' })); }}
+                    placeholder="uCaller Secret Key"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+              </div>
+            )}
+
+            {smsProvider === 'dev' && (
+              <div className="bg-dark-700 border border-dark-600 rounded-xl p-4 mb-6">
+                <p className="text-sm text-gray-400">Code is always <span className="text-white font-mono font-bold">1945</span>. No real calls/SMS sent.</p>
+              </div>
+            )}
+
+            {/* Save button */}
+            <div className="flex items-center gap-3 mb-6">
+              <button
+                onClick={saveSmsSettings}
+                disabled={smsSaving}
+                className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {smsSaving ? 'Saving...' : 'Save'}
+              </button>
+              {smsTestResult && (
+                <span className="text-sm text-gray-400">{smsTestResult}</span>
+              )}
+            </div>
+
+            {/* Test */}
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Test</h3>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={smsTestPhone}
+                onChange={e => setSmsTestPhone(e.target.value)}
+                placeholder="+79119279270"
+                className="flex-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+              />
+              <button
+                onClick={testSms}
+                className="px-4 py-2 bg-dark-700 hover:bg-dark-600 border border-dark-600 text-white text-sm rounded-lg transition-colors"
+              >
+                Send test
+              </button>
+            </div>
           </div>
         )}
       </div>

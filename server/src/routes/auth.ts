@@ -56,7 +56,7 @@ export async function authRoutes(app: FastifyInstance) {
     // Delete old codes for this phone
     await SmsCode.deleteMany({ phone: body.phone });
 
-    const generatedCode = generateOtp();
+    const generatedCode = await generateOtp();
 
     try {
       const actualCode = await sendCode(body.phone, generatedCode);
@@ -336,7 +336,7 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(429).send({ error: 'Wait 60 seconds before requesting a new code' });
     }
 
-    const generatedCode = generateOtp();
+    const generatedCode = await generateOtp();
 
     try {
       const actualCode = await sendCode(phone, generatedCode);
@@ -434,7 +434,7 @@ export async function authRoutes(app: FastifyInstance) {
     // Send verification call (NumCheckAPI flash call)
     await SmsCode.deleteMany({ phone: body.phone });
 
-    const generatedCode = generateOtp();
+    const generatedCode = await generateOtp();
     try {
       const actualCode = await sendCode(body.phone, generatedCode);
       await SmsCode.create({

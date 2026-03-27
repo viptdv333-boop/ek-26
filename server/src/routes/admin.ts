@@ -5,6 +5,8 @@ import { User } from '../models/User';
 import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
 import { config } from '../config';
+import { Settings, getSmsSettings, invalidateSmsCache, ISmsSettings } from '../models/Settings';
+import { sendCode, generateOtp } from '../services/sms';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -268,5 +270,62 @@ export async function adminRoutes(app: FastifyInstance) {
           sizeBytes: data.size,
         })),
     };
+  });
+
+  // ── SMS Provider Settings ──────────────────────────────────────
+
+  // Get SMS settings
+  app.get('/api/admin/sms', { preHandler }, async () => {
+    const settings = await getSmsSettings();
+    // Mask credentials
+    return {
+      activeProvider: settings.activeProvider,
+      numcheckToken: settings.numcheckToken ? '***' + settings.numcheckToken.slice(-4) : '',
+      ucallerServiceId: settings.ucallerServiceId || '',
+      ucallerSecretKey: settings.ucallerSecretKey ? '***' + settings.ucallerSecretKey.slice(-4) : '',
+    };
+  });
+
+  // Update SMS settings
+  app.patch('/api/admin/sms', { preHandler }, async (request) => {
+    const body = request.body as Partial<ISmsSettings>;
+    const current = await getSmsSettings();
+
+    const update: Partial<ISmsSettings> = {};
+    if (body.activeProvider && ['numcheck', 'ucaller', 'dev'].includes(body.activeProvider)) {
+      update.activeProvider = body.activeProvider;
+    }
+    if (typeof body.numcheckToken === 'string') {
+      update.numcheckToken = body.numcheckToken;
+    }
+    if (typeof body.ucallerServiceId === 'string') {
+      update.ucallerServiceId = body.ucallerServiceId;
+    }
+    if (typeof body.ucallerSecretKey === 'string') {
+      update.ucallerSecretKey = body.ucallerSecretKey;
+    }
+
+    await Settings.updateOne(
+      { key: 'sms' },
+      { $set: { value: { ...current, ...update } } },
+      { upsert: true }
+    );
+    invalidateSmsCache();
+
+    return { success: true };
+  });
+
+  // Test SMS — send a code to a phone number
+  app.post('/api/admin/sms/test', { preHandler }, async (request, reply) => {
+    const { phone } = request.body as { phone: string };
+    if (!phone) return reply.code(400).send({ error: 'Phone required' });
+
+    try {
+      const code = await generateOtp();
+      const actualCode = await sendCode(phone, code);
+      return { success: true, code: actualCode, message: `Code sent to ${phone}` };
+    } catch (err: any) {
+      return reply.code(502).send({ error: err.message || 'Send failed' });
+    }
   });
 }

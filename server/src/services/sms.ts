@@ -1,11 +1,14 @@
 import crypto from 'crypto';
 import https from 'https';
-import { config } from '../config';
+import { getSmsSettings, ISmsSettings } from '../models/Settings';
 
-export function generateOtp(): string {
-  if (config.OTP_DEV_MODE) {
-    return '1234';
-  }
+const DEV_CODE = '1945';
+
+export async function generateOtp(): Promise<string> {
+  try {
+    const settings = await getSmsSettings();
+    if (settings.activeProvider === 'dev') return DEV_CODE;
+  } catch { /* fallback to random */ }
   // 4-digit code (1000–9999)
   return crypto.randomInt(1000, 10000).toString();
 }
@@ -25,29 +28,49 @@ interface NumCheckResponse {
 }
 
 /**
- * Send verification call. Returns the actual code to store.
- * For NumCheckAPI: they generate the code (last 4 digits of caller number)
- * For uCaller: we pass our own code
- * For dev mode: returns the dev code '1234'
+ * Send verification call/SMS. Returns the actual code to store.
+ * Reads active provider from DB settings (cached 60s).
  */
 export async function sendCode(phone: string, code: string): Promise<string> {
-  if (config.OTP_DEV_MODE) {
+  let settings: ISmsSettings;
+  try {
+    settings = await getSmsSettings();
+  } catch (err) {
+    console.error('[SMS] Failed to load settings, falling back to dev mode:', err);
+    console.log(`[DEV OTP] Code for ${phone}: ${DEV_CODE}`);
+    return DEV_CODE;
+  }
+
+  const provider = settings.activeProvider;
+
+  if (provider === 'dev') {
     console.log(`[DEV OTP] Code for ${phone}: ${code}`);
     return code;
   }
 
-  // Use NumCheckAPI if token is set
-  if (config.NUMCHECK_TOKEN) {
-    return sendCodeViaNumCheck(phone);
+  if (provider === 'numcheck') {
+    if (!settings.numcheckToken) {
+      throw new Error('NumCheck token not configured');
+    }
+    return sendCodeViaNumCheck(phone, settings.numcheckToken);
   }
 
-  // Fallback: uCaller (we pass our code)
-  await sendCodeViaUCaller(phone, code);
+  if (provider === 'ucaller') {
+    if (!settings.ucallerServiceId || !settings.ucallerSecretKey) {
+      throw new Error('uCaller credentials not configured');
+    }
+    await sendCodeViaUCaller(phone, code, settings.ucallerServiceId, settings.ucallerSecretKey);
+    return code;
+  }
+
+  // Unknown provider — dev fallback
+  console.warn(`[SMS] Unknown provider '${provider}', using dev mode`);
+  console.log(`[DEV OTP] Code for ${phone}: ${code}`);
   return code;
 }
 
-async function sendCodeViaNumCheck(phone: string): Promise<string> {
-  const cleanPhone = phone.replace(/[^\d]/g, ''); // digits only, no +
+async function sendCodeViaNumCheck(phone: string, token: string): Promise<string> {
+  const cleanPhone = phone.replace(/[^\d]/g, '');
 
   console.log(`[NumCheck] Calling ${cleanPhone}...`);
 
@@ -56,8 +79,8 @@ async function sendCodeViaNumCheck(phone: string): Promise<string> {
       `https://api.numcheckapi.com/ru/init-call?phone=${cleanPhone}`,
       {
         method: 'POST',
-        headers: { 'X-AUTH-Token': config.NUMCHECK_TOKEN },
-        rejectUnauthorized: false, // NumCheck SSL cert expired
+        headers: { 'X-AUTH-Token': token },
+        rejectUnauthorized: false,
         timeout: 15000,
       },
       (res) => {
@@ -84,12 +107,12 @@ async function sendCodeViaNumCheck(phone: string): Promise<string> {
   return actualCode;
 }
 
-async function sendCodeViaUCaller(phone: string, code: string): Promise<void> {
+async function sendCodeViaUCaller(phone: string, code: string, serviceId: string, secretKey: string): Promise<void> {
   const cleanPhone = phone.replace(/[^\d]/g, '');
 
   const url = new URL('https://api.ucaller.ru/v1.0/initCall');
-  url.searchParams.set('service_id', config.UCALLER_SERVICE_ID);
-  url.searchParams.set('key', config.UCALLER_SECRET_KEY);
+  url.searchParams.set('service_id', serviceId);
+  url.searchParams.set('key', secretKey);
   url.searchParams.set('phone', cleanPhone);
   url.searchParams.set('code', code);
 

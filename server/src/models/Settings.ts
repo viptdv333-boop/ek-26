@@ -1,0 +1,55 @@
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface ISmsSettings {
+  activeProvider: 'numcheck' | 'ucaller' | 'dev';
+  numcheckToken: string;
+  ucallerServiceId: string;
+  ucallerSecretKey: string;
+}
+
+export interface ISettings extends Document {
+  key: string;
+  value: any;
+}
+
+const settingsSchema = new Schema<ISettings>(
+  {
+    key: { type: String, required: true, unique: true },
+    value: { type: Schema.Types.Mixed, required: true },
+  },
+  { timestamps: true }
+);
+
+export const Settings = mongoose.model<ISettings>('Settings', settingsSchema);
+
+// Get SMS settings with auto-init from env vars
+let smsCache: { data: ISmsSettings; ts: number } | null = null;
+const CACHE_TTL = 60_000; // 60 sec
+
+export async function getSmsSettings(): Promise<ISmsSettings> {
+  if (smsCache && Date.now() - smsCache.ts < CACHE_TTL) {
+    return smsCache.data;
+  }
+
+  let doc = await Settings.findOne({ key: 'sms' }).lean();
+
+  if (!doc) {
+    // Auto-init from env vars on first run
+    const config = await import('../config').then(m => m.config);
+    const initial: ISmsSettings = {
+      activeProvider: config.OTP_DEV_MODE ? 'dev' : (config.NUMCHECK_TOKEN ? 'numcheck' : 'ucaller'),
+      numcheckToken: config.NUMCHECK_TOKEN || '',
+      ucallerServiceId: config.UCALLER_SERVICE_ID || '',
+      ucallerSecretKey: config.UCALLER_SECRET_KEY || '',
+    };
+    doc = await Settings.create({ key: 'sms', value: initial });
+  }
+
+  const data = doc.value as ISmsSettings;
+  smsCache = { data, ts: Date.now() };
+  return data;
+}
+
+export function invalidateSmsCache() {
+  smsCache = null;
+}

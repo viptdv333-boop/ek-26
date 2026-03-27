@@ -140,6 +140,7 @@ export async function authRoutes(app: FastifyInstance) {
         phone: user.phone,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
+        isAdmin: user.isAdmin || false,
         isNewUser,
       },
       ...(needsPassword && { needsPassword: true }),
@@ -219,6 +220,7 @@ export async function authRoutes(app: FastifyInstance) {
           phone: user.phone,
           displayName: user.displayName,
           avatarUrl: user.avatarUrl,
+          isAdmin: user.isAdmin || false,
           isNewUser,
         },
       };
@@ -414,6 +416,7 @@ export async function authRoutes(app: FastifyInstance) {
         phone: user!.phone,
         displayName: user!.displayName,
         avatarUrl: user!.avatarUrl,
+        isAdmin: user!.isAdmin || false,
       },
     };
   });
@@ -529,6 +532,7 @@ export async function authRoutes(app: FastifyInstance) {
         phone: user.phone,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
+        isAdmin: user.isAdmin || false,
         isNewUser: true,
       },
     };
@@ -675,6 +679,7 @@ export async function authRoutes(app: FastifyInstance) {
         phone: user.phone,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
+        isAdmin: user.isAdmin || false,
         isNewUser: false,
       },
     };

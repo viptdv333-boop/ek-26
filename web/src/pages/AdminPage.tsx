@@ -106,7 +106,7 @@ export function AdminPage() {
   const [tab, setTab] = useState<'dashboard' | 'users' | 'sms'>('dashboard');
   // SMS settings state
   const [smsProvider, setSmsProvider] = useState<'numcheck' | 'ucaller' | 'dev'>('dev');
-  const [smsKeys, setSmsKeys] = useState({ numcheckToken: '', ucallerServiceId: '', ucallerSecretKey: '' });
+  const [smsKeys, setSmsKeys] = useState({ numcheckToken: '', ucallerServiceId: '', ucallerSecretKey: '', alibabaAccessKeyId: '', alibabaAccessKeySecret: '', alibabaSignName: '', alibabaTemplateCode: '' });
   const [smsSaving, setSmsSaving] = useState(false);
   const [smsTestPhone, setSmsTestPhone] = useState('');
   const [smsTestResult, setSmsTestResult] = useState<string | null>(null);
@@ -143,6 +143,10 @@ export function AdminPage() {
         numcheckToken: data.numcheckToken || '',
         ucallerServiceId: data.ucallerServiceId || '',
         ucallerSecretKey: data.ucallerSecretKey || '',
+        alibabaAccessKeyId: data.alibabaAccessKeyId || '',
+        alibabaAccessKeySecret: data.alibabaAccessKeySecret || '',
+        alibabaSignName: data.alibabaSignName || '',
+        alibabaTemplateCode: data.alibabaTemplateCode || '',
       });
     } catch (err) {
       console.error('SMS settings load failed:', err);
@@ -158,6 +162,10 @@ export function AdminPage() {
       if (!smsKeys.numcheckToken.startsWith('***')) body.numcheckToken = smsKeys.numcheckToken;
       if (!smsKeys.ucallerSecretKey.startsWith('***')) body.ucallerSecretKey = smsKeys.ucallerSecretKey;
       body.ucallerServiceId = smsKeys.ucallerServiceId;
+      body.alibabaAccessKeyId = smsKeys.alibabaAccessKeyId;
+      if (!smsKeys.alibabaAccessKeySecret.startsWith('***')) body.alibabaAccessKeySecret = smsKeys.alibabaAccessKeySecret;
+      body.alibabaSignName = smsKeys.alibabaSignName;
+      body.alibabaTemplateCode = smsKeys.alibabaTemplateCode;
 
       await fetch(`${BASE}/admin/sms`, {
         method: 'PATCH',
@@ -454,6 +462,7 @@ export function AdminPage() {
               {[
                 { id: 'numcheck' as const, name: 'NumCheck', desc: 'Flash-call verification' },
                 { id: 'ucaller' as const, name: 'uCaller', desc: 'Flash-call verification' },
+                { id: 'alibaba' as const, name: 'Alibaba Cloud SMS', desc: 'SMS, works in China' },
                 { id: 'dev' as const, name: 'Dev Mode', desc: 'Code: 1945, no real sending' },
               ].map(p => (
                 <div
@@ -515,6 +524,52 @@ export function AdminPage() {
                     onChange={e => setSmsKeys(k => ({ ...k, ucallerSecretKey: e.target.value }))}
                     onFocus={e => { if (e.target.value.startsWith('***')) setSmsKeys(k => ({ ...k, ucallerSecretKey: '' })); }}
                     placeholder="uCaller Secret Key"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+              </div>
+            )}
+
+            {smsProvider === 'alibaba' && (
+              <div className="space-y-3 mb-6">
+                <label className="block">
+                  <span className="text-xs text-gray-400">AccessKey ID</span>
+                  <input
+                    type="text"
+                    value={smsKeys.alibabaAccessKeyId}
+                    onChange={e => setSmsKeys(k => ({ ...k, alibabaAccessKeyId: e.target.value }))}
+                    placeholder="LTAI5t..."
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-gray-400">AccessKey Secret</span>
+                  <input
+                    type="text"
+                    value={smsKeys.alibabaAccessKeySecret}
+                    onChange={e => setSmsKeys(k => ({ ...k, alibabaAccessKeySecret: e.target.value }))}
+                    onFocus={e => { if (e.target.value.startsWith('***')) setSmsKeys(k => ({ ...k, alibabaAccessKeySecret: '' })); }}
+                    placeholder="AccessKey Secret"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-gray-400">Sign Name (подпись SMS)</span>
+                  <input
+                    type="text"
+                    value={smsKeys.alibabaSignName}
+                    onChange={e => setSmsKeys(k => ({ ...k, alibabaSignName: e.target.value }))}
+                    placeholder="FOMO"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-gray-400">Template Code (код шаблона)</span>
+                  <input
+                    type="text"
+                    value={smsKeys.alibabaTemplateCode}
+                    onChange={e => setSmsKeys(k => ({ ...k, alibabaTemplateCode: e.target.value }))}
+                    placeholder="SMS_123456"
                     className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
                   />
                 </label>

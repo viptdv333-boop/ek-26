@@ -1,10 +1,14 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISmsSettings {
-  activeProvider: 'numcheck' | 'ucaller' | 'dev';
+  activeProvider: 'numcheck' | 'ucaller' | 'alibaba' | 'dev';
   numcheckToken: string;
   ucallerServiceId: string;
   ucallerSecretKey: string;
+  alibabaAccessKeyId: string;
+  alibabaAccessKeySecret: string;
+  alibabaSignName: string;
+  alibabaTemplateCode: string;
 }
 
 export interface ISettings extends Document {
@@ -41,6 +45,10 @@ export async function getSmsSettings(): Promise<ISmsSettings> {
       numcheckToken: config.NUMCHECK_TOKEN || '',
       ucallerServiceId: config.UCALLER_SERVICE_ID || '',
       ucallerSecretKey: config.UCALLER_SECRET_KEY || '',
+      alibabaAccessKeyId: '',
+      alibabaAccessKeySecret: '',
+      alibabaSignName: '',
+      alibabaTemplateCode: '',
     };
     await Settings.create({ key: 'sms', value: initial });
     const data = initial;

@@ -283,6 +283,10 @@ export async function adminRoutes(app: FastifyInstance) {
       numcheckToken: settings.numcheckToken ? '***' + settings.numcheckToken.slice(-4) : '',
       ucallerServiceId: settings.ucallerServiceId || '',
       ucallerSecretKey: settings.ucallerSecretKey ? '***' + settings.ucallerSecretKey.slice(-4) : '',
+      alibabaAccessKeyId: settings.alibabaAccessKeyId || '',
+      alibabaAccessKeySecret: settings.alibabaAccessKeySecret ? '***' + settings.alibabaAccessKeySecret.slice(-4) : '',
+      alibabaSignName: settings.alibabaSignName || '',
+      alibabaTemplateCode: settings.alibabaTemplateCode || '',
     };
   });
 
@@ -292,7 +296,7 @@ export async function adminRoutes(app: FastifyInstance) {
     const current = await getSmsSettings();
 
     const update: Partial<ISmsSettings> = {};
-    if (body.activeProvider && ['numcheck', 'ucaller', 'dev'].includes(body.activeProvider)) {
+    if (body.activeProvider && ['numcheck', 'ucaller', 'alibaba', 'dev'].includes(body.activeProvider)) {
       update.activeProvider = body.activeProvider;
     }
     if (typeof body.numcheckToken === 'string') {
@@ -303,6 +307,18 @@ export async function adminRoutes(app: FastifyInstance) {
     }
     if (typeof body.ucallerSecretKey === 'string') {
       update.ucallerSecretKey = body.ucallerSecretKey;
+    }
+    if (typeof body.alibabaAccessKeyId === 'string') {
+      update.alibabaAccessKeyId = body.alibabaAccessKeyId;
+    }
+    if (typeof body.alibabaAccessKeySecret === 'string') {
+      update.alibabaAccessKeySecret = body.alibabaAccessKeySecret;
+    }
+    if (typeof body.alibabaSignName === 'string') {
+      update.alibabaSignName = body.alibabaSignName;
+    }
+    if (typeof body.alibabaTemplateCode === 'string') {
+      update.alibabaTemplateCode = body.alibabaTemplateCode;
     }
 
     await Settings.updateOne(

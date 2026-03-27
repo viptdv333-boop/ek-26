@@ -63,6 +63,20 @@ export async function sendCode(phone: string, code: string): Promise<string> {
     return code;
   }
 
+  if (provider === 'alibaba') {
+    if (!settings.alibabaAccessKeyId || !settings.alibabaAccessKeySecret) {
+      throw new Error('Alibaba Cloud SMS credentials not configured');
+    }
+    await sendCodeViaAlibaba(
+      phone, code,
+      settings.alibabaAccessKeyId,
+      settings.alibabaAccessKeySecret,
+      settings.alibabaSignName || '',
+      settings.alibabaTemplateCode || '',
+    );
+    return code;
+  }
+
   // Unknown provider — dev fallback
   console.warn(`[SMS] Unknown provider '${provider}', using dev mode`);
   console.log(`[DEV OTP] Code for ${phone}: ${code}`);
@@ -105,6 +119,64 @@ async function sendCodeViaNumCheck(phone: string, token: string): Promise<string
   const actualCode = data.code || '';
   console.log(`[NumCheck] Call initiated, callId: ${data.callId}, code: ${actualCode}`);
   return actualCode;
+}
+
+async function sendCodeViaAlibaba(
+  phone: string, code: string,
+  accessKeyId: string, accessKeySecret: string,
+  signName: string, templateCode: string,
+): Promise<void> {
+  // Alibaba Cloud SMS API (SendSms)
+  // https://www.alibabacloud.com/help/en/sms/developer-reference/api-dysmsapi-2017-05-25-sendsms
+
+  const cleanPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+  const params: Record<string, string> = {
+    AccessKeyId: accessKeyId,
+    Action: 'SendSms',
+    Format: 'JSON',
+    PhoneNumbers: cleanPhone,
+    SignName: signName,
+    SignatureMethod: 'HMAC-SHA1',
+    SignatureNonce: crypto.randomUUID(),
+    SignatureVersion: '1.0',
+    TemplateCode: templateCode,
+    TemplateParam: JSON.stringify({ code }),
+    Timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    Version: '2017-05-25',
+  };
+
+  // Build signature
+  const sortedKeys = Object.keys(params).sort();
+  const canonicalQuery = sortedKeys
+    .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
+    .join('&');
+  const stringToSign = `POST&${encodeURIComponent('/')}&${encodeURIComponent(canonicalQuery)}`;
+  const signature = crypto
+    .createHmac('sha1', accessKeySecret + '&')
+    .update(stringToSign)
+    .digest('base64');
+
+  params.Signature = signature;
+
+  const body = Object.entries(params)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+
+  console.log(`[Alibaba SMS] Sending to ${cleanPhone} with code ${code}...`);
+
+  const res = await fetch('https://dysmsapi.aliyuncs.com/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  const data = (await res.json()) as any;
+  console.log(`[Alibaba SMS] Response:`, JSON.stringify(data));
+
+  if (data.Code !== 'OK') {
+    console.error('[Alibaba SMS] Error:', data.Message);
+    throw new Error(`Alibaba SMS error: ${data.Message || data.Code || 'unknown'}`);
+  }
 }
 
 async function sendCodeViaUCaller(phone: string, code: string, serviceId: string, secretKey: string): Promise<void> {

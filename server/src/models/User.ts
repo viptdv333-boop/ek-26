@@ -27,6 +27,7 @@ export interface IUser extends Document {
     publicKey: Buffer;
   }>;
   blockedUsers: mongoose.Types.ObjectId[];
+  isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,6 +64,7 @@ const userSchema = new Schema<IUser>(
       },
     ],
     blockedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    isAdmin: { type: Boolean, default: false },
   },
   { timestamps: true, autoIndex: false }
 );

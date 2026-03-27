@@ -12,6 +12,7 @@ import { keyRoutes } from './routes/keys';
 import { uploadRoutes } from './routes/uploads';
 import { contactRoutes } from './routes/contacts';
 import translateRoutes from './routes/translate';
+import { adminRoutes } from './routes/admin';
 import { setupWebSocket, broadcastToConversation } from './ws/handler';
 
 // Extend Fastify types
@@ -62,6 +63,7 @@ async function main() {
   await app.register(uploadRoutes);
   await app.register(contactRoutes);
   await app.register(translateRoutes);
+  await app.register(adminRoutes);
 
   // WebSocket
   await setupWebSocket(app);

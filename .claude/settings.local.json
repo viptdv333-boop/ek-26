@@ -41,7 +41,8 @@
       "Bash(ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@85.198.82.136 \"echo ''SSH OK'' && uname -a\")",
       "Bash(find /z/EK-26/server /z/EK-26/web /z/EK-26/shared /z/EK-26/mobile -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
       "Bash(find /z/EK-26 -type f \\\\\\(-name *call* -o -name *rtc* -o -name *signaling* \\\\\\) -path */src/*)",
-      "Bash(find /z/EK-26 -name *.mp3 -o -name *.wav -o -name *.ogg)"
+      "Bash(find /z/EK-26 -name *.mp3 -o -name *.wav -o -name *.ogg)",
+      "Bash(find Z:/EK-26/web -name sw.ts -o -name service-worker* -o -name *worker*)"
     ]
   }
 }

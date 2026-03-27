@@ -52,7 +52,10 @@ export async function uploadRoutes(app: FastifyInstance) {
   // Download file (no auth — fileId is a random UUID, acts as a secret URL)
   app.get('/api/uploads/:fileId/:fileName', async (request, reply) => {
     const { fileId, fileName } = request.params as { fileId: string; fileName: string };
-    const filePath = path.join(config.UPLOADS_DIR, fileId, decodeURIComponent(fileName));
+    // Fastify already decodes params, but URL might be double-encoded
+    let decodedName = fileName;
+    try { decodedName = decodeURIComponent(fileName); } catch { /* already decoded */ }
+    const filePath = path.join(config.UPLOADS_DIR, fileId, decodedName);
 
     if (!fs.existsSync(filePath)) {
       return reply.code(404).send({ error: 'File not found' });

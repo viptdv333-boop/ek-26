@@ -141,6 +141,8 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
   };
 
   const hasAttachments = message.attachments && message.attachments.length > 0;
+  const isMediaOnly = hasAttachments && !message.text &&
+    message.attachments!.every(a => isImageFile(a.mimeType) || isVideoFile(a.mimeType));
   const avatarUrl = isMine ? myAvatarUrl : message.senderAvatarUrl;
 
   const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
@@ -199,8 +201,8 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
         {!isMine && renderAvatar()}
 
         <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
-          {/* SVG cloud background */}
-          {bubbleShape === 'cloud' && (
+          {/* SVG cloud background (skip for media-only messages) */}
+          {bubbleShape === 'cloud' && !isMediaOnly && (
             <svg
               className="absolute inset-0 w-full h-full"
               viewBox="0 0 200 120"
@@ -215,16 +217,19 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           )}
           <div
             className="relative px-3 py-2 overflow-hidden"
-            style={bubbleShape === 'cloud' ? {
+            style={bubbleShape === 'cloud' && !isMediaOnly ? {
               zIndex: 1,
               padding: '14px 22px 24px 22px',
+            } : isMediaOnly ? {
+              borderRadius: '10px',
+              overflow: 'hidden',
             } : {
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
               borderRadius: bubbleShape === 'square' ? '2px' : '10px',
             }}
           >
-            {/* Tail for non-cloud */}
-            {bubbleShape !== 'cloud' && (
+            {/* Tail for non-cloud (skip for media-only) */}
+            {bubbleShape !== 'cloud' && !isMediaOnly && (
               <div
                 className="absolute bottom-0"
                 style={{

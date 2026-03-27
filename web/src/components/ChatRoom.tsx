@@ -6,7 +6,7 @@ import { useTranslation } from '../i18n';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { MessageBubble } from './MessageBubble';
 import { sessionManager, messageCache } from '../services/crypto';
-import { uploadFile, isImageFile } from '../services/api/upload';
+import { uploadFile, isImageFile, isVideoFile } from '../services/api/upload';
 import { ForwardDialog } from './ForwardDialog';
 import { EmojiPicker } from './EmojiPicker';
 import { VoiceRecorder } from './VoiceRecorder';
@@ -244,6 +244,46 @@ export function ChatRoom({ conversationId }: Props) {
     }
   }, [messages, userId, scrollToMessageId]);
 
+  const compressImage = (file: File, maxWidth = 1920, quality = 0.8): Promise<File> => {
+    return new Promise((resolve) => {
+      // Skip small images or non-compressible formats
+      if (file.size < 200 * 1024 || file.type === 'image/gif' || file.type === 'image/svg+xml') {
+        resolve(file);
+        return;
+      }
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round(height * (maxWidth / width));
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob && blob.size < file.size) {
+            resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }));
+          } else {
+            resolve(file); // compression didn't help
+          }
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  };
+
+  const compressVideo = async (file: File): Promise<File> => {
+    // Browser-side video compression is limited; just check size
+    // If video is over 15MB after this check, it won't upload (server limit)
+    return file;
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -254,15 +294,23 @@ export function ChatRoom({ conversationId }: Props) {
       return;
     }
 
-    // Show preview for images
+    let processedFile = file;
+
+    // Compress images
     if (isImageFile(file.type)) {
-      const url = URL.createObjectURL(file);
+      processedFile = await compressImage(file);
+      const url = URL.createObjectURL(processedFile);
       setPreviewUrl(url);
+    }
+
+    // Show preview for videos
+    if (isVideoFile(file.type)) {
+      processedFile = await compressVideo(file);
     }
 
     setUploading(true);
     try {
-      const att = await uploadFile(file);
+      const att = await uploadFile(processedFile);
       setPendingAttachment(att);
     } catch (err: any) {
       alert(err.message || t('chat.uploadError'));
@@ -670,7 +718,7 @@ export function ChatRoom({ conversationId }: Props) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar"
+            accept="*/*"
             onChange={handleFileSelect}
             className="hidden"
           />

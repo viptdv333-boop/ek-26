@@ -86,17 +86,19 @@ export async function messageRoutes(app: FastifyInstance) {
   // Send message via HTTP (fallback, primary path is WebSocket)
   app.post('/api/conversations/:id/messages', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { type = 'text', text, replyToId, encrypted, envelope } = request.body as {
+    const { type = 'text', text, replyToId, encrypted, envelope, attachments } = request.body as {
       type?: string;
       text?: string;
       replyToId?: string;
       encrypted?: boolean;
       envelope?: string;
+      attachments?: Array<{ fileId: string; fileName: string; mimeType: string; size: number; url: string }>;
     };
 
     const isEncrypted = !!(encrypted && envelope);
+    const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
 
-    if (!isEncrypted && !text?.trim()) {
+    if (!isEncrypted && !text?.trim() && !hasAttachments) {
       return reply.code(400).send({ error: 'Message text required' });
     }
 
@@ -148,13 +150,17 @@ export async function messageRoutes(app: FastifyInstance) {
         conversationId: new mongoose.Types.ObjectId(id),
         senderId: new mongoose.Types.ObjectId(request.userId),
         type,
-        text: text!.trim(),
+        text: text?.trim() || '',
+        attachments: hasAttachments ? attachments : [],
         replyToId: replyToId ? new mongoose.Types.ObjectId(replyToId) : null,
         deliveredVia: 'ws',
       });
 
+      const lastText = hasAttachments
+        ? (type === 'voice' ? '🎤 Голосовое' : '📎 Файл')
+        : text!.trim().slice(0, 100);
       conversation.lastMessage = {
-        text: text!.trim().slice(0, 100),
+        text: lastText,
         senderName: sender!.displayName,
         timestamp: message.createdAt,
       };
@@ -166,6 +172,7 @@ export async function messageRoutes(app: FastifyInstance) {
         sender: { id: request.userId, displayName: sender!.displayName },
         type: message.type,
         text: message.text,
+        attachments: message.attachments || [],
         replyToId: message.replyToId?.toString() || null,
         status: 'sent',
         createdAt: message.createdAt.toISOString(),

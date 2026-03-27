@@ -45,7 +45,9 @@ export function VoiceRecorder({ onSend, onCancel }: Props) {
         try {
           const att = await uploadFile(file);
           onSend(att);
-        } catch {
+        } catch (err) {
+          console.error('[Voice] Upload failed:', err);
+          alert('Не удалось отправить голосовое сообщение');
           onCancel();
         } finally {
           setUploading(false);

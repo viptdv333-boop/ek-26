@@ -84,12 +84,22 @@ function getMimeType(fileName: string): string {
     '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
     '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
     '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime',
+    '.avi': 'video/x-msvideo', '.mkv': 'video/x-matroska',
+    '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav',
+    '.aac': 'audio/aac', '.flac': 'audio/flac',
     '.pdf': 'application/pdf',
     '.doc': 'application/msword',
     '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     '.xls': 'application/vnd.ms-excel',
     '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.ppt': 'application/vnd.ms-powerpoint',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     '.zip': 'application/zip', '.rar': 'application/x-rar-compressed',
+    '.7z': 'application/x-7z-compressed', '.tar': 'application/x-tar',
+    '.gz': 'application/gzip',
+    '.txt': 'text/plain', '.csv': 'text/csv',
+    '.json': 'application/json', '.xml': 'application/xml',
+    '.apk': 'application/vnd.android.package-archive',
   };
   return types[ext] || 'application/octet-stream';
 }

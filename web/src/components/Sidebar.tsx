@@ -9,6 +9,7 @@ import { AppSettingsModal } from './AppSettingsModal';
 import { ContactsPanel } from './ContactsPanel';
 import { MessageContextMenu } from './MessageContextMenu';
 import { useTranslation } from '../i18n';
+import { wsTransport } from '../services/transport/WebSocketTransport';
 
 function WeatherWidget() {
   const [weather, setWeather] = useState<{ temp: string; icon: string; desc: string; city: string } | null>(null);
@@ -54,8 +55,8 @@ function WeatherWidget() {
   );
 }
 
-// ── Quotes database ──────────────────────────────────────────────
-const QUOTES = [
+// ── Quotes database (localized) ──────────────────────────────────
+const QUOTES_RU = [
   { t: 'Единственный способ делать великую работу — любить то, что делаешь.', a: 'Стив Джобс' },
   { t: 'Будь собой, остальные роли уже заняты.', a: 'Оскар Уайльд' },
   { t: 'Успех — это способность идти от неудачи к неудаче не теряя энтузиазма.', a: 'У. Черчилль' },
@@ -67,46 +68,83 @@ const QUOTES = [
   { t: 'Жизнь — это то, что случается с тобой, пока ты строишь другие планы.', a: 'Дж. Леннон' },
   { t: 'Лучшее время посадить дерево было 20 лет назад. Второе лучшее — сейчас.', a: '' },
   { t: 'Стремитесь не к успеху, а к ценностям, которые он даёт.', a: 'А. Эйнштейн' },
-  { t: 'Ты не можешь вернуться назад и изменить начало, но можешь начать там, где ты есть.', a: 'К. С. Льюис' },
   { t: 'Делай то, что можешь, с тем, что имеешь, там, где находишься.', a: 'Т. Рузвельт' },
   { t: 'Воображение важнее знания.', a: 'А. Эйнштейн' },
   { t: 'Величайшая слава не в том, чтобы никогда не падать, а в том, чтобы подниматься каждый раз.', a: 'Конфуций' },
   { t: 'Познай самого себя.', a: 'Сократ' },
   { t: 'Счастье зависит от нас самих.', a: 'Аристотель' },
-  { t: 'Лучше сделать и пожалеть, чем не сделать и пожалеть.', a: 'Боккаччо' },
   { t: 'В середине каждой трудности кроется возможность.', a: 'А. Эйнштейн' },
-  { t: 'Никто не может заставить тебя чувствовать себя неполноценным без твоего согласия.', a: 'Э. Рузвельт' },
-  { t: 'Тот, кто не рискует, не пьёт шампанского.', a: 'Русская пословица' },
   { t: 'Дорога в тысячу ли начинается с первого шага.', a: 'Лао-цзы' },
-  { t: 'Мы то, что мы делаем постоянно. Совершенство — не действие, а привычка.', a: 'Аристотель' },
   { t: 'Знание — сила.', a: 'Ф. Бэкон' },
-  { t: 'Границы существуют только в умах тех, кому не хватает воображения.', a: '' },
-  { t: 'Учитесь так, словно вы постоянно ощущаете нехватку знаний.', a: 'Конфуций' },
-  { t: 'Жизнь измеряется не числом вдохов, а моментами, когда захватывает дух.', a: '' },
-  { t: 'Мечтай так, будто будешь жить вечно. Живи так, будто умрёшь сегодня.', a: 'Дж. Дин' },
-  { t: 'Нет ничего невозможного. Само слово говорит: Я возможно!', a: 'О. Хепбёрн' },
-  { t: 'Не ошибается тот, кто ничего не делает.', a: 'Т. Рузвельт' },
-  { t: 'Свобода — это то, что ты делаешь с тем, что сделали с тобой.', a: 'Ж.-П. Сартр' },
-  { t: 'Любая достаточно развитая технология неотличима от магии.', a: 'А. Кларк' },
   { t: 'Думай иначе.', a: 'Стив Джобс' },
-  { t: 'Только те, кто рискует зайти слишком далеко, узнают, как далеко можно зайти.', a: 'Т. С. Элиот' },
   { t: 'Будь изменением, которое хочешь видеть в мире.', a: 'М. Ганди' },
-  { t: 'Мы должны стать теми переменами, которые хотим видеть в мире.', a: 'М. Ганди' },
-  { t: 'Время — самый ценный ресурс. Его нельзя купить, одолжить или сохранить.', a: '' },
-  { t: 'Делай каждый день одну вещь, которая тебя пугает.', a: 'Э. Рузвельт' },
   { t: 'Талант выигрывает игры, а командная работа — чемпионаты.', a: 'М. Джордан' },
   { t: 'Верь, что можешь — и ты уже на полпути.', a: 'Т. Рузвельт' },
 ];
 
+const QUOTES_EN = [
+  { t: 'The only way to do great work is to love what you do.', a: 'Steve Jobs' },
+  { t: 'Be yourself; everyone else is already taken.', a: 'Oscar Wilde' },
+  { t: 'Success is walking from failure to failure with no loss of enthusiasm.', a: 'W. Churchill' },
+  { t: 'Do not fear going slowly, fear standing still.', a: 'Chinese proverb' },
+  { t: 'The future belongs to those who believe in the beauty of their dreams.', a: 'E. Roosevelt' },
+  { t: 'Simplicity is the ultimate sophistication.', a: 'Leonardo da Vinci' },
+  { t: 'Action is the foundational key to all success.', a: 'Pablo Picasso' },
+  { t: 'Life is what happens when you\'re busy making other plans.', a: 'J. Lennon' },
+  { t: 'The best time to plant a tree was 20 years ago. The second best time is now.', a: '' },
+  { t: 'Imagination is more important than knowledge.', a: 'A. Einstein' },
+  { t: 'Our greatest glory is not in never falling, but in rising every time we fall.', a: 'Confucius' },
+  { t: 'Know thyself.', a: 'Socrates' },
+  { t: 'Happiness depends upon ourselves.', a: 'Aristotle' },
+  { t: 'In the middle of every difficulty lies opportunity.', a: 'A. Einstein' },
+  { t: 'A journey of a thousand miles begins with a single step.', a: 'Lao Tzu' },
+  { t: 'Knowledge is power.', a: 'F. Bacon' },
+  { t: 'Think different.', a: 'Steve Jobs' },
+  { t: 'Be the change you wish to see in the world.', a: 'M. Gandhi' },
+  { t: 'Talent wins games, but teamwork wins championships.', a: 'M. Jordan' },
+  { t: 'Believe you can and you\'re halfway there.', a: 'T. Roosevelt' },
+];
+
+const QUOTES_ZH = [
+  { t: '\u505A\u4F1F\u5927\u5DE5\u4F5C\u7684\u552F\u4E00\u65B9\u6CD5\u662F\u70ED\u7231\u4F60\u6240\u505A\u7684\u4E8B\u3002', a: '\u4E54\u5E03\u65AF' },
+  { t: '\u505A\u4F60\u81EA\u5DF1\uFF0C\u56E0\u4E3A\u522B\u4EBA\u90FD\u6709\u4EBA\u505A\u4E86\u3002', a: '\u738B\u5C14\u5FB7' },
+  { t: '\u4E0D\u8981\u6015\u8D70\u5F97\u6162\uFF0C\u53EA\u6015\u4F60\u505C\u4E0B\u6765\u3002', a: '\u4E2D\u56FD\u8C1A\u8BED' },
+  { t: '\u672A\u6765\u5C5E\u4E8E\u90A3\u4E9B\u76F8\u4FE1\u68A6\u60F3\u4E4B\u7F8E\u7684\u4EBA\u3002', a: '\u7F57\u65AF\u798F' },
+  { t: '\u7B80\u5355\u662F\u7EC8\u6781\u7684\u7CBE\u81F4\u3002', a: '\u8FBE\u82AC\u5947' },
+  { t: '\u884C\u52A8\u662F\u6210\u529F\u7684\u57FA\u7840\u3002', a: '\u6BD5\u52A0\u7D22' },
+  { t: '\u751F\u6D3B\u5C31\u662F\u5F53\u4F60\u5FD9\u4E8E\u5236\u5B9A\u5176\u4ED6\u8BA1\u5212\u65F6\u6240\u53D1\u751F\u7684\u4E8B\u3002', a: '\u5217\u4FAC' },
+  { t: '\u79CD\u4E00\u68F5\u6811\u6700\u597D\u7684\u65F6\u95F4\u662F\u4E8C\u5341\u5E74\u524D\uFF0C\u5176\u6B21\u662F\u73B0\u5728\u3002', a: '' },
+  { t: '\u60F3\u8C61\u529B\u6BD4\u77E5\u8BC6\u66F4\u91CD\u8981\u3002', a: '\u7231\u56E0\u65AF\u5766' },
+  { t: '\u6700\u5927\u7684\u5149\u8363\u4E0D\u662F\u6C38\u4E0D\u8DCC\u5012\uFF0C\u800C\u662F\u6BCF\u6B21\u8DCC\u5012\u540E\u90FD\u80FD\u7AD9\u8D77\u6765\u3002', a: '\u5B54\u5B50' },
+  { t: '\u8BA4\u8BC6\u4F60\u81EA\u5DF1\u3002', a: '\u82CF\u683C\u62C9\u5E95' },
+  { t: '\u5E78\u798F\u53D6\u51B3\u4E8E\u6211\u4EEC\u81EA\u5DF1\u3002', a: '\u4E9A\u91CC\u58EB\u591A\u5FB7' },
+  { t: '\u5343\u91CC\u4E4B\u884C\uFF0C\u59CB\u4E8E\u8DB3\u4E0B\u3002', a: '\u8001\u5B50' },
+  { t: '\u77E5\u8BC6\u5C31\u662F\u529B\u91CF\u3002', a: '\u57F9\u6839' },
+  { t: '\u4E0D\u540C\u51E1\u60F3\u3002', a: '\u4E54\u5E03\u65AF' },
+  { t: '\u6210\u4E3A\u4F60\u5E0C\u671B\u770B\u5230\u7684\u4E16\u754C\u7684\u6539\u53D8\u3002', a: '\u7518\u5730' },
+  { t: '\u5929\u624D\u8D62\u5F97\u6BD4\u8D5B\uFF0C\u56E2\u961F\u8D62\u5F97\u51A0\u519B\u3002', a: '\u4E54\u4E39' },
+  { t: '\u76F8\u4FE1\u4F60\u80FD\uFF0C\u4F60\u5C31\u5DF2\u7ECF\u6210\u529F\u4E86\u4E00\u534A\u3002', a: '\u7F57\u65AF\u798F' },
+];
+
+const QUOTES: Record<string, Array<{ t: string; a: string }>> = {
+  ru: QUOTES_RU,
+  en: QUOTES_EN,
+  zh: QUOTES_ZH,
+};
+
 function QuoteWidget() {
+  const lang = (localStorage.getItem('ek26_lang') || 'ru') as 'ru' | 'en' | 'zh';
+  const list = QUOTES[lang] || QUOTES_RU;
   const [quote, setQuote] = useState<{ t: string; a: string }>(
-    () => QUOTES[Math.floor(Math.random() * QUOTES.length)]
+    () => list[Math.floor(Math.random() * list.length)]
   );
   const [key, setKey] = useState(0); // force re-render for animation restart
 
   useEffect(() => {
     const handler = () => {
-      setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+      const curLang = (localStorage.getItem('ek26_lang') || 'ru') as 'ru' | 'en' | 'zh';
+      const curList = QUOTES[curLang] || QUOTES_RU;
+      setQuote(curList[Math.floor(Math.random() * curList.length)]);
       setKey(k => k + 1);
     };
     window.addEventListener('sidebar-shown', handler);
@@ -297,6 +335,16 @@ export function Sidebar() {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showArchive, setShowArchive] = useState(false);
+  const [connStatus, setConnStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
+
+  useEffect(() => {
+    const unsub = wsTransport.on('connection', (data: { status: string }) => {
+      setConnStatus(data.status as any);
+    });
+    // Check initial state
+    setConnStatus(wsTransport.connected ? 'connected' : 'connecting');
+    return unsub;
+  }, []);
 
   const doSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -528,7 +576,17 @@ export function Sidebar() {
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain shrink-0" />
+          <div className="relative shrink-0">
+            <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain" />
+            <div
+              className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-dark-800 ${
+                connStatus === 'connected' ? 'bg-green-500' :
+                connStatus === 'disconnected' ? 'bg-red-500' :
+                'bg-yellow-500 animate-pulse'
+              }`}
+              title={connStatus === 'connected' ? t('sidebar.online') : connStatus === 'disconnected' ? t('sidebar.offline') : t('sidebar.connecting')}
+            />
+          </div>
           <HeaderWidget />
         </div>
         <button

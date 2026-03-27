@@ -31,7 +31,7 @@ export async function getSmsSettings(): Promise<ISmsSettings> {
     return smsCache.data;
   }
 
-  let doc = await Settings.findOne({ key: 'sms' }).lean();
+  const doc = await Settings.findOne({ key: 'sms' }).lean() as any;
 
   if (!doc) {
     // Auto-init from env vars on first run
@@ -42,7 +42,10 @@ export async function getSmsSettings(): Promise<ISmsSettings> {
       ucallerServiceId: config.UCALLER_SERVICE_ID || '',
       ucallerSecretKey: config.UCALLER_SECRET_KEY || '',
     };
-    doc = await Settings.create({ key: 'sms', value: initial });
+    await Settings.create({ key: 'sms', value: initial });
+    const data = initial;
+    smsCache = { data, ts: Date.now() };
+    return data;
   }
 
   const data = doc.value as ISmsSettings;

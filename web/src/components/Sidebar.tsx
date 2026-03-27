@@ -576,17 +576,7 @@ export function Sidebar() {
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className="relative shrink-0">
-            <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain" />
-            <div
-              className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-dark-800 ${
-                connStatus === 'connected' ? 'bg-green-500' :
-                connStatus === 'disconnected' ? 'bg-red-500' :
-                'bg-yellow-500 animate-pulse'
-              }`}
-              title={connStatus === 'connected' ? t('sidebar.online') : connStatus === 'disconnected' ? t('sidebar.offline') : t('sidebar.connecting')}
-            />
-          </div>
+          <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain shrink-0" />
           <HeaderWidget />
         </div>
         <button
@@ -848,16 +838,22 @@ export function Sidebar() {
           )}
           <div className="flex-1 min-w-0">
             <span className="text-sm text-gray-300 truncate block">{user?.displayName}</span>
-            {user?.phone ? (
-              <span className="text-xs text-gray-500 truncate block">{user.phone}</span>
-            ) : (
-              <button
-                onClick={() => setShowPhoneLink(true)}
-                className="text-xs text-accent hover:text-accent-hover transition-colors"
-              >
-                {t('sidebar.linkPhone')}
-              </button>
-            )}
+            <div className="flex items-center gap-1">
+              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                connStatus === 'connected' ? 'bg-green-500' :
+                connStatus === 'disconnected' ? 'bg-red-500' :
+                'bg-yellow-500 animate-pulse'
+              }`} />
+              <span className={`text-[10px] truncate ${
+                connStatus === 'connected' ? 'text-gray-500' :
+                connStatus === 'disconnected' ? 'text-red-400/70' :
+                'text-yellow-400/70'
+              }`}>
+                {connStatus === 'connected' ? t('sidebar.online') :
+                 connStatus === 'disconnected' ? t('sidebar.offline') :
+                 t('sidebar.connecting')}
+              </span>
+            </div>
           </div>
           <button
             onClick={() => setShowProfile(true)}

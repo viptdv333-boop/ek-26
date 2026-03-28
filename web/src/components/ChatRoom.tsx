@@ -13,6 +13,7 @@ import { VoiceRecorder } from './VoiceRecorder';
 import { GroupInfoPanel } from './GroupInfoPanel';
 import { callManager } from '../services/webrtc/CallManager';
 import { conversationsApi } from '../services/api/endpoints';
+import { useContactsStore } from '../stores/contactsStore';
 import type { Attachment } from '../stores/chatStore';
 
 const EMPTY_ARRAY: string[] = [];
@@ -53,6 +54,8 @@ export function ChatRoom({ conversationId }: Props) {
   const isUserOnline = useChatStore((s) => s.isUserOnline);
   const setActiveConversation = useChatStore((s) => s.setActiveConversation);
   const userId = useAuthStore((s) => s.user?.id);
+  const syncedContacts = useContactsStore((s) => s.syncedContacts);
+  const storeContacts = useContactsStore((s) => s.contacts);
   const myAvatarUrl = useAuthStore((s) => s.user?.avatarUrl) || null;
 
   // Wallpaper support — reactive via storage event
@@ -128,11 +131,17 @@ export function ChatRoom({ conversationId }: Props) {
   const getTitle = () => {
     if (conv?.groupMeta?.name) return conv.groupMeta.name;
     const other = getOther();
-    return other?.displayName || t('sidebar.chat');
+    if (!other) return t('sidebar.chat');
+    const synced = syncedContacts.find(sc => sc.registeredUserId === other.id);
+    if (synced?.name) return synced.name;
+    const contact = storeContacts.find(c => c.userId === other.id);
+    if (contact?.displayName && contact.displayName !== contact.phone) return contact.displayName;
+    return other.displayName || t('sidebar.chat');
   };
 
   const otherUser = getOther();
-  const otherAvatarUrl = otherUser?.avatarUrl || null;
+  const syncedOther = otherUser ? syncedContacts.find(sc => sc.registeredUserId === otherUser.id) : null;
+  const otherAvatarUrl = syncedOther?.avatarUrl || otherUser?.avatarUrl || null;
 
   const getSubtitle = () => {
     if (typingUsers.length > 0) return t('chat.typing');

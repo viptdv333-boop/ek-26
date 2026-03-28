@@ -6,14 +6,6 @@ import { MessageContextMenu } from './MessageContextMenu';
 import { ContactCard } from './ContactCard';
 import { useTranslation } from '../i18n';
 
-interface SyncResult {
-  name: string;
-  phone: string;
-  userId?: string;
-  avatarUrl?: string;
-  registered: boolean;
-}
-
 function formatLastSeen(lastSeen: string | null, t: (key: string, params?: Record<string, string | number>) => string): string | null {
   if (!lastSeen) return null;
   const diff = Date.now() - new Date(lastSeen).getTime();
@@ -40,8 +32,6 @@ export function ContactsPanel() {
   const setActive = useChatStore((s) => s.setActiveConversation);
   const addConversation = useChatStore((s) => s.addConversation);
   const [contactMenu, setContactMenu] = useState<{ x: number; y: number; contact: Contact } | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const [syncResults, setSyncResults] = useState<SyncResult[] | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -55,7 +45,7 @@ export function ContactsPanel() {
   const [noAccountFound, setNoAccountFound] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const hasContactPicker = 'contacts' in navigator && 'ContactsManager' in window;
+  const [searchQuery, setSearchQuery] = useState('');
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
@@ -133,67 +123,6 @@ export function ContactsPanel() {
     window.open(`sms:${phoneNum}?body=${text}`, '_self');
   };
 
-  const handleSyncContacts = async () => {
-    if (!hasContactPicker) return;
-    setSyncing(true);
-    setSyncResults(null);
-    try {
-      const deviceContacts = await (navigator as any).contacts.select(['name', 'tel'], { multiple: true });
-      const phoneMap = new Map<string, string>();
-      for (const c of deviceContacts) {
-        const name = c.name?.[0] || '';
-        for (const tel of (c.tel || [])) {
-          let p = tel.replace(/[^\d+]/g, '');
-          if (p.startsWith('8') && p.length === 11) p = '+7' + p.slice(1);
-          if (!p.startsWith('+')) p = '+' + p;
-          if (p.length >= 10) phoneMap.set(p, name);
-        }
-      }
-      if (phoneMap.size === 0) return;
-      const phones = [...phoneMap.keys()];
-      const found = await usersApi.lookupByPhones(phones);
-      const foundPhones = new Set((Array.isArray(found) ? found : []).map((u: any) => u.phone));
-
-      let addedCount = 0;
-      for (const user of (Array.isArray(found) ? found : [])) {
-        try {
-          await contactsApi.add(user.id);
-          addedCount++;
-        } catch {}
-      }
-      if (addedCount > 0) await fetchContacts();
-
-      const registered: SyncResult[] = [];
-      const unregistered: SyncResult[] = [];
-      for (const user of (Array.isArray(found) ? found : [])) {
-        registered.push({
-          name: phoneMap.get(user.phone) || user.displayName,
-          phone: user.phone,
-          userId: user.id,
-          avatarUrl: user.avatarUrl,
-          registered: true,
-        });
-      }
-      for (const [ph, name] of phoneMap) {
-        if (!foundPhones.has(ph)) {
-          unregistered.push({ name, phone: ph, registered: false });
-        }
-      }
-      registered.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-      unregistered.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-      setSyncResults([...registered, ...unregistered]);
-    } catch {} finally { setSyncing(false); }
-  };
-
-  const handleAddSyncedContact = async (userId: string) => {
-    try {
-      await contactsApi.add(userId);
-      await fetchContacts();
-      setSyncResults(prev => prev?.map(r => r.userId === userId ? { ...r, userId: undefined } : r) || null);
-      showToast(t('contacts.addedToast'));
-    } catch {}
-  };
-
   const handleOpenChat = async (contact: Contact) => {
     try {
       const conv = await conversationsApi.create(contact.userId);
@@ -261,9 +190,6 @@ export function ContactsPanel() {
     return (a.displayName || '').localeCompare(b.displayName || '', 'ru');
   });
 
-  const syncRegistered = syncResults?.filter(r => r.registered) || [];
-  const syncUnregistered = syncResults?.filter(r => !r.registered) || [];
-
   // Synced contacts: split into registered (not already in contacts) and unregistered
   const contactUserIds = new Set(contacts.map(c => c.userId));
   const registeredSynced = syncedContacts
@@ -272,104 +198,55 @@ export function ContactsPanel() {
   const unregisteredSynced = syncedContacts
     .filter(sc => !sc.isRegistered)
     .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-  const hasSyncedSection = registeredSynced.length > 0 || unregisteredSynced.length > 0;
+
+  // Filter by search query
+  const q = searchQuery.toLowerCase().trim();
+  const filteredContacts = q
+    ? sortedContacts.filter(c => c.displayName?.toLowerCase().includes(q) || c.phone?.toLowerCase().includes(q) || c.username?.toLowerCase().includes(q))
+    : sortedContacts;
+  const filteredRegisteredSynced = q
+    ? registeredSynced.filter(sc => sc.name?.toLowerCase().includes(q) || sc.phone?.toLowerCase().includes(q))
+    : registeredSynced;
+  const filteredUnregisteredSynced = q
+    ? unregisteredSynced.filter(sc => sc.name?.toLowerCase().includes(q) || sc.phone?.toLowerCase().includes(q))
+    : unregisteredSynced;
 
   return (
     <>
-      <div className="px-4 py-2">
-        <button
-          onClick={() => {
-            if (hasContactPicker) {
-              handleSyncContacts();
-            } else {
-              showToast(t('contacts.syncMobileOnly'));
-            }
-          }}
-          disabled={syncing}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-400 hover:text-accent hover:bg-dark-600 rounded-lg transition-colors text-sm disabled:opacity-50"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+      {/* Search field */}
+      <div className="px-3 py-2">
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          {syncing ? t('contacts.syncing') : t('contacts.syncFromPhone')}
-        </button>
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('contacts.searchPlaceholder')}
+            className="w-full pl-9 pr-8 py-2 bg-dark-700 border border-dark-500 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-lg"
+            >
+              &times;
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Sync results - sorted: registered first, then unregistered */}
-      {syncResults && syncResults.length > 0 && (
-        <div className="px-2 pb-2">
-          <div className="flex items-center justify-between px-2 mb-2">
-            <span className="text-xs text-gray-500">{t('contacts.syncFromPhone')} ({syncResults.length})</span>
-            <button onClick={() => setSyncResults(null)} className="text-xs text-gray-500 hover:text-white">&times;</button>
-          </div>
-          <div className="max-h-60 overflow-y-auto space-y-1">
-            {syncRegistered.length > 0 && (
-              <>
-                <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({syncRegistered.length})</p>
-                {syncRegistered.map((r, i) => (
-                  <div key={`reg-${i}`} className="flex items-center gap-3 px-3 py-2 bg-dark-700 rounded-xl">
-                    {r.avatarUrl ? (
-                      <img src={r.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-dark-500 flex items-center justify-center">
-                        <span className="text-gray-400 text-xs">{r.name?.[0]?.toUpperCase() || '?'}</span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white truncate">{r.name || r.phone}</p>
-                      <p className="text-xs text-gray-500 truncate">{r.phone}</p>
-                    </div>
-                    {r.userId ? (
-                      <button
-                        onClick={() => handleAddSyncedContact(r.userId!)}
-                        className="px-2 py-1 bg-accent hover:bg-accent-hover text-white text-xs rounded-lg"
-                      >
-                        {t('contacts.add')}
-                      </button>
-                    ) : (
-                      <span className="text-xs text-green-400">{t('contacts.added')} ✓</span>
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
-            {syncUnregistered.length > 0 && (
-              <>
-                <p className="text-xs text-gray-400 px-3 py-1 font-medium mt-2">{t('contacts.notRegistered')} ({syncUnregistered.length})</p>
-                {syncUnregistered.map((r, i) => (
-                  <div key={`unreg-${i}`} className="flex items-center gap-3 px-3 py-2 bg-dark-700 rounded-xl">
-                    <div className="w-8 h-8 rounded-full bg-dark-500 flex items-center justify-center">
-                      <span className="text-gray-400 text-xs">{r.name?.[0]?.toUpperCase() || '?'}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white truncate">{r.name || r.phone}</p>
-                      <p className="text-xs text-gray-500 truncate">{r.phone}</p>
-                    </div>
-                    <button
-                      onClick={() => handleInvite(r.phone)}
-                      className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg"
-                    >
-                      {t('contacts.invite')}
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* All contacts in one scrollable list */}
-      <div className="flex-1 overflow-y-auto px-2">
+      <div className="flex-1 overflow-y-auto px-2" style={{ minHeight: 0 }}>
         {loading && <p className="text-center text-gray-500 text-sm py-4">{t('contacts.loading')}</p>}
 
         {/* Registered contacts (regular + synced) sorted alphabetically */}
-        {(sortedContacts.length > 0 || registeredSynced.length > 0) && (
+        {(filteredContacts.length > 0 || filteredRegisteredSynced.length > 0) && (
           <>
-            {sortedContacts.length + registeredSynced.length > 0 && unregisteredSynced.length > 0 && (
-              <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({sortedContacts.length + registeredSynced.length})</p>
+            {filteredContacts.length + filteredRegisteredSynced.length > 0 && filteredUnregisteredSynced.length > 0 && (
+              <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({filteredContacts.length + filteredRegisteredSynced.length})</p>
             )}
-            {sortedContacts.map((contact) => (
+            {filteredContacts.map((contact) => (
               <div
                 key={contact.id}
                 className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors group"
@@ -423,7 +300,7 @@ export function ContactsPanel() {
                 </div>
               </div>
             ))}
-            {registeredSynced.map((sc) => (
+            {filteredRegisteredSynced.map((sc) => (
               <div key={`synced-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors">
                 {sc.avatarUrl ? (
                   <img src={sc.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
@@ -442,10 +319,10 @@ export function ContactsPanel() {
         )}
 
         {/* Unregistered synced contacts */}
-        {unregisteredSynced.length > 0 && (
+        {filteredUnregisteredSynced.length > 0 && (
           <>
-            <p className="text-xs text-gray-400 px-3 py-2 font-medium mt-2">{t('contacts.notRegistered')} ({unregisteredSynced.length})</p>
-            {unregisteredSynced.map((sc) => (
+            <p className="text-xs text-gray-400 px-3 py-2 font-medium mt-2">{t('contacts.notRegistered')} ({filteredUnregisteredSynced.length})</p>
+            {filteredUnregisteredSynced.map((sc) => (
               <div key={`unreg-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors">
                 <div className="w-10 h-10 rounded-full bg-dark-500 flex items-center justify-center">
                   <span className="text-gray-400 text-sm">{sc.name?.[0]?.toUpperCase() || '?'}</span>
@@ -465,8 +342,10 @@ export function ContactsPanel() {
           </>
         )}
 
-        {!loading && sortedContacts.length === 0 && syncedContacts.length === 0 && (
-          <p className="text-center text-gray-500 text-sm py-8">{t('contacts.noContacts')}</p>
+        {!loading && filteredContacts.length === 0 && filteredRegisteredSynced.length === 0 && filteredUnregisteredSynced.length === 0 && (
+          <p className="text-center text-gray-500 text-sm py-8">
+            {q ? t('contacts.nothingFound') : t('contacts.noContacts')}
+          </p>
         )}
       </div>
 

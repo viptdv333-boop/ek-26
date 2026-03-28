@@ -324,6 +324,7 @@ export function Sidebar() {
   const authLogout = useAuthStore((s) => s.logout);
   const resetChat = useChatStore((s) => s.reset);
   const contacts = useContactsStore((s) => s.contacts);
+  const syncedContacts = useContactsStore((s) => s.syncedContacts);
   const addContact = useContactsStore((s) => s.addContact);
   const fetchContacts = useContactsStore((s) => s.fetchContacts);
   const [showNewChat, setShowNewChat] = useState(false);
@@ -520,6 +521,12 @@ export function Sidebar() {
     });
     if (!other) return t('sidebar.chat');
     if (typeof other === 'string') return t('sidebar.user');
+    const otherId = other.id;
+    // Priority: synced contact name > regular contact name > participant displayName
+    const contact = contacts.find(c => c.userId === otherId);
+    const synced = syncedContacts.find(sc => sc.registeredUserId === otherId);
+    if (synced?.name) return synced.name;
+    if (contact?.displayName && contact.displayName !== contact.phone) return contact.displayName;
     return other.displayName || t('sidebar.user');
   };
 
@@ -703,8 +710,16 @@ export function Sidebar() {
               <div className="relative w-10 h-10 flex-shrink-0">
                 {isGroup && conv.groupMeta?.avatarUrl ? (
                   <img src={conv.groupMeta.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
-                ) : !isGroup && getOtherUser(conv)?.avatarUrl ? (
-                  <img src={getOtherUser(conv)!.avatarUrl!} alt="" className="w-10 h-10 rounded-full object-cover" />
+                ) : !isGroup && (() => {
+                  const ou = getOtherUser(conv);
+                  const sc = ou ? syncedContacts.find(s => s.registeredUserId === ou.id) : null;
+                  return sc?.avatarUrl || ou?.avatarUrl;
+                })() ? (
+                  <img src={(() => {
+                    const ou = getOtherUser(conv);
+                    const sc = ou ? syncedContacts.find(s => s.registeredUserId === ou.id) : null;
+                    return sc?.avatarUrl || ou?.avatarUrl || '';
+                  })()} alt="" className="w-10 h-10 rounded-full object-cover" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
                     <span className="text-accent text-sm font-medium">

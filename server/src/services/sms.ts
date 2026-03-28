@@ -310,3 +310,56 @@ async function sendCodeViaUCaller(phone: string, code: string, serviceId: string
     throw new Error(`uCaller error: ${data.error || 'unknown'}`);
   }
 }
+
+/**
+ * Send an invite SMS to an unregistered phone number.
+ * Uses Twilio Messages API (not Verify) for plain text.
+ */
+export async function sendInviteSms(phone: string, message: string): Promise<void> {
+  let settings: ISmsSettings;
+  try {
+    settings = await getSmsSettings();
+  } catch {
+    console.log(`[SMS Invite] Dev mode — would send to ${phone}: ${message}`);
+    return;
+  }
+
+  if (settings.activeProvider === 'dev') {
+    console.log(`[SMS Invite] Dev mode — would send to ${phone}: ${message}`);
+    return;
+  }
+
+  // Try Twilio Messages API if credentials available
+  if (settings.twilioAccountSid && settings.twilioAuthToken) {
+    const auth = Buffer.from(`${settings.twilioAccountSid}:${settings.twilioAuthToken}`).toString('base64');
+    const body = new URLSearchParams({
+      To: phone,
+      From: settings.twilioPhoneNumber || '',
+      Body: message,
+    });
+
+    console.log(`[Twilio Invite] Sending SMS to ${phone}...`);
+
+    const res = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${settings.twilioAccountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: body.toString(),
+      }
+    );
+    const data = await res.json() as any;
+    console.log(`[Twilio Invite] Response:`, JSON.stringify(data));
+
+    if (data.error_code) {
+      throw new Error(`Twilio error: ${data.message}`);
+    }
+    return;
+  }
+
+  // Fallback: just log
+  console.log(`[SMS Invite] No SMS provider for invites, would send to ${phone}: ${message}`);
+}

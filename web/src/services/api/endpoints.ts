@@ -88,6 +88,8 @@ export const contactsApi = {
   remove: (contactUserId: string) => api.delete<{ success: boolean }>(`/contacts/${contactUserId}`),
   update: (contactUserId: string, data: { nickname?: string | null; note?: string | null; customAvatar?: string | null; isFavorite?: boolean }) =>
     api.patch<any>(`/contacts/${contactUserId}`, data),
+  invite: (phone: string) => api.post<{ success: boolean }>('/contacts/invite', { phone }),
+  batchAdd: (userIds: string[]) => api.post<{ added: number; duplicates: number }>('/contacts/batch', { userIds }),
 };
 
 // Translate

@@ -337,6 +337,8 @@ export function Sidebar() {
   const [chatMenu, setChatMenu] = useState<{ x: number; y: number; convId: string } | null>(null);
   const setConversations = useChatStore((s) => s.setConversations);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showArchive, setShowArchive] = useState(false);
   const [connStatus, setConnStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
@@ -922,7 +924,7 @@ export function Sidebar() {
                   ...(!isContact && otherUserId ? [{
                     label: t('menu.addContact'),
                     icon: 'user',
-                    onClick: () => { addContact(otherUserId).catch(() => {}); setChatMenu(null); },
+                    onClick: async () => { try { await addContact(otherUserId); showToast(t('contacts.addedToast')); } catch {} setChatMenu(null); },
                   }] : []),
                   {
                     label: t('menu.block'),
@@ -947,6 +949,13 @@ export function Sidebar() {
           ]}
           onClose={() => setChatMenu(null)}
         />
+      )}
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2.5 bg-accent text-white text-sm font-medium rounded-xl shadow-lg animate-fade-in">
+          {toast}
+        </div>
       )}
     </div>
   );

@@ -12,6 +12,7 @@ export interface ISmsSettings {
   twilioAccountSid: string;
   twilioAuthToken: string;
   twilioVerifyServiceSid: string;
+  twilioPhoneNumber: string;
 }
 
 export interface ISettings extends Document {
@@ -55,6 +56,7 @@ export async function getSmsSettings(): Promise<ISmsSettings> {
       twilioAccountSid: '',
       twilioAuthToken: '',
       twilioVerifyServiceSid: '',
+      twilioPhoneNumber: '',
     };
     await Settings.create({ key: 'sms', value: initial });
     const data = initial;

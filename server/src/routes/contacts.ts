@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { Contact } from '../models/Contact';
 import { User } from '../models/User';
 import mongoose from 'mongoose';
+import { sendInviteSms } from '../services/sms';
 
 export async function contactRoutes(app: FastifyInstance) {
   // Get all contacts
@@ -118,5 +119,58 @@ export async function contactRoutes(app: FastifyInstance) {
     }
 
     return { success: true };
+  });
+
+  // Invite via SMS
+  app.post('/api/contacts/invite', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { phone } = request.body as { phone: string };
+
+    if (!phone || phone.replace(/[^\d]/g, '').length < 10) {
+      return reply.code(400).send({ error: 'Invalid phone number' });
+    }
+
+    // Check if user already registered
+    const existing = await User.findOne({ phone });
+    if (existing) {
+      return reply.code(400).send({ error: 'User already registered' });
+    }
+
+    try {
+      const message = 'Join FOMO Chat! Download: https://chat.fomo.broker';
+      await sendInviteSms(phone, message);
+      return { success: true };
+    } catch (err: any) {
+      console.error('[Invite SMS] Error:', err.message);
+      return reply.code(500).send({ error: 'Failed to send invite' });
+    }
+  });
+
+  // Batch add contacts
+  app.post('/api/contacts/batch', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { userIds } = request.body as { userIds: string[] };
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return reply.code(400).send({ error: 'userIds array required' });
+    }
+
+    if (userIds.length > 500) {
+      return reply.code(400).send({ error: 'Maximum 500 contacts at once' });
+    }
+
+    const docs = userIds
+      .filter(id => id !== request.userId)
+      .map(id => ({
+        userId: new mongoose.Types.ObjectId(request.userId),
+        contactUserId: new mongoose.Types.ObjectId(id),
+      }));
+
+    try {
+      const result = await Contact.insertMany(docs, { ordered: false });
+      return { added: result.length, duplicates: docs.length - result.length };
+    } catch (err: any) {
+      // insertMany with ordered:false throws on duplicates but still inserts non-duplicates
+      const inserted = err.insertedDocs?.length || 0;
+      return { added: inserted, duplicates: docs.length - inserted };
+    }
   });
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { usersApi, conversationsApi } from '../services/api/endpoints';
+import { usersApi, conversationsApi, contactsApi } from '../services/api/endpoints';
 import { useChatStore } from '../stores/chatStore';
 import { useContactsStore, Contact } from '../stores/contactsStore';
 import { useTranslation } from '../i18n';
@@ -30,6 +30,9 @@ export function NewChatDialog({ onClose }: Props) {
   const [searchResults, setSearchResults] = useState<UserResult[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   // Group state
   const [groupName, setGroupName] = useState('');
@@ -37,6 +40,21 @@ export function NewChatDialog({ onClose }: Props) {
   const [selectedNames, setSelectedNames] = useState<Map<string, string>>(new Map());
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
+
+  // Detect if input is phone-like
+  const isPhoneInput = /^[+\d]/.test(search);
+
+  const handleSearchChange = (value: string) => {
+    // If starts with + or digit, filter to only + and digits
+    if (/^[+\d]/.test(value)) {
+      value = value.replace(/[^+\d]/g, '');
+    }
+    setSearch(value);
+    setSearchResults([]);
+    setError('');
+    setShowInvite(false);
+    setInviteSent(false);
+  };
 
   const filteredContacts = contacts.filter((c) =>
     !search || c.displayName.toLowerCase().includes(search.toLowerCase()) || c.phone?.includes(search)
@@ -46,10 +64,20 @@ export function NewChatDialog({ onClose }: Props) {
     if (search.length < 2) return;
     setLoading(true);
     setError('');
+    setShowInvite(false);
     try {
       const users = await usersApi.search(search);
       setSearchResults(users || []);
-      if (!users || users.length === 0) setError(t('newChat.notFound'));
+      if (!users || users.length === 0) {
+        // If phone number with 10+ digits, show invite option
+        const digits = search.replace(/[^\d]/g, '');
+        if (digits.length >= 10) {
+          setShowInvite(true);
+          setError(t('newChat.userNotFound'));
+        } else {
+          setError(t('newChat.notFound'));
+        }
+      }
     } catch {
       setError(t('newChat.searchError'));
     } finally {
@@ -104,6 +132,21 @@ export function NewChatDialog({ onClose }: Props) {
     }
   };
 
+  const handleInvite = async () => {
+    const phone = search.startsWith('+') ? search : '+' + search;
+    setInviting(true);
+    try {
+      await contactsApi.invite(phone);
+      setInviteSent(true);
+      setShowInvite(false);
+      setError('');
+    } catch {
+      setError(t('contacts.inviteError'));
+    } finally {
+      setInviting(false);
+    }
+  };
+
   const selectedContacts = contacts.filter((c) => selectedIds.has(c.userId));
 
   const resetTabState = () => {
@@ -113,6 +156,8 @@ export function NewChatDialog({ onClose }: Props) {
     setGroupName('');
     setSelectedIds(new Set());
     setSelectedNames(new Map());
+    setShowInvite(false);
+    setInviteSent(false);
   };
 
   return (
@@ -154,9 +199,9 @@ export function NewChatDialog({ onClose }: Props) {
           <input
             type="text"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setSearchResults([]); setError(''); }}
+            onChange={(e) => handleSearchChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder={t('newChat.searchPlaceholder')}
+            placeholder={tab === 'group' ? t('newChat.groupSearchPlaceholder') : t('newChat.searchPlaceholder')}
             className="w-full px-4 py-2.5 bg-dark-800 border border-dark-500 rounded-xl text-white text-sm focus:outline-none focus:border-accent transition-colors"
             autoFocus
           />
@@ -251,13 +296,17 @@ export function NewChatDialog({ onClose }: Props) {
             </button>
           ))}
 
-          {filteredContacts.length === 0 && searchResults.length === 0 && !error && (
+          {filteredContacts.length === 0 && searchResults.length === 0 && !error && !inviteSent && (
             <p className="text-center text-gray-500 text-sm py-8">
               {search ? t('newChat.noContactsMatch') : t('newChat.noContacts')}
             </p>
           )}
 
           {error && <p className="text-center text-red-400 text-sm py-4">{error}</p>}
+
+          {inviteSent && (
+            <p className="text-center text-green-400 text-sm py-4">✓ {t('newChat.inviteSent')}</p>
+          )}
         </div>
 
         {/* Bottom buttons */}
@@ -268,7 +317,16 @@ export function NewChatDialog({ onClose }: Props) {
           >
             {t('newChat.cancel')}
           </button>
-          {search.length >= 2 && searchResults.length === 0 && (
+          {showInvite && tab === 'direct' && (
+            <button
+              onClick={handleInvite}
+              disabled={inviting}
+              className="flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-medium transition-colors text-sm"
+            >
+              {inviting ? '...' : t('newChat.invite')}
+            </button>
+          )}
+          {!showInvite && search.length >= 2 && searchResults.length === 0 && !inviteSent && (
             <button
               onClick={handleSearch}
               disabled={loading}

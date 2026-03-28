@@ -7,7 +7,7 @@ import { useTranslation } from '../i18n';
 
 interface Props {
   onClose: () => void;
-  initialTab?: 'profile' | 'appearance';
+  initialTab?: 'profile' | 'appearance' | 'contacts';
 }
 
 const WALLPAPER_PRESETS = [

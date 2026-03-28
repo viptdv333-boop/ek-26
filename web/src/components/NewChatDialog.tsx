@@ -41,12 +41,9 @@ export function NewChatDialog({ onClose }: Props) {
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
 
-  // Detect if input is phone-like
-  const isPhoneInput = /^[+\d]/.test(search);
-
   const handleSearchChange = (value: string) => {
-    // If starts with + or digit, filter to only + and digits
-    if (/^[+\d]/.test(value)) {
+    // Direct tab: only + and digits allowed
+    if (tab === 'direct') {
       value = value.replace(/[^+\d]/g, '');
     }
     setSearch(value);
@@ -56,9 +53,11 @@ export function NewChatDialog({ onClose }: Props) {
     setInviteSent(false);
   };
 
-  const filteredContacts = contacts.filter((c) =>
-    !search || c.displayName.toLowerCase().includes(search.toLowerCase()) || c.phone?.includes(search)
-  );
+  const filteredContacts = contacts.filter((c) => {
+    if (!search) return true;
+    // Filter contacts by phone match
+    return c.phone?.includes(search) || c.displayName.toLowerCase().includes(search.toLowerCase());
+  });
 
   const handleSearch = async () => {
     if (search.length < 2) return;

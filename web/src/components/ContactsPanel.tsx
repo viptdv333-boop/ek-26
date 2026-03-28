@@ -37,16 +37,17 @@ export function ContactsPanel() {
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const setActive = useChatStore((s) => s.setActiveConversation);
   const addConversation = useChatStore((s) => s.addConversation);
-  const [phone, setPhone] = useState('+');
-  const [adding, setAdding] = useState(false);
-  const [addError, setAddError] = useState('');
   const [contactMenu, setContactMenu] = useState<{ x: number; y: number; contact: Contact } | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResults, setSyncResults] = useState<SyncResult[] | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
-  const [invitingPhone, setInvitingPhone] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Add contact dialog state
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addPhone, setAddPhone] = useState('+');
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState('');
   const [searchResults, setSearchResults] = useState<{ id: string; displayName: string; phone: string | null; avatarUrl: string | null }[]>([]);
   const [searchingPhone, setSearchingPhone] = useState(false);
   const [noAccountFound, setNoAccountFound] = useState(false);
@@ -60,9 +61,9 @@ export function ContactsPanel() {
     fetchContacts();
   }, [fetchContacts]);
 
-  // Live search as user types phone/name
+  // Live search as user types phone
   useEffect(() => {
-    const q = phone.replace(/^\+$/, '');
+    const q = addPhone.replace(/^\+$/, '');
     if (q.length < 3) {
       setSearchResults([]);
       setNoAccountFound(false);
@@ -76,8 +77,7 @@ export function ContactsPanel() {
         const users = await usersApi.search(q);
         const results = Array.isArray(users) ? users : [];
         setSearchResults(results);
-        // If phone input with 10+ digits and no results, show invite
-        const digits = phone.replace(/[^\d]/g, '');
+        const digits = addPhone.replace(/[^\d]/g, '');
         if (results.length === 0 && digits.length >= 10) {
           setNoAccountFound(true);
         }
@@ -88,25 +88,25 @@ export function ContactsPanel() {
       }
     }, 400);
     return () => clearTimeout(searchTimerRef.current);
-  }, [phone]);
+  }, [addPhone]);
 
   const handlePhoneChange = (value: string) => {
     // Only allow + and digits
     const filtered = value.replace(/[^+\d]/g, '');
-    setPhone(filtered || '+');
+    setAddPhone(filtered || '+');
     setAddError('');
     setNoAccountFound(false);
   };
 
   const handleAddByPhone = async () => {
-    if (phone.replace(/[^\d]/g, '').length < 10) {
+    if (addPhone.replace(/[^\d]/g, '').length < 10) {
       setAddError(t('contacts.invalidPhone'));
       return;
     }
     setAdding(true);
     setAddError('');
     try {
-      const found = await usersApi.lookupByPhones([phone]);
+      const found = await usersApi.lookupByPhones([addPhone]);
       const users = Array.isArray(found) ? found : [];
       if (users.length === 0) {
         setAddError(t('contacts.notFound'));
@@ -115,7 +115,8 @@ export function ContactsPanel() {
       }
       await contactsApi.add(users[0].id);
       await fetchContacts();
-      setPhone('+');
+      setAddPhone('+');
+      setShowAddDialog(false);
       showToast(t('contacts.addedToast'));
     } catch (err: any) {
       setAddError(err?.message?.includes('409') ? t('contacts.alreadyAdded') : t('contacts.error'));
@@ -124,18 +125,9 @@ export function ContactsPanel() {
     }
   };
 
-  const handleInvite = async (phoneNum: string) => {
-    setInvitingPhone(phoneNum);
-    try {
-      await contactsApi.invite(phoneNum);
-      showToast(t('contacts.inviteSent'));
-    } catch {
-      // Fallback to native SMS
-      const text = encodeURIComponent(t('contacts.inviteText'));
-      window.open(`sms:${phoneNum}?body=${text}`, '_self');
-    } finally {
-      setInvitingPhone(null);
-    }
+  const handleInvite = (phoneNum: string) => {
+    const text = encodeURIComponent(t('contacts.inviteText'));
+    window.open(`sms:${phoneNum}?body=${text}`, '_self');
   };
 
   const handleSyncContacts = async () => {
@@ -159,17 +151,15 @@ export function ContactsPanel() {
       const found = await usersApi.lookupByPhones(phones);
       const foundPhones = new Set((Array.isArray(found) ? found : []).map((u: any) => u.phone));
 
-      // Auto-add all registered users
       let addedCount = 0;
       for (const user of (Array.isArray(found) ? found : [])) {
         try {
           await contactsApi.add(user.id);
           addedCount++;
-        } catch {} // ignore 409 (already in contacts)
+        } catch {}
       }
       if (addedCount > 0) await fetchContacts();
 
-      // Build results: registered first, then unregistered
       const registered: SyncResult[] = [];
       const unregistered: SyncResult[] = [];
       for (const user of (Array.isArray(found) ? found : [])) {
@@ -186,7 +176,6 @@ export function ContactsPanel() {
           unregistered.push({ name, phone: ph, registered: false });
         }
       }
-      // Sort each alphabetically
       registered.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
       unregistered.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
       setSyncResults([...registered, ...unregistered]);
@@ -249,7 +238,6 @@ export function ContactsPanel() {
 
   const isOnline = (userId: string) => onlineUsers.has(userId);
 
-  // Sort: favorites first (max 5), then alphabetically
   const sortedContacts = [...contacts].sort((a, b) => {
     const aFav = a.isFavorite ? 1 : 0;
     const bFav = b.isFavorite ? 1 : 0;
@@ -257,92 +245,13 @@ export function ContactsPanel() {
     return (a.displayName || '').localeCompare(b.displayName || '', 'ru');
   });
 
-  // Separate sync results into registered and unregistered
   const syncRegistered = syncResults?.filter(r => r.registered) || [];
   const syncUnregistered = syncResults?.filter(r => !r.registered) || [];
 
   return (
     <>
-      {/* Add by phone */}
-      <div className="px-4 py-3">
-        <div className="flex gap-2">
-          <input
-            value={phone}
-            onChange={(e) => handlePhoneChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddByPhone()}
-            placeholder={t('contacts.enterNumber')}
-            className="flex-1 px-3 py-2 bg-dark-700 border border-dark-500 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
-          />
-          <button
-            onClick={handleAddByPhone}
-            disabled={adding}
-            className="px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-          >
-            {adding ? '...' : t('contacts.add')}
-          </button>
-        </div>
-        {addError && <p className="text-xs text-red-400 mt-1">{addError}</p>}
-
-        {/* Invite button when no account found */}
-        {noAccountFound && searchResults.length === 0 && !searchingPhone && (
-          <button
-            onClick={() => handleInvite(phone)}
-            disabled={invitingPhone === phone}
-            className="w-full mt-2 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-            {invitingPhone === phone ? '...' : t('contacts.invite')}
-          </button>
-        )}
-
-        {/* Live search results */}
-        {searchResults.length > 0 && (
-          <div className="mt-2 bg-dark-700 border border-dark-500 rounded-xl overflow-hidden">
-            {searchResults.map((user) => {
-              const alreadyAdded = contacts.some(c => c.userId === user.id);
-              return (
-                <div key={user.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 transition-colors">
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                      <span className="text-accent text-xs font-medium">{user.displayName[0]?.toUpperCase()}</span>
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white truncate">{user.displayName}</p>
-                    {user.phone && <p className="text-xs text-gray-500 truncate">{user.phone}</p>}
-                  </div>
-                  {alreadyAdded ? (
-                    <span className="text-xs text-green-400">{t('contacts.added')} &#10003;</span>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await contactsApi.add(user.id);
-                          await fetchContacts();
-                          setSearchResults(prev => prev.filter(u => u.id !== user.id));
-                          setPhone('+');
-                          showToast(t('contacts.addedToast'));
-                        } catch {}
-                      }}
-                      className="px-3 py-1 bg-accent hover:bg-accent-hover text-white text-xs rounded-lg transition-colors"
-                    >
-                      {t('contacts.add')}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {searchingPhone && <p className="text-xs text-gray-500 mt-1">{t('contacts.searching')}</p>}
-      </div>
-
       {hasContactPicker && (
-        <div className="px-4 pb-2">
+        <div className="px-4 py-2">
           <button
             onClick={handleSyncContacts}
             disabled={syncing}
@@ -364,7 +273,6 @@ export function ContactsPanel() {
             <button onClick={() => setSyncResults(null)} className="text-xs text-gray-500 hover:text-white">&times;</button>
           </div>
           <div className="max-h-60 overflow-y-auto space-y-1">
-            {/* Registered section */}
             {syncRegistered.length > 0 && (
               <>
                 <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({syncRegistered.length})</p>
@@ -395,7 +303,6 @@ export function ContactsPanel() {
                 ))}
               </>
             )}
-            {/* Unregistered section */}
             {syncUnregistered.length > 0 && (
               <>
                 <p className="text-xs text-gray-400 px-3 py-1 font-medium mt-2">{t('contacts.notRegistered')} ({syncUnregistered.length})</p>
@@ -410,10 +317,9 @@ export function ContactsPanel() {
                     </div>
                     <button
                       onClick={() => handleInvite(r.phone)}
-                      disabled={invitingPhone === r.phone}
-                      className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg disabled:opacity-50"
+                      className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg"
                     >
-                      {invitingPhone === r.phone ? '...' : t('contacts.invite')}
+                      {t('contacts.invite')}
                     </button>
                   </div>
                 ))}
@@ -434,7 +340,6 @@ export function ContactsPanel() {
             key={contact.id}
             className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors group"
           >
-            {/* Avatar */}
             <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
               {contact.avatarUrl ? (
                 <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
@@ -448,7 +353,6 @@ export function ContactsPanel() {
               )}
             </div>
 
-            {/* Info */}
             <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenChat(contact)}>
               <p className="text-sm text-white truncate flex items-center gap-1">
                 {contact.isFavorite && <span className="text-yellow-400 flex-shrink-0">&#11088;</span>}
@@ -457,7 +361,6 @@ export function ContactsPanel() {
               {contact.phone && (
                 <p className="text-xs text-gray-500 truncate">{contact.phone}</p>
               )}
-              {/* Online status */}
               {isOnline(contact.userId) ? (
                 <p className="text-xs text-green-400">{t('contacts.online')}</p>
               ) : (
@@ -468,7 +371,6 @@ export function ContactsPanel() {
               )}
             </div>
 
-            {/* Actions - only menu button */}
             <div className="flex items-center gap-1">
               <div
                 onClick={(e) => {
@@ -489,6 +391,119 @@ export function ContactsPanel() {
         ))}
       </div>
 
+      {/* Add Contact button at bottom */}
+      <div className="px-4 py-3 border-t border-dark-600">
+        <button
+          onClick={() => { setShowAddDialog(true); setAddPhone('+'); setAddError(''); setSearchResults([]); setNoAccountFound(false); }}
+          className="w-full py-2.5 bg-accent hover:bg-accent-hover text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+          {t('contacts.addContact')}
+        </button>
+      </div>
+
+      {/* Add Contact Dialog */}
+      {showAddDialog && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowAddDialog(false)}>
+          <div
+            className="w-full max-w-sm bg-dark-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-dark-600">
+              <h2 className="text-lg font-semibold text-white mb-3">{t('contacts.addContact')}</h2>
+              <div className="flex gap-2">
+                <input
+                  value={addPhone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddByPhone()}
+                  placeholder={t('contacts.enterNumber')}
+                  className="flex-1 px-4 py-2.5 bg-dark-800 border border-dark-500 rounded-xl text-white text-sm focus:outline-none focus:border-accent transition-colors"
+                  autoFocus
+                  inputMode="tel"
+                />
+                <button
+                  onClick={handleAddByPhone}
+                  disabled={adding}
+                  className="px-4 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {adding ? '...' : t('contacts.add')}
+                </button>
+              </div>
+              {addError && <p className="text-xs text-red-400 mt-2">{addError}</p>}
+              {searchingPhone && <p className="text-xs text-gray-500 mt-1">{t('contacts.searching')}</p>}
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-1 max-h-64">
+              {/* Search results */}
+              {searchResults.map((user) => {
+                const alreadyAdded = contacts.some(c => c.userId === user.id);
+                return (
+                  <div key={user.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-dark-600 transition-colors">
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                        <span className="text-accent text-sm font-medium">{user.displayName[0]?.toUpperCase()}</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{user.displayName}</p>
+                      {user.phone && <p className="text-xs text-gray-500 truncate">{user.phone}</p>}
+                    </div>
+                    {alreadyAdded ? (
+                      <span className="text-xs text-green-400">{t('contacts.added')} ✓</span>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await contactsApi.add(user.id);
+                            await fetchContacts();
+                            setSearchResults(prev => prev.filter(u => u.id !== user.id));
+                            setAddPhone('+');
+                            setShowAddDialog(false);
+                            showToast(t('contacts.addedToast'));
+                          } catch {}
+                        }}
+                        className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs rounded-lg transition-colors"
+                      >
+                        {t('contacts.add')}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Invite when no account */}
+              {noAccountFound && searchResults.length === 0 && !searchingPhone && (
+                <div className="px-4 py-4 text-center">
+                  <p className="text-sm text-gray-400 mb-3">{t('contacts.notFound')}</p>
+                  <button
+                    onClick={() => handleInvite(addPhone)}
+                    className="w-full py-2.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    {t('contacts.invite')}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-dark-600">
+              <button
+                onClick={() => setShowAddDialog(false)}
+                className="w-full py-2.5 rounded-xl border border-dark-500 text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                {t('newChat.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {contactMenu && (
         <MessageContextMenu
           x={contactMenu.x}
@@ -507,7 +522,6 @@ export function ContactsPanel() {
         <ContactCard contact={editingContact} onClose={() => setEditingContact(null)} />
       )}
 
-      {/* Toast notification */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2.5 bg-accent text-white text-sm font-medium rounded-xl shadow-lg">
           {toast}

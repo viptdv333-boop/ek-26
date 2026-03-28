@@ -346,118 +346,116 @@ export function ContactsPanel() {
         </div>
       )}
 
-      {/* Contact list */}
+      {/* All contacts in one scrollable list */}
       <div className="flex-1 overflow-y-auto px-2">
         {loading && <p className="text-center text-gray-500 text-sm py-4">{t('contacts.loading')}</p>}
-        {!loading && contacts.length === 0 && (
-          <p className="text-center text-gray-500 text-sm py-8">{t('contacts.noContacts')}</p>
-        )}
-        {sortedContacts.map((contact) => (
-          <div
-            key={contact.id}
-            className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors group"
-          >
-            <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
-              {contact.avatarUrl ? (
-                <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                  <span className="text-accent text-sm font-medium">{contact.displayName[0]?.toUpperCase()}</span>
-                </div>
-              )}
-              {isOnline(contact.userId) && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-800" />
-              )}
-            </div>
 
-            <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenChat(contact)}>
-              <p className="text-sm text-white truncate flex items-center gap-1">
-                {contact.isFavorite && <span className="text-yellow-400 flex-shrink-0">&#11088;</span>}
-                {contact.displayName}
-              </p>
-              {contact.phone && (
-                <p className="text-xs text-gray-500 truncate">{contact.phone}</p>
-              )}
-              {isOnline(contact.userId) ? (
-                <p className="text-xs text-green-400">{t('contacts.online')}</p>
-              ) : (
-                (() => {
-                  const status = formatLastSeen(contact.lastSeen, t);
-                  return status ? <p className="text-xs text-gray-500">{status}</p> : null;
-                })()
-              )}
-            </div>
-
-            <div className="flex items-center gap-1">
+        {/* Registered contacts (regular + synced) sorted alphabetically */}
+        {(sortedContacts.length > 0 || registeredSynced.length > 0) && (
+          <>
+            {sortedContacts.length + registeredSynced.length > 0 && unregisteredSynced.length > 0 && (
+              <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({sortedContacts.length + registeredSynced.length})</p>
+            )}
+            {sortedContacts.map((contact) => (
               <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const rect = (e.target as HTMLElement).getBoundingClientRect();
-                  setContactMenu({ x: rect.left, y: rect.bottom, contact });
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-dark-500 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                key={contact.id}
+                className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors group"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="12" cy="5" r="2" />
-                  <circle cx="12" cy="12" r="2" />
-                  <circle cx="12" cy="19" r="2" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Synced contacts section */}
-      {hasSyncedSection && (
-        <div className="px-2 pb-2">
-          <div className="px-2 py-1">
-            <span className="text-xs text-gray-500 font-medium">{t('contacts.syncedContacts') || 'Synced Contacts'}</span>
-          </div>
-          {registeredSynced.length > 0 && (
-            <>
-              <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({registeredSynced.length})</p>
-              {registeredSynced.map((sc) => (
-                <div key={sc.id} className="flex items-center gap-3 px-3 py-2 hover:bg-dark-600 rounded-xl transition-colors">
-                  {sc.avatarUrl ? (
-                    <img src={sc.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
+                  {contact.avatarUrl ? (
+                    <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                      <span className="text-accent text-sm font-medium">{sc.name?.[0]?.toUpperCase() || '?'}</span>
+                      <span className="text-accent text-sm font-medium">{contact.displayName[0]?.toUpperCase()}</span>
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white truncate">{sc.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
-                  </div>
+                  {isOnline(contact.userId) && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-800" />
+                  )}
                 </div>
-              ))}
-            </>
-          )}
-          {unregisteredSynced.length > 0 && (
-            <>
-              <p className="text-xs text-gray-400 px-3 py-1 font-medium mt-2">{t('contacts.notRegistered')} ({unregisteredSynced.length})</p>
-              {unregisteredSynced.map((sc) => (
-                <div key={sc.id} className="flex items-center gap-3 px-3 py-2 hover:bg-dark-600 rounded-xl transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-dark-500 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">{sc.name?.[0]?.toUpperCase() || '?'}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white truncate">{sc.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
-                  </div>
-                  <button
-                    onClick={() => handleInvite(sc.phone)}
-                    className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg"
+
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenChat(contact)}>
+                  <p className="text-sm text-white truncate flex items-center gap-1">
+                    {contact.isFavorite && <span className="text-yellow-400 flex-shrink-0">&#11088;</span>}
+                    {contact.displayName}
+                  </p>
+                  {contact.phone && (
+                    <p className="text-xs text-gray-500 truncate">{contact.phone}</p>
+                  )}
+                  {isOnline(contact.userId) ? (
+                    <p className="text-xs text-green-400">{t('contacts.online')}</p>
+                  ) : (
+                    (() => {
+                      const status = formatLastSeen(contact.lastSeen, t);
+                      return status ? <p className="text-xs text-gray-500">{status}</p> : null;
+                    })()
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const rect = (e.target as HTMLElement).getBoundingClientRect();
+                      setContactMenu({ x: rect.left, y: rect.bottom, contact });
+                    }}
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-dark-500 text-gray-400 hover:text-white transition-colors cursor-pointer"
                   >
-                    {t('contacts.invite')}
-                  </button>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="5" r="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <circle cx="12" cy="19" r="2" />
+                    </svg>
+                  </div>
                 </div>
-              ))}
-            </>
-          )}
-        </div>
-      )}
+              </div>
+            ))}
+            {registeredSynced.map((sc) => (
+              <div key={`synced-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors">
+                {sc.avatarUrl ? (
+                  <img src={sc.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                    <span className="text-accent text-sm font-medium">{sc.name?.[0]?.toUpperCase() || '?'}</span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{sc.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Unregistered synced contacts */}
+        {unregisteredSynced.length > 0 && (
+          <>
+            <p className="text-xs text-gray-400 px-3 py-2 font-medium mt-2">{t('contacts.notRegistered')} ({unregisteredSynced.length})</p>
+            {unregisteredSynced.map((sc) => (
+              <div key={`unreg-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors">
+                <div className="w-10 h-10 rounded-full bg-dark-500 flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">{sc.name?.[0]?.toUpperCase() || '?'}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{sc.name || sc.phone}</p>
+                  <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
+                </div>
+                <button
+                  onClick={() => handleInvite(sc.phone)}
+                  className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg flex-shrink-0"
+                >
+                  {t('contacts.invite')}
+                </button>
+              </div>
+            ))}
+          </>
+        )}
+
+        {!loading && sortedContacts.length === 0 && syncedContacts.length === 0 && (
+          <p className="text-center text-gray-500 text-sm py-8">{t('contacts.noContacts')}</p>
+        )}
+      </div>
 
       {/* Add Contact button at bottom */}
       <div className="px-4 py-3 border-t border-dark-600">

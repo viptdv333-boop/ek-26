@@ -2,6 +2,8 @@ import { api } from './client';
 
 // Auth
 export const authApi = {
+  // Get verification method (call vs sms)
+  getVerifyMethod: () => api.get<{ method: 'call' | 'sms' }>('/auth/verify-method'),
   // Legacy phone+code flow
   requestCode: (phone: string) => api.post<{ message: string }>('/auth/request-code', { phone }),
   verifyCode: (phone: string, code: string) =>

@@ -91,6 +91,12 @@ export function AuthPage() {
   const [code, setCode] = useState(['', '', '', '']);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [countdown, setCountdown] = useState(0);
+  const [verifyMethod, setVerifyMethod] = useState<'call' | 'sms'>('sms');
+
+  // Fetch verify method on mount
+  useEffect(() => {
+    authApi.getVerifyMethod().then(r => setVerifyMethod(r.method)).catch(() => {});
+  }, []);
 
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -708,8 +714,8 @@ export function AuthPage() {
         {step === 'code' && (
           <div className="space-y-4">
             <p className="text-center text-gray-400 text-sm">
-              {t('auth.weWillCall')} <span className="text-white">{phone}</span>,<br />
-              {t('auth.enterLast4')}
+              {t(verifyMethod === 'call' ? 'auth.weWillCallPhone' : 'auth.weWillCall')} <span className="text-white">{phone}</span>,<br />
+              {t(verifyMethod === 'call' ? 'auth.enterLast4Call' : 'auth.enterLast4')}
             </p>
             <div className="flex gap-3 justify-center">
               {code.map((digit, i) => (

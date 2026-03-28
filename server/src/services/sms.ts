@@ -277,6 +277,19 @@ export async function isTwilioVerifyProvider(): Promise<boolean> {
   }
 }
 
+/**
+ * Get verification method type: 'call' for flash-call providers, 'sms' for SMS providers.
+ */
+export async function getVerifyMethod(): Promise<'call' | 'sms'> {
+  try {
+    const settings = await getSmsSettings();
+    const callProviders = ['numcheck', 'ucaller'];
+    return callProviders.includes(settings.activeProvider) ? 'call' : 'sms';
+  } catch {
+    return 'sms';
+  }
+}
+
 async function sendCodeViaUCaller(phone: string, code: string, serviceId: string, secretKey: string): Promise<void> {
   const cleanPhone = phone.replace(/[^\d]/g, '');
 

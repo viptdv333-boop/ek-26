@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { authApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 
@@ -17,6 +17,11 @@ export function PhoneLinkDialog({ onClose }: Props) {
   const [countdown, setCountdown] = useState(0);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const updateUser = useAuthStore((s) => s.updateUser);
+  const [verifyMethod, setVerifyMethod] = useState<'call' | 'sms'>('sms');
+
+  useEffect(() => {
+    authApi.getVerifyMethod().then(r => setVerifyMethod(r.method)).catch(() => {});
+  }, []);
 
   const startCountdown = () => {
     setCountdown(60);
@@ -126,7 +131,7 @@ export function PhoneLinkDialog({ onClose }: Props) {
                 disabled={loading}
                 className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-medium transition-colors"
               >
-                {loading ? 'Звоним...' : 'Получить код'}
+                {loading ? (verifyMethod === 'call' ? 'Звоним...' : 'Отправляем...') : 'Получить код'}
               </button>
             </div>
           </div>
@@ -135,10 +140,10 @@ export function PhoneLinkDialog({ onClose }: Props) {
         {step === 'code' && (
           <div className="space-y-3">
             <p className="text-center text-gray-400 text-sm">
-              Мы отправим код на <span className="text-white">{phone}</span>
+              {verifyMethod === 'call' ? 'Мы позвоним на' : 'Мы отправим код на'} <span className="text-white">{phone}</span>
             </p>
             <p className="text-center text-gray-500 text-xs">
-              Введите код из SMS
+              {verifyMethod === 'call' ? 'Введите последние 4 цифры входящего номера' : 'Введите код из SMS'}
             </p>
             <div className="flex gap-3 justify-center">
               {code.map((digit, i) => (

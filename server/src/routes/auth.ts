@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { SmsCode } from '../models/SmsCode';
 import { Session } from '../models/Session';
-import { generateOtp, hashOtp, sendCode, isTwilioVerifyProvider, checkTwilioVerifyCode } from '../services/sms';
+import { generateOtp, hashOtp, sendCode, isTwilioVerifyProvider, checkTwilioVerifyCode, getVerifyMethod } from '../services/sms';
 import { signAccessToken, signRefreshToken, hashToken, verifyToken } from '../services/jwt';
 import { signEmailVerificationToken, sendVerificationEmail } from '../services/email';
 import { Message } from '../models/Message';
@@ -40,6 +40,12 @@ async function enrichSessionGeo(sessionId: string, ip: string) {
 }
 
 export async function authRoutes(app: FastifyInstance) {
+  // Public endpoint: get verification method type (call vs sms)
+  app.get('/api/auth/verify-method', async () => {
+    const method = await getVerifyMethod();
+    return { method };
+  });
+
   // Request SMS code
   app.post('/api/auth/request-code', async (request, reply) => {
     const body = requestCodeSchema.parse(request.body);

@@ -148,7 +148,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
     }
   };
 
-  const GOOGLE_CLIENT_ID = '765432109876-placeholder.apps.googleusercontent.com'; // Will be replaced with real ID
+  const GOOGLE_CLIENT_ID = '1041371304955-o194d2teij50k25qd4asvlhn83nf44p9.apps.googleusercontent.com';
 
   const handleGoogleSync = async () => {
     setGoogleSyncing(true);

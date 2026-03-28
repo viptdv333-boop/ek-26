@@ -250,20 +250,24 @@ export function ContactsPanel() {
 
   return (
     <>
-      {hasContactPicker && (
-        <div className="px-4 py-2">
-          <button
-            onClick={handleSyncContacts}
-            disabled={syncing}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-400 hover:text-accent hover:bg-dark-600 rounded-lg transition-colors text-sm disabled:opacity-50"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-            </svg>
-            {syncing ? t('contacts.syncing') : t('contacts.syncFromPhone')}
-          </button>
-        </div>
-      )}
+      <div className="px-4 py-2">
+        <button
+          onClick={() => {
+            if (hasContactPicker) {
+              handleSyncContacts();
+            } else {
+              showToast(t('contacts.syncMobileOnly'));
+            }
+          }}
+          disabled={syncing}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-400 hover:text-accent hover:bg-dark-600 rounded-lg transition-colors text-sm disabled:opacity-50"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+          </svg>
+          {syncing ? t('contacts.syncing') : t('contacts.syncFromPhone')}
+        </button>
+      </div>
 
       {/* Sync results - sorted: registered first, then unregistered */}
       {syncResults && syncResults.length > 0 && (

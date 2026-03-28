@@ -287,6 +287,9 @@ export async function adminRoutes(app: FastifyInstance) {
       alibabaAccessKeySecret: settings.alibabaAccessKeySecret ? '***' + settings.alibabaAccessKeySecret.slice(-4) : '',
       alibabaSignName: settings.alibabaSignName || '',
       alibabaTemplateCode: settings.alibabaTemplateCode || '',
+      twilioAccountSid: settings.twilioAccountSid || '',
+      twilioAuthToken: settings.twilioAuthToken ? '***' + settings.twilioAuthToken.slice(-4) : '',
+      twilioPhoneNumber: settings.twilioPhoneNumber || '',
     };
   });
 
@@ -296,7 +299,7 @@ export async function adminRoutes(app: FastifyInstance) {
     const current = await getSmsSettings();
 
     const update: Partial<ISmsSettings> = {};
-    if (body.activeProvider && ['numcheck', 'ucaller', 'alibaba', 'dev'].includes(body.activeProvider)) {
+    if (body.activeProvider && ['numcheck', 'ucaller', 'alibaba', 'twilio', 'dev'].includes(body.activeProvider)) {
       update.activeProvider = body.activeProvider;
     }
     if (typeof body.numcheckToken === 'string') {
@@ -319,6 +322,15 @@ export async function adminRoutes(app: FastifyInstance) {
     }
     if (typeof body.alibabaTemplateCode === 'string') {
       update.alibabaTemplateCode = body.alibabaTemplateCode;
+    }
+    if (typeof body.twilioAccountSid === 'string') {
+      update.twilioAccountSid = body.twilioAccountSid;
+    }
+    if (typeof body.twilioAuthToken === 'string') {
+      update.twilioAuthToken = body.twilioAuthToken;
+    }
+    if (typeof body.twilioPhoneNumber === 'string') {
+      update.twilioPhoneNumber = body.twilioPhoneNumber;
     }
 
     await Settings.updateOne(

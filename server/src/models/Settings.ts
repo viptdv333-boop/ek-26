@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISmsSettings {
-  activeProvider: 'numcheck' | 'ucaller' | 'alibaba' | 'dev';
+  activeProvider: 'numcheck' | 'ucaller' | 'alibaba' | 'twilio' | 'dev';
   numcheckToken: string;
   ucallerServiceId: string;
   ucallerSecretKey: string;
@@ -9,6 +9,9 @@ export interface ISmsSettings {
   alibabaAccessKeySecret: string;
   alibabaSignName: string;
   alibabaTemplateCode: string;
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  twilioPhoneNumber: string;
 }
 
 export interface ISettings extends Document {
@@ -49,6 +52,9 @@ export async function getSmsSettings(): Promise<ISmsSettings> {
       alibabaAccessKeySecret: '',
       alibabaSignName: '',
       alibabaTemplateCode: '',
+      twilioAccountSid: '',
+      twilioAuthToken: '',
+      twilioPhoneNumber: '',
     };
     await Settings.create({ key: 'sms', value: initial });
     const data = initial;

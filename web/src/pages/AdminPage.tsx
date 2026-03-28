@@ -463,6 +463,7 @@ export function AdminPage() {
                 { id: 'numcheck' as const, name: 'NumCheck', desc: 'Flash-call verification' },
                 { id: 'ucaller' as const, name: 'uCaller', desc: 'Flash-call verification' },
                 { id: 'alibaba' as const, name: 'Alibaba Cloud SMS', desc: 'SMS, works in China' },
+                { id: 'twilio' as const, name: 'Twilio', desc: 'SMS, global coverage (200+ countries)' },
                 { id: 'dev' as const, name: 'Dev Mode', desc: 'Code: 1945, no real sending' },
               ].map(p => (
                 <div
@@ -570,6 +571,42 @@ export function AdminPage() {
                     value={smsKeys.alibabaTemplateCode}
                     onChange={e => setSmsKeys(k => ({ ...k, alibabaTemplateCode: e.target.value }))}
                     placeholder="SMS_123456"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+              </div>
+            )}
+
+            {smsProvider === 'twilio' && (
+              <div className="space-y-3 mb-6">
+                <label className="block">
+                  <span className="text-xs text-gray-400">Account SID</span>
+                  <input
+                    type="text"
+                    value={smsKeys.twilioAccountSid || ''}
+                    onChange={e => setSmsKeys(k => ({ ...k, twilioAccountSid: e.target.value }))}
+                    placeholder="AC..."
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-gray-400">Auth Token</span>
+                  <input
+                    type="text"
+                    value={smsKeys.twilioAuthToken || ''}
+                    onChange={e => setSmsKeys(k => ({ ...k, twilioAuthToken: e.target.value }))}
+                    onFocus={e => { if (e.target.value.startsWith('***')) setSmsKeys(k => ({ ...k, twilioAuthToken: '' })); }}
+                    placeholder="Auth Token"
+                    className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-gray-400">Phone Number (Twilio номер)</span>
+                  <input
+                    type="text"
+                    value={smsKeys.twilioPhoneNumber || ''}
+                    onChange={e => setSmsKeys(k => ({ ...k, twilioPhoneNumber: e.target.value }))}
+                    placeholder="+1234567890"
                     className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
                   />
                 </label>

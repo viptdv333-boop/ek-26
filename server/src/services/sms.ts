@@ -77,6 +77,19 @@ export async function sendCode(phone: string, code: string): Promise<string> {
     return code;
   }
 
+  if (provider === 'twilio') {
+    if (!settings.twilioAccountSid || !settings.twilioAuthToken || !settings.twilioPhoneNumber) {
+      throw new Error('Twilio credentials not configured');
+    }
+    await sendCodeViaTwilio(
+      phone, code,
+      settings.twilioAccountSid,
+      settings.twilioAuthToken,
+      settings.twilioPhoneNumber,
+    );
+    return code;
+  }
+
   // Unknown provider — dev fallback
   console.warn(`[SMS] Unknown provider '${provider}', using dev mode`);
   console.log(`[DEV OTP] Code for ${phone}: ${code}`);
@@ -176,6 +189,40 @@ async function sendCodeViaAlibaba(
   if (data.Code !== 'OK') {
     console.error('[Alibaba SMS] Error:', data.Message);
     throw new Error(`Alibaba SMS error: ${data.Message || data.Code || 'unknown'}`);
+  }
+}
+
+async function sendCodeViaTwilio(
+  phone: string, code: string,
+  accountSid: string, authToken: string, fromNumber: string,
+): Promise<void> {
+  const cleanPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+  console.log(`[Twilio] Sending SMS to ${cleanPhone} with code ${code}...`);
+
+  const body = new URLSearchParams({
+    To: cleanPhone,
+    From: fromNumber,
+    Body: `Your verification code: ${code}`,
+  });
+
+  const res = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    },
+  );
+  const data = (await res.json()) as any;
+  console.log(`[Twilio] Response:`, JSON.stringify(data));
+
+  if (data.error_code || data.status === 'failed') {
+    console.error('[Twilio] Error:', data.message);
+    throw new Error(`Twilio error: ${data.message || data.error_code || 'unknown'}`);
   }
 }
 

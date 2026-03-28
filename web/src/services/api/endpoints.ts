@@ -90,6 +90,9 @@ export const contactsApi = {
     api.patch<any>(`/contacts/${contactUserId}`, data),
   invite: (phone: string) => api.post<{ success: boolean }>('/contacts/invite', { phone }),
   batchAdd: (userIds: string[]) => api.post<{ added: number; duplicates: number }>('/contacts/batch', { userIds }),
+  syncSave: (contacts: Array<{phone: string, name: string, avatarUrl?: string, registeredUserId?: string}>, source: 'google' | 'apple' | 'vcf') =>
+    api.post<{ saved: number }>('/contacts/sync-save', { contacts, source }),
+  fetchSynced: () => api.get<any[]>('/contacts/synced'),
 };
 
 // Translate

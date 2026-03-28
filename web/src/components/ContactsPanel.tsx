@@ -30,8 +30,10 @@ function formatLastSeen(lastSeen: string | null, t: (key: string, params?: Recor
 export function ContactsPanel() {
   const { t } = useTranslation();
   const contacts = useContactsStore((s) => s.contacts);
+  const syncedContacts = useContactsStore((s) => s.syncedContacts);
   const loading = useContactsStore((s) => s.loading);
   const fetchContacts = useContactsStore((s) => s.fetchContacts);
+  const fetchSyncedContacts = useContactsStore((s) => s.fetchSyncedContacts);
   const removeContact = useContactsStore((s) => s.removeContact);
   const updateContact = useContactsStore((s) => s.updateContact);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
@@ -59,7 +61,8 @@ export function ContactsPanel() {
 
   useEffect(() => {
     fetchContacts();
-  }, [fetchContacts]);
+    fetchSyncedContacts();
+  }, [fetchContacts, fetchSyncedContacts]);
 
   // Live search as user types phone
   useEffect(() => {
@@ -248,6 +251,16 @@ export function ContactsPanel() {
   const syncRegistered = syncResults?.filter(r => r.registered) || [];
   const syncUnregistered = syncResults?.filter(r => !r.registered) || [];
 
+  // Synced contacts: split into registered (not already in contacts) and unregistered
+  const contactUserIds = new Set(contacts.map(c => c.userId));
+  const registeredSynced = syncedContacts
+    .filter(sc => sc.isRegistered && sc.registeredUserId && !contactUserIds.has(sc.registeredUserId))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  const unregisteredSynced = syncedContacts
+    .filter(sc => !sc.isRegistered)
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  const hasSyncedSection = registeredSynced.length > 0 || unregisteredSynced.length > 0;
+
   return (
     <>
       <div className="px-4 py-2">
@@ -394,6 +407,57 @@ export function ContactsPanel() {
           </div>
         ))}
       </div>
+
+      {/* Synced contacts section */}
+      {hasSyncedSection && (
+        <div className="px-2 pb-2">
+          <div className="px-2 py-1">
+            <span className="text-xs text-gray-500 font-medium">{t('contacts.syncedContacts') || 'Synced Contacts'}</span>
+          </div>
+          {registeredSynced.length > 0 && (
+            <>
+              <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({registeredSynced.length})</p>
+              {registeredSynced.map((sc) => (
+                <div key={sc.id} className="flex items-center gap-3 px-3 py-2 hover:bg-dark-600 rounded-xl transition-colors">
+                  {sc.avatarUrl ? (
+                    <img src={sc.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                      <span className="text-accent text-sm font-medium">{sc.name?.[0]?.toUpperCase() || '?'}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white truncate">{sc.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          {unregisteredSynced.length > 0 && (
+            <>
+              <p className="text-xs text-gray-400 px-3 py-1 font-medium mt-2">{t('contacts.notRegistered')} ({unregisteredSynced.length})</p>
+              {unregisteredSynced.map((sc) => (
+                <div key={sc.id} className="flex items-center gap-3 px-3 py-2 hover:bg-dark-600 rounded-xl transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-dark-500 flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">{sc.name?.[0]?.toUpperCase() || '?'}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white truncate">{sc.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
+                  </div>
+                  <button
+                    onClick={() => handleInvite(sc.phone)}
+                    className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg"
+                  >
+                    {t('contacts.invite')}
+                  </button>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Add Contact button at bottom */}
       <div className="px-4 py-3 border-t border-dark-600">

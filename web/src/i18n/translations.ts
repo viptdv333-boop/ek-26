@@ -306,6 +306,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'contacts.hoursAgo': 'был(а) {n} ч. назад',
     'contacts.daysAgo': 'был(а) {n} дн. назад',
     'contacts.longAgo': 'был(а) давно',
+    'contacts.syncedContacts': 'Синхронизированные контакты',
     'contacts.registered': 'Зарегистрированы',
     'contacts.notRegistered': 'Не зарегистрированы',
 
@@ -727,6 +728,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'contacts.hoursAgo': '{n}h ago',
     'contacts.daysAgo': '{n}d ago',
     'contacts.longAgo': 'long ago',
+    'contacts.syncedContacts': 'Synced Contacts',
     'contacts.registered': 'Registered',
     'contacts.notRegistered': 'Not registered',
 
@@ -1148,6 +1150,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'contacts.hoursAgo': '{n}\u5C0F\u65F6\u524D',
     'contacts.daysAgo': '{n}\u5929\u524D',
     'contacts.longAgo': '\u5F88\u4E45\u4EE5\u524D',
+    'contacts.syncedContacts': '\u540C\u6B65\u8054\u7CFB\u4EBA',
     'contacts.registered': '\u5DF2\u6CE8\u518C',
     'contacts.notRegistered': '\u672A\u6CE8\u518C',
 

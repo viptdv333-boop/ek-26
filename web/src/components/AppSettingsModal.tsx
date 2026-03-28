@@ -756,9 +756,24 @@ export function AppSettingsModal({ onClose }: Props) {
       const text = await file.text();
       const parsed = parseVCard(text);
       if (parsed.length === 0) { setVcfImporting(false); return; }
-      const allPhones = [...new Set(parsed.flatMap(c => c.phones))];
+
+      // Build a list of all contacts with their names and phones
+      const allVcfContacts: Array<{ phone: string; name: string }> = [];
+      const seenPhones = new Set<string>();
+      for (const card of parsed) {
+        for (const phone of card.phones) {
+          if (!seenPhones.has(phone)) {
+            seenPhones.add(phone);
+            allVcfContacts.push({ phone, name: card.name });
+          }
+        }
+      }
+
+      const allPhones = allVcfContacts.map(c => c.phone);
       const found = await usersApi.lookupByPhones(allPhones);
       const users = Array.isArray(found) ? found : [];
+      const usersByPhone = new Map(users.map((u: any) => [u.phone, u]));
+
       if (users.length > 0) {
         const userIds = users.map((u: any) => u.id);
         try {
@@ -769,6 +784,22 @@ export function AppSettingsModal({ onClose }: Props) {
           }
         }
       }
+
+      // Save ALL contacts (registered + unregistered) via syncSave
+      const syncPayload = allVcfContacts.map(c => {
+        const user = usersByPhone.get(c.phone);
+        return {
+          phone: c.phone,
+          name: c.name,
+          registeredUserId: user?.id,
+        };
+      });
+      try {
+        await contactsApi.syncSave(syncPayload, 'vcf');
+      } catch (err) {
+        console.error('syncSave error:', err);
+      }
+
       setVcfResults({ registered: users.length, unregistered: allPhones.length - users.length });
     } catch (err) {
       console.error('VCF import error:', err);
@@ -812,7 +843,7 @@ export function AppSettingsModal({ onClose }: Props) {
         });
       });
 
-      const allPhones: string[] = [];
+      const allGoogleContacts: Array<{ phone: string; name: string; avatarUrl?: string }> = [];
       let nextPageToken = '';
 
       do {
@@ -827,26 +858,37 @@ export function AppSettingsModal({ onClose }: Props) {
         const data = await res.json();
 
         for (const person of (data.connections || [])) {
+          const name = person.names?.[0]?.displayName || '';
+          const avatarUrl = person.photos?.[0]?.url || undefined;
           for (const ph of (person.phoneNumbers || [])) {
             let num = (ph.value || '').replace(/[^\d+]/g, '');
             if (num.startsWith('8') && num.length === 11) num = '+7' + num.slice(1);
             if (!num.startsWith('+')) num = '+' + num;
-            if (num.length >= 10) allPhones.push(num);
+            if (num.length >= 10) allGoogleContacts.push({ phone: num, name, avatarUrl });
           }
         }
 
         nextPageToken = data.nextPageToken || '';
       } while (nextPageToken);
 
-      if (allPhones.length === 0) {
+      if (allGoogleContacts.length === 0) {
         setGoogleResults({ registered: 0, unregistered: 0 });
         setGoogleSyncing(false);
         return;
       }
 
-      const uniquePhones = [...new Set(allPhones)];
+      // Deduplicate by phone, keeping the first occurrence
+      const seenPhones = new Set<string>();
+      const uniqueGoogleContacts = allGoogleContacts.filter(c => {
+        if (seenPhones.has(c.phone)) return false;
+        seenPhones.add(c.phone);
+        return true;
+      });
+
+      const uniquePhones = uniqueGoogleContacts.map(c => c.phone);
       const found = await usersApi.lookupByPhones(uniquePhones);
       const users = Array.isArray(found) ? found : [];
+      const usersByPhone = new Map(users.map((u: any) => [u.phone, u]));
 
       if (users.length > 0) {
         const userIds = users.map((u: any) => u.id);
@@ -857,6 +899,22 @@ export function AppSettingsModal({ onClose }: Props) {
             try { await contactsApi.add(id); } catch {}
           }
         }
+      }
+
+      // Save ALL contacts (registered + unregistered) via syncSave
+      const syncPayload = uniqueGoogleContacts.map(c => {
+        const user = usersByPhone.get(c.phone);
+        return {
+          phone: c.phone,
+          name: c.name,
+          avatarUrl: c.avatarUrl,
+          registeredUserId: user?.id,
+        };
+      });
+      try {
+        await contactsApi.syncSave(syncPayload, 'google');
+      } catch (err) {
+        console.error('syncSave error:', err);
       }
 
       setGoogleResults({ registered: users.length, unregistered: uniquePhones.length - users.length });

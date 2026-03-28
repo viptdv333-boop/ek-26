@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { Contact } from '../models/Contact';
 import { User } from '../models/User';
+import { SyncedContact } from '../models/SyncedContact';
 import mongoose from 'mongoose';
 import { sendInviteSms } from '../services/sms';
 
@@ -172,5 +173,68 @@ export async function contactRoutes(app: FastifyInstance) {
       const inserted = err.insertedDocs?.length || 0;
       return { added: inserted, duplicates: docs.length - inserted };
     }
+  });
+
+  // Save batch of synced contacts (full refresh per source)
+  app.post('/api/contacts/sync-save', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { contacts, source } = request.body as {
+      contacts: Array<{ phone: string; name: string; avatarUrl?: string; registeredUserId?: string }>;
+      source: 'google' | 'apple' | 'vcf';
+    };
+
+    if (!Array.isArray(contacts)) {
+      return reply.code(400).send({ error: 'contacts array required' });
+    }
+
+    if (!source || !['google', 'apple', 'vcf'].includes(source)) {
+      return reply.code(400).send({ error: 'Valid source required (google, apple, vcf)' });
+    }
+
+    const ownerId = new mongoose.Types.ObjectId(request.userId);
+
+    // Delete existing synced contacts for this user+source to refresh
+    await SyncedContact.deleteMany({ ownerId, source });
+
+    if (contacts.length === 0) {
+      return { saved: 0 };
+    }
+
+    const docs = contacts.map((c) => ({
+      ownerId,
+      phone: c.phone,
+      name: c.name || '',
+      avatarUrl: c.avatarUrl,
+      source,
+      registeredUserId: c.registeredUserId ? new mongoose.Types.ObjectId(c.registeredUserId) : undefined,
+      isRegistered: !!c.registeredUserId,
+    }));
+
+    try {
+      const result = await SyncedContact.insertMany(docs, { ordered: false });
+      return { saved: result.length };
+    } catch (err: any) {
+      // Some duplicates may exist across sources; count what was inserted
+      const inserted = err.insertedDocs?.length || 0;
+      return { saved: inserted };
+    }
+  });
+
+  // Get all synced contacts for authenticated user
+  app.get('/api/contacts/synced', { preHandler: [app.authenticate] }, async (request) => {
+    const ownerId = new mongoose.Types.ObjectId(request.userId);
+
+    const contacts = await SyncedContact.find({ ownerId })
+      .sort({ isRegistered: -1, name: 1 })
+      .lean();
+
+    return contacts.map((c) => ({
+      id: c._id.toString(),
+      phone: c.phone,
+      name: c.name,
+      avatarUrl: c.avatarUrl,
+      source: c.source,
+      registeredUserId: c.registeredUserId?.toString() || null,
+      isRegistered: c.isRegistered,
+    }));
   });
 }

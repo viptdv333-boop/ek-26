@@ -327,6 +327,7 @@ export function Sidebar() {
   const syncedContacts = useContactsStore((s) => s.syncedContacts);
   const addContact = useContactsStore((s) => s.addContact);
   const fetchContacts = useContactsStore((s) => s.fetchContacts);
+  const fetchSyncedContacts = useContactsStore((s) => s.fetchSyncedContacts);
   const [showNewChat, setShowNewChat] = useState(false);
   const [showPhoneLink, setShowPhoneLink] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -353,9 +354,10 @@ export function Sidebar() {
     return unsub;
   }, []);
 
-  // Load contacts for context menu "Add to contacts" check
+  // Load contacts and synced contacts for name display
   useEffect(() => {
     if (contacts.length === 0) fetchContacts();
+    if (syncedContacts.length === 0) fetchSyncedContacts();
   }, []);
 
   const doSearch = useCallback(async (query: string) => {

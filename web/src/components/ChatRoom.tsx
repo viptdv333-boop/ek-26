@@ -143,6 +143,19 @@ export function ChatRoom({ conversationId }: Props) {
   const syncedOther = otherUser ? syncedContacts.find(sc => sc.registeredUserId === otherUser.id) : null;
   const otherAvatarUrl = syncedOther?.avatarUrl || otherUser?.avatarUrl || null;
 
+  const formatLastSeen = (lastSeen: string | null): string | null => {
+    if (!lastSeen) return null;
+    const diff = Date.now() - new Date(lastSeen).getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (minutes < 1) return t('contacts.justNow');
+    if (minutes < 60) return t('contacts.minutesAgo', { n: minutes });
+    if (hours < 24) return t('contacts.hoursAgo', { n: hours });
+    if (days < 30) return t('contacts.daysAgo', { n: days });
+    return t('contacts.longAgo');
+  };
+
   const getSubtitle = () => {
     if (typingUsers.length > 0) return t('chat.typing');
     if (conv?.type === 'group') {
@@ -154,6 +167,11 @@ export function ChatRoom({ conversationId }: Props) {
     });
     const otherId = other ? (typeof other === 'string' ? other : other.id) : null;
     if (otherId && isUserOnline(otherId)) return t('chat.online');
+    // Show last seen from contacts store
+    if (otherId) {
+      const contact = storeContacts.find(c => c.userId === otherId);
+      if (contact?.lastSeen) return formatLastSeen(contact.lastSeen);
+    }
     return null;
   };
 
@@ -511,7 +529,7 @@ export function ChatRoom({ conversationId }: Props) {
         >
           <h2 className="text-sm font-medium text-white">{title}</h2>
           {subtitle && (
-            <span className={`text-xs ${typingUsers.length > 0 ? 'text-accent' : 'text-gray-400'}`}>
+            <span className={`text-xs ${typingUsers.length > 0 ? 'text-accent' : subtitle === t('chat.online') ? 'text-green-400' : 'text-gray-400'}`}>
               {subtitle}
             </span>
           )}

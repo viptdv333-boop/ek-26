@@ -3,6 +3,8 @@ import { useAuthStore } from './stores/authStore';
 import { AuthPage } from './pages/AuthPage';
 import { ChatPage } from './pages/ChatPage';
 import { AdminPage } from './pages/AdminPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
 
 export function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -10,6 +12,8 @@ export function App() {
 
   return (
     <Routes>
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="/auth" element={isAuthenticated ? <Navigate to="/" /> : <AuthPage />} />
       <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPage /> : <Navigate to="/" />} />
       <Route path="/" element={isAuthenticated ? <ChatPage /> : <Navigate to="/auth" />} />

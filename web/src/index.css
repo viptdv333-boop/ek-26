@@ -94,6 +94,19 @@
    ═══════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+/* Light theme (default for landing) */
+.home-page.home-light {
+  --h-bg: #fafafa;
+  --h-card: #ffffff;
+  --h-fg: #18181b;
+  --h-muted: #71717a;
+  --h-accent: #dc2626;
+  --h-border: rgba(0,0,0,0.08);
+  --h-primary: #18181b;
+  --h-secondary: rgba(0,0,0,0.04);
+}
+
+/* Dark theme fallback */
 .home-page {
   --h-bg: #0a0a0f;
   --h-card: #0f0f17;
@@ -109,17 +122,6 @@
   color: var(--h-fg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-}
-
-.light .home-page {
-  --h-bg: #fafafa;
-  --h-card: #ffffff;
-  --h-fg: #18181b;
-  --h-muted: #71717a;
-  --h-accent: #dc2626;
-  --h-border: rgba(0,0,0,0.08);
-  --h-primary: #18181b;
-  --h-secondary: rgba(0,0,0,0.04);
 }
 
 /* Container */
@@ -142,8 +144,8 @@
   backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--h-border);
 }
-.light .home-nav-scrolled {
-  background: rgba(250, 250, 250, 0.85);
+.home-light .home-nav-scrolled {
+  background: rgba(255, 255, 255, 0.85);
 }
 
 /* ── HERO ── */
@@ -159,7 +161,7 @@
     radial-gradient(ellipse 60% 50% at 20% 40%, rgba(239,68,68,0.08) 0%, transparent 70%),
     radial-gradient(ellipse 50% 50% at 80% 60%, rgba(59,130,246,0.05) 0%, transparent 70%);
 }
-.light .home-hero-bg {
+.home-light .home-hero-bg {
   background:
     radial-gradient(ellipse 60% 50% at 20% 40%, rgba(239,68,68,0.06) 0%, transparent 70%),
     radial-gradient(ellipse 50% 50% at 80% 60%, rgba(59,130,246,0.03) 0%, transparent 70%);
@@ -215,7 +217,7 @@
   background: rgba(255,255,255,0.1);
   transform: translateY(-1px);
 }
-.light .home-btn-secondary:hover {
+.home-light .home-btn-secondary:hover {
   background: rgba(0,0,0,0.06);
 }
 
@@ -233,7 +235,7 @@
   border-color: rgba(239,68,68,0.2);
   box-shadow: 0 16px 48px -12px rgba(0,0,0,0.2), 0 0 0 1px rgba(239,68,68,0.1);
 }
-.light .home-card:hover {
+.home-light .home-card:hover {
   box-shadow: 0 16px 48px -12px rgba(0,0,0,0.1), 0 0 0 1px rgba(239,68,68,0.1);
 }
 .home-card-icon {
@@ -268,7 +270,7 @@
   position: relative;
   z-index: 2;
 }
-.light .home-mock-chat {
+.home-light .home-mock-chat {
   box-shadow:
     0 4px 6px rgba(0,0,0,0.04),
     0 20px 60px -12px rgba(0,0,0,0.12);

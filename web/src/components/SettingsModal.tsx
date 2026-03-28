@@ -75,6 +75,8 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   const vcfInputRef = useRef<HTMLInputElement>(null);
   const [vcfImporting, setVcfImporting] = useState(false);
   const [vcfResults, setVcfResults] = useState<{ registered: number; unregistered: number } | null>(null);
+  const [googleSyncing, setGoogleSyncing] = useState(false);
+  const [googleResults, setGoogleResults] = useState<{ registered: number; unregistered: number } | null>(null);
 
   // Delete account
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -143,6 +145,106 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
     } finally {
       setVcfImporting(false);
       if (vcfInputRef.current) vcfInputRef.current.value = '';
+    }
+  };
+
+  const GOOGLE_CLIENT_ID = '765432109876-placeholder.apps.googleusercontent.com'; // Will be replaced with real ID
+
+  const handleGoogleSync = async () => {
+    setGoogleSyncing(true);
+    setGoogleResults(null);
+    try {
+      // Use Google OAuth popup to get access token
+      const token = await new Promise<string>((resolve, reject) => {
+        // Load Google Identity Services script if not already loaded
+        const loadGIS = () => {
+          return new Promise<void>((res) => {
+            if ((window as any).google?.accounts?.oauth2) { res(); return; }
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.onload = () => res();
+            script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
+            document.head.appendChild(script);
+          });
+        };
+
+        loadGIS().then(() => {
+          const client = (window as any).google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/contacts.readonly',
+            callback: (response: any) => {
+              if (response.error) {
+                reject(new Error(response.error));
+              } else {
+                resolve(response.access_token);
+              }
+            },
+          });
+          client.requestAccessToken();
+        });
+      });
+
+      // Fetch contacts from Google People API
+      const allPhones: string[] = [];
+      let nextPageToken = '';
+
+      do {
+        const url = new URL('https://people.googleapis.com/v1/people/me/connections');
+        url.searchParams.set('personFields', 'names,phoneNumbers,photos');
+        url.searchParams.set('pageSize', '1000');
+        if (nextPageToken) url.searchParams.set('pageToken', nextPageToken);
+
+        const res = await fetch(url.toString(), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        for (const person of (data.connections || [])) {
+          for (const ph of (person.phoneNumbers || [])) {
+            let num = (ph.value || '').replace(/[^\d+]/g, '');
+            if (num.startsWith('8') && num.length === 11) num = '+7' + num.slice(1);
+            if (!num.startsWith('+')) num = '+' + num;
+            if (num.length >= 10) allPhones.push(num);
+          }
+        }
+
+        nextPageToken = data.nextPageToken || '';
+      } while (nextPageToken);
+
+      if (allPhones.length === 0) {
+        setGoogleResults({ registered: 0, unregistered: 0 });
+        setGoogleSyncing(false);
+        return;
+      }
+
+      // Deduplicate
+      const uniquePhones = [...new Set(allPhones)];
+
+      // Batch lookup
+      const found = await usersApi.lookupByPhones(uniquePhones);
+      const users = Array.isArray(found) ? found : [];
+
+      // Batch add
+      if (users.length > 0) {
+        const userIds = users.map((u: any) => u.id);
+        try {
+          await contactsApi.batchAdd(userIds);
+        } catch {
+          for (const id of userIds) {
+            try { await contactsApi.add(id); } catch {}
+          }
+        }
+      }
+
+      setGoogleResults({ registered: users.length, unregistered: uniquePhones.length - users.length });
+    } catch (err: any) {
+      console.error('Google sync error:', err);
+      // If it's user cancellation, just silently return
+      if (err.message?.includes('popup_closed') || err.message?.includes('access_denied')) {
+        // User cancelled
+      }
+    } finally {
+      setGoogleSyncing(false);
     }
   };
 
@@ -333,8 +435,9 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               {/* Google Contacts sync */}
               <div>
                 <button
-                  disabled
-                  className="w-full px-4 py-2.5 bg-dark-600 text-gray-400 rounded-xl text-sm font-medium flex items-center justify-center gap-2 opacity-60 cursor-not-allowed"
+                  onClick={handleGoogleSync}
+                  disabled={googleSyncing}
+                  className="w-full px-4 py-2.5 bg-dark-600 hover:bg-dark-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -342,23 +445,20 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                   </svg>
-                  {t('settings.syncGoogle')}
-                  <span className="text-xs bg-dark-500 px-2 py-0.5 rounded-full">{t('settings.comingSoon')}</span>
+                  {googleSyncing ? t('settings.importing') : t('settings.syncGoogle')}
                 </button>
+                {googleResults && (
+                  <div className="mt-3 p-3 bg-dark-800 rounded-xl space-y-1">
+                    <p className="text-sm font-medium text-white">{t('settings.importResults')}</p>
+                    <p className="text-xs text-green-400">{t('settings.importedRegistered', { count: googleResults.registered })}</p>
+                    <p className="text-xs text-gray-400">{t('settings.importedUnregistered', { count: googleResults.unregistered })}</p>
+                  </div>
+                )}
               </div>
 
-              {/* Apple iCloud sync */}
+              {/* Apple — use device contacts (Contact Picker API on mobile) */}
               <div>
-                <button
-                  disabled
-                  className="w-full px-4 py-2.5 bg-dark-600 text-gray-400 rounded-xl text-sm font-medium flex items-center justify-center gap-2 opacity-60 cursor-not-allowed"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                  </svg>
-                  {t('settings.syncApple')}
-                  <span className="text-xs bg-dark-500 px-2 py-0.5 rounded-full">{t('settings.comingSoon')}</span>
-                </button>
+                <p className="text-xs text-gray-500 mb-2">{t('settings.appleHint')}</p>
               </div>
             </div>
           ) : activeTab === 'profile' ? (

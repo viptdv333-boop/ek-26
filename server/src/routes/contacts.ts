@@ -175,6 +175,16 @@ export async function contactRoutes(app: FastifyInstance) {
     }
   });
 
+  // Delete all contacts (regular + synced) for authenticated user
+  app.delete('/api/contacts/all', { preHandler: [app.authenticate] }, async (request) => {
+    const userId = new mongoose.Types.ObjectId(request.userId);
+    const [regular, synced] = await Promise.all([
+      Contact.deleteMany({ userId }),
+      SyncedContact.deleteMany({ ownerId: userId }),
+    ]);
+    return { deletedRegular: regular.deletedCount, deletedSynced: synced.deletedCount };
+  });
+
   // Save batch of synced contacts (full refresh per source)
   app.post('/api/contacts/sync-save', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { contacts, source } = request.body as {

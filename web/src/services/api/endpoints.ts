@@ -93,6 +93,7 @@ export const contactsApi = {
   syncSave: (contacts: Array<{phone: string, name: string, avatarUrl?: string, registeredUserId?: string}>, source: 'google' | 'apple' | 'vcf') =>
     api.post<{ saved: number }>('/contacts/sync-save', { contacts, source }),
   fetchSynced: () => api.get<any[]>('/contacts/synced'),
+  deleteAll: () => api.delete<any>('/contacts/all'),
 };
 
 // Translate

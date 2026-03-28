@@ -241,7 +241,20 @@ export function ContactsPanel() {
 
   const isOnline = (userId: string) => onlineUsers.has(userId);
 
-  const sortedContacts = [...contacts].sort((a, b) => {
+  // Build map of synced names/avatars by phone for priority override
+  const syncedByPhone = new Map(syncedContacts.map(sc => [sc.phone, sc]));
+  const syncedByUserId = new Map(
+    syncedContacts.filter(sc => sc.registeredUserId).map(sc => [sc.registeredUserId!, sc])
+  );
+
+  // Override display names with synced (Google/Apple) names
+  const sortedContacts = [...contacts].map(c => {
+    const synced = syncedByUserId.get(c.userId) || (c.phone ? syncedByPhone.get(c.phone) : undefined);
+    if (synced && synced.name) {
+      return { ...c, displayName: synced.name, avatarUrl: synced.avatarUrl || c.avatarUrl };
+    }
+    return c;
+  }).sort((a, b) => {
     const aFav = a.isFavorite ? 1 : 0;
     const bFav = b.isFavorite ? 1 : 0;
     if (aFav !== bFav) return bFav - aFav;

@@ -83,6 +83,8 @@ export function AppSettingsModal({ onClose }: Props) {
   const [vcfResults, setVcfResults] = useState<{ registered: number; unregistered: number } | null>(null);
   const [googleSyncing, setGoogleSyncing] = useState(false);
   const [googleResults, setGoogleResults] = useState<{ registered: number; unregistered: number } | null>(null);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  const [deletingContacts, setDeletingContacts] = useState(false);
 
   // --- Handlers (identical to SettingsModal) ---
 
@@ -811,37 +813,66 @@ export function AppSettingsModal({ onClose }: Props) {
 
   const GOOGLE_CLIENT_ID = '1041371304955-o194d2teij50k25qd4asvlhn83nf44p9.apps.googleusercontent.com';
 
+  const getGoogleToken = async (forcePrompt = false): Promise<string> => {
+    // Reuse existing token if available and not forcing
+    if (googleToken && !forcePrompt) {
+      // Test if token is still valid
+      try {
+        const test = await fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + googleToken);
+        if (test.ok) return googleToken;
+      } catch {}
+    }
+
+    return new Promise<string>((resolve, reject) => {
+      const loadGIS = () => {
+        return new Promise<void>((res) => {
+          if ((window as any).google?.accounts?.oauth2) { res(); return; }
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.onload = () => res();
+          script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
+          document.head.appendChild(script);
+        });
+      };
+
+      loadGIS().then(() => {
+        const client = (window as any).google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/contacts.readonly',
+          prompt: forcePrompt ? 'consent' : '',
+          callback: (response: any) => {
+            if (response.error) {
+              reject(new Error(response.error));
+            } else {
+              setGoogleToken(response.access_token);
+              resolve(response.access_token);
+            }
+          },
+        });
+        client.requestAccessToken();
+      });
+    });
+  };
+
+  const handleDeleteAllContacts = async () => {
+    if (!window.confirm(t('settings.deleteAllConfirm'))) return;
+    setDeletingContacts(true);
+    try {
+      await contactsApi.deleteAll();
+      setGoogleResults(null);
+      setVcfResults(null);
+    } catch (err) {
+      console.error('Delete contacts error:', err);
+    } finally {
+      setDeletingContacts(false);
+    }
+  };
+
   const handleGoogleSync = async () => {
     setGoogleSyncing(true);
     setGoogleResults(null);
     try {
-      const token = await new Promise<string>((resolve, reject) => {
-        const loadGIS = () => {
-          return new Promise<void>((res) => {
-            if ((window as any).google?.accounts?.oauth2) { res(); return; }
-            const script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.onload = () => res();
-            script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
-            document.head.appendChild(script);
-          });
-        };
-
-        loadGIS().then(() => {
-          const client = (window as any).google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/contacts.readonly',
-            callback: (response: any) => {
-              if (response.error) {
-                reject(new Error(response.error));
-              } else {
-                resolve(response.access_token);
-              }
-            },
-          });
-          client.requestAccessToken();
-        });
-      });
+      const token = await getGoogleToken();
 
       const allGoogleContacts: Array<{ phone: string; name: string; avatarUrl?: string }> = [];
       let nextPageToken = '';
@@ -984,6 +1015,33 @@ export function AppSettingsModal({ onClose }: Props) {
       {/* Apple hint */}
       <div>
         <p className="text-xs text-gray-500">{t('settings.appleHint')}</p>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-dark-500 pt-4 space-y-3">
+        {/* Refresh Google contacts */}
+        <button
+          onClick={handleGoogleSync}
+          disabled={googleSyncing}
+          className="w-full px-4 py-2.5 bg-dark-600 hover:bg-dark-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+          </svg>
+          {googleSyncing ? t('settings.importing') : t('settings.refreshContacts')}
+        </button>
+
+        {/* Delete all contacts */}
+        <button
+          onClick={handleDeleteAllContacts}
+          disabled={deletingContacts}
+          className="w-full px-4 py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+          </svg>
+          {deletingContacts ? '...' : t('settings.deleteAllContacts')}
+        </button>
       </div>
     </div>
   );

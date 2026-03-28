@@ -10,24 +10,26 @@ export async function contactRoutes(app: FastifyInstance) {
       .populate('contactUserId', 'displayName avatarUrl phone status lastSeen telegramUsername')
       .lean();
 
-    return contacts.map((c) => {
-      const user = c.contactUserId as any;
-      return {
-        id: c._id.toString(),
-        userId: user._id.toString(),
-        displayName: (c.nickname || user.displayName) as string,
-        originalName: user.displayName as string,
-        nickname: c.nickname,
-        avatarUrl: c.customAvatar || user.avatarUrl,
-        phone: user.phone,
-        status: user.status,
-        lastSeen: user.lastSeen?.toISOString() || null,
-        telegramUsername: user.telegramUsername,
-        note: c.note,
-        isFavorite: c.isFavorite || false,
-        createdAt: c.createdAt.toISOString(),
-      };
-    });
+    return contacts
+      .filter((c) => c.contactUserId && (c.contactUserId as any)._id)
+      .map((c) => {
+        const user = c.contactUserId as any;
+        return {
+          id: c._id.toString(),
+          userId: user._id.toString(),
+          displayName: (c.nickname || user.displayName) as string,
+          originalName: user.displayName as string,
+          nickname: c.nickname,
+          avatarUrl: c.customAvatar || user.avatarUrl,
+          phone: user.phone,
+          status: user.status,
+          lastSeen: user.lastSeen?.toISOString() || null,
+          telegramUsername: user.telegramUsername,
+          note: c.note,
+          isFavorite: c.isFavorite || false,
+          createdAt: c.createdAt.toISOString(),
+        };
+      });
   });
 
   // Add contact

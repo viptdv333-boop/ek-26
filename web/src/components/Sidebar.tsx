@@ -922,7 +922,7 @@ export function Sidebar() {
                   ...(!isContact && otherUserId ? [{
                     label: t('menu.addContact'),
                     icon: 'user',
-                    onClick: () => { addContact(otherUserId); setChatMenu(null); },
+                    onClick: () => { addContact(otherUserId).catch(() => {}); setChatMenu(null); },
                   }] : []),
                   {
                     label: t('menu.block'),

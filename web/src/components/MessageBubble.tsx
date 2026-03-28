@@ -192,7 +192,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
   return (
     <>
       <div
-        className={`flex ${isMine ? 'flex-row-reverse' : 'flex-row'} group items-end gap-1.5 relative w-full`}
+        className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-1.5 relative`}
         onContextMenu={handleContextMenu}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}

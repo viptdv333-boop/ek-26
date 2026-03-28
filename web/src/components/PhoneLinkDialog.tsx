@@ -135,10 +135,10 @@ export function PhoneLinkDialog({ onClose }: Props) {
         {step === 'code' && (
           <div className="space-y-3">
             <p className="text-center text-gray-400 text-sm">
-              Мы позвоним на <span className="text-white">{phone}</span>
+              Мы отправим код на <span className="text-white">{phone}</span>
             </p>
             <p className="text-center text-gray-500 text-xs">
-              Введите последние 4 цифры входящего номера
+              Введите код из SMS
             </p>
             <div className="flex gap-3 justify-center">
               {code.map((digit, i) => (
@@ -157,10 +157,10 @@ export function PhoneLinkDialog({ onClose }: Props) {
             </div>
             <div className="text-center">
               {countdown > 0 ? (
-                <span className="text-gray-500 text-sm">Повторный звонок через {countdown}с</span>
+                <span className="text-gray-500 text-sm">Повторная отправка через {countdown}с</span>
               ) : (
                 <button onClick={handleRequestCode} className="text-accent text-sm hover:text-accent-hover">
-                  Позвонить повторно
+                  Отправить повторно
                 </button>
               )}
             </div>

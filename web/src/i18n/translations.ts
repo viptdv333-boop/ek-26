@@ -3,6 +3,9 @@ export type Lang = 'ru' | 'en' | 'zh';
 export const translations: Record<Lang, Record<string, string>> = {
   ru: {
     // ── Auth ──────────────────────────────────────────────────────
+    'auth.appDescription': 'Безопасный мессенджер для общения и звонков',
+    'auth.privacy': 'Политика конфиденциальности',
+    'auth.terms': 'Условия использования',
     'auth.register': 'Регистрация',
     'auth.login': 'Вход',
     'auth.loginLoading': 'Вход...',
@@ -421,6 +424,9 @@ export const translations: Record<Lang, Record<string, string>> = {
 
   en: {
     // ── Auth ──────────────────────────────────────────────────────
+    'auth.appDescription': 'Secure messenger for chats and calls',
+    'auth.privacy': 'Privacy Policy',
+    'auth.terms': 'Terms of Service',
     'auth.register': 'Sign Up',
     'auth.login': 'Sign In',
     'auth.loginLoading': 'Signing in...',
@@ -839,6 +845,9 @@ export const translations: Record<Lang, Record<string, string>> = {
 
   zh: {
     // ── Auth ──────────────────────────────────────────────────────
+    'auth.appDescription': '\u5B89\u5168\u7684\u804A\u5929\u548C\u901A\u8BDD\u5E94\u7528',
+    'auth.privacy': '\u9690\u79C1\u653F\u7B56',
+    'auth.terms': '\u670D\u52A1\u6761\u6B3E',
     'auth.register': '\u6CE8\u518C',
     'auth.login': '\u767B\u5F55',
     'auth.loginLoading': '\u767B\u5F55\u4E2D...',

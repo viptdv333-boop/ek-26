@@ -588,7 +588,9 @@ export function AuthPage() {
       <div className="w-full max-w-sm px-6">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo-f.png" alt="FOMO" className="h-16 w-auto mx-auto mb-4 object-contain shrink-0" />
+          <img src="/logo-f.png" alt="FOMO Chat" className="h-16 w-auto mx-auto mb-4 object-contain shrink-0" />
+          <h1 className="text-xl font-bold text-white">FOMO Chat</h1>
+          <p className="text-sm text-gray-400 mt-1">{t('auth.appDescription')}</p>
         </div>
 
         {/* ── PHONE step (Login / Register tabs) ────────────────── */}
@@ -841,6 +843,13 @@ export function AuthPage() {
 
         {/* Error */}
         {error && <p className="mt-4 text-center text-red-400 text-sm">{error}</p>}
+
+        {/* Footer links */}
+        <div className="mt-8 text-center text-xs text-gray-500 space-x-3">
+          <a href="/privacy" className="hover:text-gray-300 transition-colors">{t('auth.privacy')}</a>
+          <span>&middot;</span>
+          <a href="/terms" className="hover:text-gray-300 transition-colors">{t('auth.terms')}</a>
+        </div>
       </div>
     </div>
   );

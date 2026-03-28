@@ -17,21 +17,11 @@
   </head>
   <body class="bg-dark-900 text-white antialiased">
     <div id="root"></div>
-    <!-- Static content for crawlers (hidden when JS loads) -->
-    <noscript>
-      <div style="text-align:center;padding:40px;font-family:sans-serif">
-        <h1>FOMO Chat</h1>
-        <p>Secure messenger for chats, calls, and file sharing.</p>
-        <p>Безопасный мессенджер для общения и звонков.</p>
-        <p><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a></p>
-      </div>
-    </noscript>
-    <div id="seo-footer" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
-      <h1>FOMO Chat</h1>
-      <p>FOMO Chat is a secure messenger for chats, voice and video calls, and file sharing.</p>
-      <a href="/privacy">Privacy Policy</a>
-      <a href="/terms">Terms of Service</a>
-    </div>
+    <footer id="app-footer" style="text-align:center;padding:12px;font-family:sans-serif;font-size:12px;color:#666">
+      <p style="margin:0 0 4px"><strong style="color:#999">FOMO Chat</strong> — secure messenger for chats, voice and video calls, and file sharing.</p>
+      <a href="/privacy" style="color:#6366f1;margin-right:8px">Privacy Policy</a>
+      <a href="/terms" style="color:#6366f1">Terms of Service</a>
+    </footer>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

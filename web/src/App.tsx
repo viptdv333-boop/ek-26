@@ -5,6 +5,7 @@ import { ChatPage } from './pages/ChatPage';
 import { AdminPage } from './pages/AdminPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
+import { HomePage } from './pages/HomePage';
 
 export function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -12,6 +13,7 @@ export function App() {
 
   return (
     <Routes>
+      <Route path="/home" element={<HomePage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/auth" element={isAuthenticated ? <Navigate to="/" /> : <AuthPage />} />

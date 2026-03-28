@@ -11,7 +11,7 @@ export interface ISmsSettings {
   alibabaTemplateCode: string;
   twilioAccountSid: string;
   twilioAuthToken: string;
-  twilioPhoneNumber: string;
+  twilioVerifyServiceSid: string;
 }
 
 export interface ISettings extends Document {
@@ -54,7 +54,7 @@ export async function getSmsSettings(): Promise<ISmsSettings> {
       alibabaTemplateCode: '',
       twilioAccountSid: '',
       twilioAuthToken: '',
-      twilioPhoneNumber: '',
+      twilioVerifyServiceSid: '',
     };
     await Settings.create({ key: 'sms', value: initial });
     const data = initial;

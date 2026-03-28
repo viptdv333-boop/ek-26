@@ -289,7 +289,7 @@ export async function adminRoutes(app: FastifyInstance) {
       alibabaTemplateCode: settings.alibabaTemplateCode || '',
       twilioAccountSid: settings.twilioAccountSid || '',
       twilioAuthToken: settings.twilioAuthToken ? '***' + settings.twilioAuthToken.slice(-4) : '',
-      twilioPhoneNumber: settings.twilioPhoneNumber || '',
+      twilioVerifyServiceSid: settings.twilioVerifyServiceSid || '',
     };
   });
 
@@ -329,8 +329,8 @@ export async function adminRoutes(app: FastifyInstance) {
     if (typeof body.twilioAuthToken === 'string') {
       update.twilioAuthToken = body.twilioAuthToken;
     }
-    if (typeof body.twilioPhoneNumber === 'string') {
-      update.twilioPhoneNumber = body.twilioPhoneNumber;
+    if (typeof body.twilioVerifyServiceSid === 'string') {
+      update.twilioVerifyServiceSid = body.twilioVerifyServiceSid;
     }
 
     await Settings.updateOne(
@@ -351,7 +351,10 @@ export async function adminRoutes(app: FastifyInstance) {
     try {
       const code = await generateOtp();
       const actualCode = await sendCode(phone, code);
-      return { success: true, code: actualCode, message: `Code sent to ${phone}` };
+      const msg = actualCode === '__TWILIO_VERIFY__'
+        ? `Twilio Verify sent to ${phone} (check your phone)`
+        : `Code: ${actualCode} sent to ${phone}`;
+      return { success: true, code: actualCode, message: msg };
     } catch (err: any) {
       return reply.code(502).send({ error: err.message || 'Send failed' });
     }

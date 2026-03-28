@@ -78,16 +78,17 @@ export async function sendCode(phone: string, code: string): Promise<string> {
   }
 
   if (provider === 'twilio') {
-    if (!settings.twilioAccountSid || !settings.twilioAuthToken || !settings.twilioPhoneNumber) {
-      throw new Error('Twilio credentials not configured');
+    if (!settings.twilioAccountSid || !settings.twilioAuthToken || !settings.twilioVerifyServiceSid) {
+      throw new Error('Twilio Verify credentials not configured');
     }
-    await sendCodeViaTwilio(
-      phone, code,
+    await sendCodeViaTwilioVerify(
+      phone,
       settings.twilioAccountSid,
       settings.twilioAuthToken,
-      settings.twilioPhoneNumber,
+      settings.twilioVerifyServiceSid,
     );
-    return code;
+    // Twilio Verify generates its own code — return marker
+    return '__TWILIO_VERIFY__';
   }
 
   // Unknown provider — dev fallback
@@ -192,22 +193,21 @@ async function sendCodeViaAlibaba(
   }
 }
 
-async function sendCodeViaTwilio(
-  phone: string, code: string,
-  accountSid: string, authToken: string, fromNumber: string,
+async function sendCodeViaTwilioVerify(
+  phone: string,
+  accountSid: string, authToken: string, serviceSid: string,
 ): Promise<void> {
   const cleanPhone = phone.startsWith('+') ? phone : `+${phone}`;
 
-  console.log(`[Twilio] Sending SMS to ${cleanPhone} with code ${code}...`);
+  console.log(`[Twilio Verify] Sending verification to ${cleanPhone}...`);
 
   const body = new URLSearchParams({
     To: cleanPhone,
-    From: fromNumber,
-    Body: `Your verification code: ${code}`,
+    Channel: 'sms',
   });
 
   const res = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    `https://verify.twilio.com/v2/Services/${serviceSid}/Verifications`,
     {
       method: 'POST',
       headers: {
@@ -218,11 +218,62 @@ async function sendCodeViaTwilio(
     },
   );
   const data = (await res.json()) as any;
-  console.log(`[Twilio] Response:`, JSON.stringify(data));
+  console.log(`[Twilio Verify] Response:`, JSON.stringify(data));
 
-  if (data.error_code || data.status === 'failed') {
-    console.error('[Twilio] Error:', data.message);
-    throw new Error(`Twilio error: ${data.message || data.error_code || 'unknown'}`);
+  if (data.status !== 'pending') {
+    console.error('[Twilio Verify] Error:', data.message || data.code);
+    throw new Error(`Twilio Verify error: ${data.message || data.code || 'unknown'}`);
+  }
+}
+
+/**
+ * Check a verification code via Twilio Verify.
+ * Returns true if code is correct.
+ */
+export async function checkTwilioVerifyCode(phone: string, code: string): Promise<boolean> {
+  let settings: ISmsSettings;
+  try {
+    settings = await getSmsSettings();
+  } catch {
+    return false;
+  }
+
+  if (settings.activeProvider !== 'twilio') return false;
+  if (!settings.twilioAccountSid || !settings.twilioAuthToken || !settings.twilioVerifyServiceSid) return false;
+
+  const cleanPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+  const body = new URLSearchParams({
+    To: cleanPhone,
+    Code: code,
+  });
+
+  const res = await fetch(
+    `https://verify.twilio.com/v2/Services/${settings.twilioVerifyServiceSid}/VerificationCheck`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${settings.twilioAccountSid}:${settings.twilioAuthToken}`).toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    },
+  );
+  const data = (await res.json()) as any;
+  console.log(`[Twilio Verify] Check response:`, JSON.stringify(data));
+
+  return data.status === 'approved';
+}
+
+/**
+ * Check if the current SMS provider is Twilio Verify (uses external code verification).
+ */
+export async function isTwilioVerifyProvider(): Promise<boolean> {
+  try {
+    const settings = await getSmsSettings();
+    return settings.activeProvider === 'twilio';
+  } catch {
+    return false;
   }
 }
 

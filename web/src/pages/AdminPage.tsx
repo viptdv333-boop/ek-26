@@ -601,12 +601,12 @@ export function AdminPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs text-gray-400">Phone Number (Twilio номер)</span>
+                  <span className="text-xs text-gray-400">Verify Service SID</span>
                   <input
                     type="text"
-                    value={smsKeys.twilioPhoneNumber || ''}
-                    onChange={e => setSmsKeys(k => ({ ...k, twilioPhoneNumber: e.target.value }))}
-                    placeholder="+1234567890"
+                    value={smsKeys.twilioVerifyServiceSid || ''}
+                    onChange={e => setSmsKeys(k => ({ ...k, twilioVerifyServiceSid: e.target.value }))}
+                    placeholder="VA..."
                     className="w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-accent"
                   />
                 </label>

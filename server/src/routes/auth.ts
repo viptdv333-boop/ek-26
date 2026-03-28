@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { SmsCode } from '../models/SmsCode';
 import { Session } from '../models/Session';
-import { generateOtp, hashOtp, sendCode } from '../services/sms';
+import { generateOtp, hashOtp, sendCode, isTwilioVerifyProvider, checkTwilioVerifyCode } from '../services/sms';
 import { signAccessToken, signRefreshToken, hashToken, verifyToken } from '../services/jwt';
 import { signEmailVerificationToken, sendVerificationEmail } from '../services/email';
 import { Message } from '../models/Message';
@@ -60,11 +60,14 @@ export async function authRoutes(app: FastifyInstance) {
 
     try {
       const actualCode = await sendCode(body.phone, generatedCode);
-      await SmsCode.create({
-        phone: body.phone,
-        codeHash: hashOtp(actualCode),
-        expiresAt: new Date(Date.now() + 5 * 60_000), // 5 minutes
-      });
+      // Twilio Verify manages its own codes — only store for non-Twilio providers
+      if (actualCode !== '__TWILIO_VERIFY__') {
+        await SmsCode.create({
+          phone: body.phone,
+          codeHash: hashOtp(actualCode),
+          expiresAt: new Date(Date.now() + 5 * 60_000), // 5 minutes
+        });
+      }
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed' });
       return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });
@@ -77,29 +80,37 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/api/auth/verify-code', async (request, reply) => {
     const body = verifyCodeSchema.parse(request.body);
 
-    const smsCode = await SmsCode.findOne({ phone: body.phone });
-    if (!smsCode) {
-      return reply.code(400).send({ error: 'No code requested for this phone' });
-    }
+    // Twilio Verify — check via Twilio API
+    if (await isTwilioVerifyProvider()) {
+      const approved = await checkTwilioVerifyCode(body.phone, body.code);
+      if (!approved) {
+        return reply.code(400).send({ error: 'Invalid code' });
+      }
+    } else {
+      const smsCode = await SmsCode.findOne({ phone: body.phone });
+      if (!smsCode) {
+        return reply.code(400).send({ error: 'No code requested for this phone' });
+      }
 
-    if (smsCode.attempts >= 5) {
+      if (smsCode.attempts >= 5) {
+        await SmsCode.deleteOne({ _id: smsCode._id });
+        return reply.code(429).send({ error: 'Too many attempts. Request a new code.' });
+      }
+
+      if (smsCode.expiresAt < new Date()) {
+        await SmsCode.deleteOne({ _id: smsCode._id });
+        return reply.code(400).send({ error: 'Code expired' });
+      }
+
+      if (smsCode.codeHash !== hashOtp(body.code)) {
+        smsCode.attempts += 1;
+        await smsCode.save();
+        return reply.code(400).send({ error: 'Invalid code' });
+      }
+
+      // Code is valid — delete it
       await SmsCode.deleteOne({ _id: smsCode._id });
-      return reply.code(429).send({ error: 'Too many attempts. Request a new code.' });
     }
-
-    if (smsCode.expiresAt < new Date()) {
-      await SmsCode.deleteOne({ _id: smsCode._id });
-      return reply.code(400).send({ error: 'Code expired' });
-    }
-
-    if (smsCode.codeHash !== hashOtp(body.code)) {
-      smsCode.attempts += 1;
-      await smsCode.save();
-      return reply.code(400).send({ error: 'Invalid code' });
-    }
-
-    // Code is valid — delete it
-    await SmsCode.deleteOne({ _id: smsCode._id });
 
     // Find or create user
     let isNewUser = false;
@@ -340,11 +351,13 @@ export async function authRoutes(app: FastifyInstance) {
 
     try {
       const actualCode = await sendCode(phone, generatedCode);
-      await SmsCode.findOneAndUpdate(
-        { phone },
-        { phone, codeHash: hashOtp(actualCode), attempts: 0, expiresAt: new Date(Date.now() + 5 * 60_000) },
-        { upsert: true }
-      );
+      if (actualCode !== '__TWILIO_VERIFY__') {
+        await SmsCode.findOneAndUpdate(
+          { phone },
+          { phone, codeHash: hashOtp(actualCode), attempts: 0, expiresAt: new Date(Date.now() + 5 * 60_000) },
+          { upsert: true }
+        );
+      }
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed (link-phone)' });
       return reply.code(502).send({ error: 'Не удалось отправить SMS. Попробуйте позже.' });
@@ -356,21 +369,29 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/api/auth/link-phone/verify', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { phone, code } = request.body as { phone: string; code: string };
 
-    const smsCode = await SmsCode.findOne({ phone });
-    if (!smsCode) {
-      return reply.code(400).send({ error: 'No code requested' });
-    }
-    if (smsCode.expiresAt < new Date()) {
-      await SmsCode.deleteOne({ _id: smsCode._id });
-      return reply.code(400).send({ error: 'Code expired' });
-    }
-    if (smsCode.codeHash !== hashOtp(code)) {
-      smsCode.attempts += 1;
-      await smsCode.save();
-      return reply.code(400).send({ error: 'Invalid code' });
-    }
+    // Twilio Verify — check via Twilio API
+    if (await isTwilioVerifyProvider()) {
+      const approved = await checkTwilioVerifyCode(phone, code);
+      if (!approved) {
+        return reply.code(400).send({ error: 'Invalid code' });
+      }
+    } else {
+      const smsCode = await SmsCode.findOne({ phone });
+      if (!smsCode) {
+        return reply.code(400).send({ error: 'No code requested' });
+      }
+      if (smsCode.expiresAt < new Date()) {
+        await SmsCode.deleteOne({ _id: smsCode._id });
+        return reply.code(400).send({ error: 'Code expired' });
+      }
+      if (smsCode.codeHash !== hashOtp(code)) {
+        smsCode.attempts += 1;
+        await smsCode.save();
+        return reply.code(400).send({ error: 'Invalid code' });
+      }
 
-    await SmsCode.deleteOne({ _id: smsCode._id });
+      await SmsCode.deleteOne({ _id: smsCode._id });
+    }
 
     // Check if phone belongs to another user — merge accounts if so
     const phoneUser = await User.findOne({ phone });
@@ -431,17 +452,19 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(409).send({ error: 'Этот номер телефона уже зарегистрирован' });
     }
 
-    // Send verification call (NumCheckAPI flash call)
+    // Send verification call/SMS
     await SmsCode.deleteMany({ phone: body.phone });
 
     const generatedCode = await generateOtp();
     try {
       const actualCode = await sendCode(body.phone, generatedCode);
-      await SmsCode.create({
-        phone: body.phone,
-        codeHash: hashOtp(actualCode),
-        expiresAt: new Date(Date.now() + 5 * 60_000),
-      });
+      if (actualCode !== '__TWILIO_VERIFY__') {
+        await SmsCode.create({
+          phone: body.phone,
+          codeHash: hashOtp(actualCode),
+          expiresAt: new Date(Date.now() + 5 * 60_000),
+        });
+      }
     } catch (err: any) {
       app.log.error({ err, msg: 'SMS send failed (register)' });
       return reply.code(502).send({ error: 'Не удалось отправить код. Попробуйте позже.' });
@@ -453,6 +476,15 @@ export async function authRoutes(app: FastifyInstance) {
   // ─── Verify phone after registration (do NOT create user yet) ──────
   app.post('/api/auth/register/verify-phone', async (request, reply) => {
     const body = verifyCodeSchema.parse(request.body);
+
+    // Twilio Verify — check via Twilio API
+    if (await isTwilioVerifyProvider()) {
+      const approved = await checkTwilioVerifyCode(body.phone, body.code);
+      if (!approved) {
+        return reply.code(400).send({ error: 'Invalid code' });
+      }
+      return { success: true, verified: true };
+    }
 
     const smsCode = await SmsCode.findOne({ phone: body.phone });
     if (!smsCode) {

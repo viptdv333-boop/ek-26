@@ -6,6 +6,7 @@ import { AdminPage } from './pages/AdminPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
 import { HomePage } from './pages/HomePage';
+import { YandexCallback } from './pages/YandexCallback';
 
 export function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -17,6 +18,7 @@ export function App() {
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/auth" element={isAuthenticated ? <Navigate to="/" /> : <AuthPage />} />
+      <Route path="/auth/yandex/callback" element={<YandexCallback />} />
       <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPage /> : <Navigate to="/" />} />
       <Route path="/" element={isAuthenticated ? <ChatPage /> : <Navigate to="/auth" />} />
       <Route path="*" element={<Navigate to="/" />} />

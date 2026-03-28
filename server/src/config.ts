@@ -11,6 +11,8 @@ const envSchema = z.object({
   UCALLER_SECRET_KEY: z.string().default(''),
   NUMCHECK_TOKEN: z.string().default(''),
   TELEGRAM_BOT_TOKEN: z.string().default(''),
+  YANDEX_CLIENT_ID: z.string().default('cf2c3fae1c86457b92cfaa9c74a54cad'),
+  YANDEX_CLIENT_SECRET: z.string().default('b22ea4dda3ae4e94ab05d625c85a2903'),
   OTP_DEV_MODE: z.string().default('true').transform((v) => v === 'true'),
   FIREBASE_SERVICE_ACCOUNT: z.string().default(''),
   BASE_URL: z.string().default('http://localhost:3000'),

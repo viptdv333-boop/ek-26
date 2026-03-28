@@ -247,6 +247,120 @@ export async function authRoutes(app: FastifyInstance) {
     }
   });
 
+  // ── Yandex OAuth callback ──────────────────────────────────────
+  app.post('/api/auth/yandex', async (request, reply) => {
+    try {
+      const { config } = await import('../config');
+      const { code } = request.body as { code: string };
+      if (!code) return reply.code(400).send({ error: 'Missing code' });
+
+      // Exchange code for token
+      const tokenRes = await fetch('https://oauth.yandex.ru/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          client_id: config.YANDEX_CLIENT_ID,
+          client_secret: config.YANDEX_CLIENT_SECRET,
+        }),
+      });
+      const tokenData = await tokenRes.json() as any;
+      if (!tokenData.access_token) {
+        app.log.error({ tokenData }, 'Yandex token exchange failed');
+        return reply.code(400).send({ error: 'Yandex auth failed' });
+      }
+
+      // Get user info
+      const infoRes = await fetch('https://login.yandex.ru/info?format=json', {
+        headers: { Authorization: `OAuth ${tokenData.access_token}` },
+      });
+      const info = await infoRes.json() as any;
+      if (!info.id) {
+        return reply.code(400).send({ error: 'Failed to get Yandex user info' });
+      }
+
+      const yandexId = String(info.id);
+      const displayName = info.display_name || info.real_name || [info.first_name, info.last_name].filter(Boolean).join(' ') || `ya_${yandexId}`;
+      const phone = info.default_phone?.number || null;
+      const email = info.default_email || null;
+      const avatarId = info.default_avatar_id;
+      const avatarUrl = avatarId ? `https://avatars.yandex.net/get-yapic/${avatarId}/islands-200` : null;
+
+      // Find or create user
+      let isNewUser = false;
+      let user = await User.findOne({ yandexId });
+      if (!user && phone) {
+        user = await User.findOne({ phone });
+      }
+      if (!user && email) {
+        user = await User.findOne({ email });
+      }
+
+      if (user) {
+        // Link yandexId if not linked
+        if (!user.yandexId) {
+          user.yandexId = yandexId;
+        }
+        if (phone && !user.phone) {
+          user.phone = phone;
+        }
+        if (email && !user.email) {
+          user.email = email;
+          user.emailVerified = true;
+        }
+        if (avatarUrl && !user.avatarUrl) {
+          user.avatarUrl = avatarUrl;
+        }
+        await user.save();
+      } else {
+        isNewUser = true;
+        user = await User.create({
+          yandexId,
+          phone,
+          email,
+          emailVerified: !!email,
+          displayName,
+          avatarUrl,
+          rssFeedId: crypto.randomUUID(),
+        });
+      }
+
+      // Create tokens
+      const userId = user._id.toString();
+      const accessToken = await signAccessToken(userId, user.phone || '');
+      const refreshToken = await signRefreshToken(userId);
+
+      { const di = getDeviceInfo(request);
+      await Session.create({
+        userId: user._id,
+        deviceId: crypto.randomUUID(),
+        refreshTokenHash: hashToken(refreshToken),
+        deviceName: di.deviceName,
+        ip: di.ip,
+        lastActiveAt: new Date(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000),
+      }); enrichSessionGeo((await Session.findOne({ userId: user._id }).sort({ createdAt: -1 }))?._id?.toString() || '', di.ip); }
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: userId,
+          phone: user.phone,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          email: user.email,
+          isAdmin: user.isAdmin || false,
+          isNewUser,
+        },
+      };
+    } catch (err: any) {
+      app.log.error({ err, msg: 'Yandex auth error' });
+      return reply.code(500).send({ error: err.message || 'Yandex auth failed' });
+    }
+  });
+
   // Mobile Telegram Login page — opens in browser, redirects back to app with tokens
   app.get('/auth/telegram-mobile', async (request, reply) => {
     const { config } = await import('../config');

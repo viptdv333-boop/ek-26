@@ -4,6 +4,7 @@ export interface IUser extends Document {
   phone: string | null;
   telegramId: number | null;
   telegramUsername: string | null;
+  yandexId: string | null;
   displayName: string;
   avatarUrl: string | null;
   email: string | null;
@@ -37,6 +38,7 @@ const userSchema = new Schema<IUser>(
     phone: { type: String, default: null },
     telegramId: { type: Number },
     telegramUsername: { type: String },
+    yandexId: { type: String, default: null },
     displayName: { type: String, required: true, default: '' },
     avatarUrl: { type: String, default: null },
     email: { type: String, default: null },
@@ -72,5 +74,6 @@ const userSchema = new Schema<IUser>(
 userSchema.index({ email: 1 }, { unique: true, partialFilterExpression: { email: { $type: 'string' } } });
 userSchema.index({ phone: 1 }, { unique: true, partialFilterExpression: { phone: { $type: 'string' } } });
 userSchema.index({ telegramId: 1 }, { unique: true, partialFilterExpression: { telegramId: { $type: 'number' } } });
+userSchema.index({ yandexId: 1 }, { unique: true, partialFilterExpression: { yandexId: { $type: 'string' } } });
 
 export const User = mongoose.model<IUser>('User', userSchema);

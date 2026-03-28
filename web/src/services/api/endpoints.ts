@@ -10,6 +10,8 @@ export const authApi = {
     api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean; needsPassword?: boolean }>('/auth/verify-code', { phone, code }),
   telegramLogin: (data: Record<string, string | number>) =>
     api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean }>('/auth/telegram', data),
+  yandexLogin: (code: string) =>
+    api.post<{ accessToken: string; refreshToken: string; user: any; isNewUser: boolean }>('/auth/yandex', { code }),
   linkPhoneRequest: (phone: string) => api.post<{ message: string }>('/auth/link-phone/request', { phone }),
   linkPhoneVerify: (phone: string, code: string) =>
     api.post<{ success: boolean; user: any }>('/auth/link-phone/verify', { phone, code }),

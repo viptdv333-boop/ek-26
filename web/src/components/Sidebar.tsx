@@ -7,6 +7,7 @@ import { PhoneLinkDialog } from './PhoneLinkDialog';
 import { ProfileModal } from './ProfileModal';
 import { AppSettingsModal } from './AppSettingsModal';
 import { ContactsPanel } from './ContactsPanel';
+import { useContactsStore } from '../stores/contactsStore';
 import { MessageContextMenu } from './MessageContextMenu';
 import { useTranslation } from '../i18n';
 import { wsTransport } from '../services/transport/WebSocketTransport';
@@ -322,6 +323,9 @@ export function Sidebar() {
   const user = useAuthStore((s) => s.user);
   const authLogout = useAuthStore((s) => s.logout);
   const resetChat = useChatStore((s) => s.reset);
+  const contacts = useContactsStore((s) => s.contacts);
+  const addContact = useContactsStore((s) => s.addContact);
+  const fetchContacts = useContactsStore((s) => s.fetchContacts);
   const [showNewChat, setShowNewChat] = useState(false);
   const [showPhoneLink, setShowPhoneLink] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -344,6 +348,11 @@ export function Sidebar() {
     // Check initial state
     setConnStatus(wsTransport.connected ? 'connected' : 'connecting');
     return unsub;
+  }, []);
+
+  // Load contacts for context menu "Add to contacts" check
+  useEffect(() => {
+    if (contacts.length === 0) fetchContacts();
   }, []);
 
   const doSearch = useCallback(async (query: string) => {
@@ -904,16 +913,31 @@ export function Sidebar() {
               icon: 'archive',
               onClick: () => handleArchiveChat(chatMenu.convId),
             },
-            ...(conversations.find(c => c.id === chatMenu.convId)?.type === 'direct' ? [{
-              label: t('menu.block'),
-              icon: 'block',
-              onClick: () => handleBlockUser(chatMenu.convId),
-            }] : [{
-              label: t('menu.leaveGroup'),
-              icon: 'delete',
-              onClick: () => handleLeaveGroup(chatMenu.convId),
-              danger: true,
-            }]),
+            ...(() => {
+              const conv = conversations.find(c => c.id === chatMenu.convId);
+              if (conv?.type === 'direct') {
+                const otherUserId = getOtherUserId(conv);
+                const isContact = otherUserId ? contacts.some(c => c.userId === otherUserId) : true;
+                return [
+                  ...(!isContact && otherUserId ? [{
+                    label: t('menu.addContact'),
+                    icon: 'user',
+                    onClick: () => { addContact(otherUserId); setChatMenu(null); },
+                  }] : []),
+                  {
+                    label: t('menu.block'),
+                    icon: 'block',
+                    onClick: () => handleBlockUser(chatMenu.convId),
+                  },
+                ];
+              }
+              return [{
+                label: t('menu.leaveGroup'),
+                icon: 'delete',
+                onClick: () => handleLeaveGroup(chatMenu.convId),
+                danger: true,
+              }];
+            })(),
             {
               label: t('menu.deleteChat'),
               icon: 'delete',

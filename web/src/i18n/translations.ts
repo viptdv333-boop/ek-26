@@ -126,6 +126,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'menu.unarchive': 'Из архива',
     'menu.deleteChat': 'Удалить чат',
     'menu.leaveGroup': 'Покинуть группу',
+    'menu.addContact': 'Добавить в контакты',
     'menu.block': 'Заблокировать',
 
     // ── Sidebar context menu confirms ─────────────────────────────
@@ -510,6 +511,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'menu.unarchive': 'Unarchive',
     'menu.deleteChat': 'Delete chat',
     'menu.leaveGroup': 'Leave group',
+    'menu.addContact': 'Add to contacts',
     'menu.block': 'Block',
 
     // ── Sidebar context menu confirms ─────────────────────────────
@@ -894,6 +896,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'menu.unarchive': '\u53D6\u6D88\u5F52\u6863',
     'menu.deleteChat': '\u5220\u9664\u804A\u5929',
     'menu.leaveGroup': '\u9000\u51FA\u7FA4\u7EC4',
+    'menu.addContact': '添加到联系人',
     'menu.block': '\u62C9\u9ED1',
 
     // ── Sidebar context menu confirms ─────────────────────────────

@@ -6,16 +6,32 @@
     <meta name="theme-color" content="#6366f1" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="FOMO" />
-    <meta name="description" content="FOMO Chat — защищённый мессенджер" />
+    <meta name="apple-mobile-web-app-title" content="FOMO Chat" />
+    <meta name="description" content="FOMO Chat — secure messenger for chats, calls, and file sharing. Безопасный мессенджер для общения и звонков." />
     <meta name="google-site-verification" content="xj_jAqQCzcE3YQTWbxxNZHPWFTckWeTF88C4UMcSF_8" />
-    <title>FOMO</title>
+    <meta name="application-name" content="FOMO Chat" />
+    <title>FOMO Chat — Secure Messenger</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/logo-f.png" />
     <link rel="manifest" href="/manifest.json" />
   </head>
   <body class="bg-dark-900 text-white antialiased">
     <div id="root"></div>
+    <!-- Static content for crawlers (hidden when JS loads) -->
+    <noscript>
+      <div style="text-align:center;padding:40px;font-family:sans-serif">
+        <h1>FOMO Chat</h1>
+        <p>Secure messenger for chats, calls, and file sharing.</p>
+        <p>Безопасный мессенджер для общения и звонков.</p>
+        <p><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a></p>
+      </div>
+    </noscript>
+    <div id="seo-footer" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
+      <h1>FOMO Chat</h1>
+      <p>FOMO Chat is a secure messenger for chats, voice and video calls, and file sharing.</p>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

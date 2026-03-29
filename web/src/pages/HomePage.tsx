@@ -165,11 +165,11 @@ export function HomePage() {
           <span className="text-xl font-bold tracking-tight text-[var(--h-fg)]">FOMO <span className="text-[var(--h-accent)]">Chat</span></span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
           <LangSwitcher lang={lang} setLang={saveLang} />
           <ThemeSwitcher dark={isDark} toggle={toggleTheme} />
           <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.login}</Link>
-          <Link to="/auth?tab=register" className="home-btn-accent text-sm px-5 py-2.5">{s.register}</Link>
+          <Link to="/auth?tab=register" className="home-btn-accent text-sm px-6 py-2.5">{s.register}</Link>
         </div>
       </nav>
 

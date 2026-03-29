@@ -150,6 +150,10 @@ export function AuthPage() {
 
   // ── Login ──────────────────────────────────────────────────────
   const handleLogin = async () => {
+    if (!captchaVerified) {
+      setError(t('auth.wrongCaptcha'));
+      return;
+    }
     if (phoneNumber.replace(/\D/g, '').length < 6) {
       setError(t('auth.enterPhone'));
       return;
@@ -417,8 +421,82 @@ export function AuthPage() {
     </div>
   );
 
+  // ── Yandex OAuth handler ────────────────────────────────────────
+  const handleYandexLogin = () => {
+    const clientId = 'cf2c3fae1c86457b92cfaa9c74a54cad';
+    const redirectUri = encodeURIComponent(window.location.origin + '/auth/yandex/callback');
+    window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
+  };
+
+  // ── Math captcha block (reusable) ─────────────────────────────
+  const captchaBlock = (onSubmit: () => void) => (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <svg className="w-4 h-4" style={{ color: 'var(--a-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+        <span className="text-sm font-medium" style={{ color: 'var(--a-muted)' }}>{t('auth.securityCheck')}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div
+          className="flex-1 flex items-center justify-center rounded-xl text-xl font-bold tracking-wider"
+          style={{ background: 'var(--a-input-bg)', border: '1px solid var(--a-input-border)', color: 'var(--a-fg)', height: '2.75rem' }}
+        >
+          {mathNums[0]} + {mathNums[1]} = ?
+        </div>
+        <button
+          onClick={refreshCaptcha}
+          className="rounded-xl transition-all flex items-center justify-center"
+          style={{ background: 'var(--a-secondary-bg)', color: 'var(--a-muted)', border: '1px solid var(--a-border)', width: '2.75rem', height: '2.75rem' }}
+          title={t('auth.captchaRefresh')}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+          </svg>
+        </button>
+      </div>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={captchaAnswer}
+        onChange={(e) => setCaptchaAnswer(e.target.value.replace(/\D/g, ''))}
+        onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+        placeholder={t('auth.captchaAnswer')}
+        className="auth-input mt-2"
+      />
+      {captchaVerified && (
+        <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#22c55e' }}>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+          {t('auth.captchaOk')}
+        </p>
+      )}
+    </div>
+  );
+
+  // ── Yandex + divider block (reusable) ─────────────────────────
+  const yandexBlock = (
+    <>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
+        <span className="text-xs" style={{ color: 'var(--a-subtle)' }}>{t('auth.or')}</span>
+        <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
+      </div>
+      <div className="flex justify-center">
+        <button
+          onClick={handleYandexLogin}
+          className="w-11 h-11 rounded-full overflow-hidden border transition-all hover:scale-110 hover:shadow-lg"
+          style={{ borderColor: 'var(--a-border)' }}
+          title={t('auth.yandexLogin')}
+        >
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/58/Yandex_icon.svg" alt="Yandex" className="w-full h-full object-cover" />
+        </button>
+      </div>
+    </>
+  );
+
   // ── Render ─────────────────────────────────────────────────────
-  const themeClass = theme === 'dark' ? 'auth-dark' : 'auth-light';
+  const isDark = theme === 'dark';
+  const themeClass = isDark ? 'auth-dark' : 'auth-light';
 
   return (
     <div className={`auth-page ${themeClass}`}>
@@ -428,53 +506,57 @@ export function AuthPage() {
         <div className="auth-blob" style={{ bottom: '-10%', left: '-5%', width: 400, height: 400, opacity: 0.12, background: 'radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)' }} />
       </div>
 
-      {/* Top bar: theme toggle + language */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-        {/* Language flags */}
-        <div className="flex items-center gap-1">
+      {/* ── Top bar — identical to HomePage navbar right side ── */}
+      <div className="absolute top-0 right-0 z-10 flex items-center gap-10 h-16 px-8">
+        {/* Language flags — same as HomePage */}
+        <div className="flex items-center gap-1.5">
           {([
-            { l: 'ru' as const, flag: 'ru' },
-            { l: 'en' as const, flag: 'gb' },
-            { l: 'zh' as const, flag: 'cn' },
-          ]).map(({ l, flag }) => (
+            { l: 'ru' as const, flag: 'ru', alt: 'Русский' },
+            { l: 'en' as const, flag: 'gb', alt: 'English' },
+            { l: 'zh' as const, flag: 'cn', alt: '中文' },
+          ]).map(({ l, flag, alt }) => (
             <button
               key={l}
               onClick={() => setLang(l)}
-              className="w-7 h-7 rounded-full overflow-hidden border-2 transition-all"
-              style={lang === l
-                ? { borderColor: 'var(--a-accent)', transform: 'scale(1.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }
-                : { borderColor: 'transparent', opacity: 0.5 }
-              }
+              className={`w-8 h-8 rounded-full overflow-hidden border-2 transition-all ${
+                lang === l
+                  ? 'border-[var(--a-accent)] scale-110 shadow-md'
+                  : 'border-transparent opacity-50 hover:opacity-80'
+              }`}
+              title={alt}
             >
-              <img src={`https://flagcdn.com/w40/${flag}.png`} alt={l} className="w-full h-full object-cover" />
+              <img src={`https://flagcdn.com/w40/${flag}.png`} alt={alt} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
+        {/* Theme toggle slider — same as HomePage */}
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl transition-all"
-          style={{ background: 'var(--a-secondary-bg)', color: 'var(--a-muted)', border: '1px solid var(--a-border)' }}
-          title={theme === 'dark' ? t('auth.lightTheme') : t('auth.darkTheme')}
+          className="relative flex items-center rounded-full h-9 w-[140px] cursor-pointer transition-all overflow-hidden"
+          style={{ background: 'var(--a-secondary-bg)', border: '1px solid var(--a-border)' }}
         >
-          {theme === 'dark' ? (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-            </svg>
-          )}
+          <div
+            className="absolute top-0.5 h-8 w-[68px] rounded-full shadow-md transition-transform duration-300 ease-out"
+            style={{ background: isDark ? '#fff' : 'var(--a-fg)', transform: isDark ? 'translateX(68px)' : 'translateX(2px)' }}
+          />
+          <span className="relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-300" style={{ color: !isDark ? '#fff' : 'var(--a-muted)' }}>
+            {t('auth.lightTheme')}
+          </span>
+          <span className="relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-300" style={{ color: isDark ? (isDark ? '#18181b' : '#fff') : 'var(--a-muted)' }}>
+            {t('auth.darkTheme')}
+          </span>
         </button>
       </div>
 
       <div className="auth-card relative z-10 mx-4">
-        {/* Logo — horizontal like reference */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <img src="/logo-f.png" alt="FOMO Chat" className="h-11 w-auto object-contain shrink-0" />
+        {/* Logo — large icon + CHAT + subtitle */}
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <img src="/logo-f.png" alt="FOMO Chat" className="h-14 w-auto object-contain shrink-0" />
           <div>
-            <h1 className="text-lg font-bold leading-tight" style={{ color: 'var(--a-fg)' }}>FOMO <span style={{ color: 'var(--a-accent)' }}>Chat</span></h1>
-            <p className="text-xs uppercase tracking-widest font-medium" style={{ color: 'var(--a-muted)' }}>{t('auth.appDescription')}</p>
+            <h1 className="text-2xl font-extrabold leading-tight tracking-tight" style={{ color: 'var(--a-fg)' }}>
+              <span style={{ color: 'var(--a-accent)' }}>CHAT</span>
+            </h1>
+            <p className="text-xs font-medium" style={{ color: 'var(--a-muted)', letterSpacing: '0.02em' }}>{t('auth.subtitle')}</p>
           </div>
         </div>
 
@@ -493,124 +575,55 @@ export function AuthPage() {
 
             {/* ── Login form ──────────────────────────────────── */}
             {tab === 'login' && (
-              <div className="space-y-5">
-                {/* Title */}
-                <div className="text-center">
-                  <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--a-fg)' }}>{t('auth.signInTitle')}</h2>
-                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.signInDesc')}</p>
-                </div>
+              <div className="space-y-4">
+                <h2 className="text-lg font-bold text-center" style={{ color: 'var(--a-fg)' }}>{t('auth.signInTitle')}</h2>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true, handleLogin)}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
                   {passwordField(password, setPassword, t('auth.password'), showPassword, () => setShowPassword(!showPassword), (e) => e.key === 'Enter' && handleLogin())}
                 </div>
-                <button onClick={handleLogin} disabled={loading} className="auth-btn">
+
+                {captchaBlock(handleLogin)}
+
+                <button onClick={handleLogin} disabled={loading} className="auth-btn auth-btn-lg">
                   {loading ? t('auth.loginLoading') : (
                     <span className="flex items-center justify-center gap-2">
                       {t('auth.signIn')}
-                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
                     </span>
                   )}
                 </button>
 
-                {/* OAuth divider */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
-                  <span className="text-xs" style={{ color: 'var(--a-subtle)' }}>{t('auth.or')}</span>
-                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
-                </div>
-
-                {/* Yandex login — round icon */}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      const clientId = 'cf2c3fae1c86457b92cfaa9c74a54cad';
-                      const redirectUri = encodeURIComponent(window.location.origin + '/auth/yandex/callback');
-                      window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
-                    }}
-                    className="w-12 h-12 rounded-full overflow-hidden border transition-all hover:scale-110 hover:shadow-lg"
-                    style={{ borderColor: 'var(--a-border)' }}
-                    title={t('auth.yandexLogin')}
-                  >
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/5/58/Yandex_icon.svg"
-                      alt="Yandex"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                </div>
+                {yandexBlock}
               </div>
             )}
 
             {/* ── Register form ─────────────────────────────────── */}
             {tab === 'register' && (
-              <div className="space-y-5">
-                {/* Title */}
-                <div className="text-center">
-                  <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--a-fg)' }}>{t('auth.createAccountTitle')}</h2>
-                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.createAccountDesc')}</p>
-                </div>
+              <div className="space-y-4">
+                <h2 className="text-lg font-bold text-center" style={{ color: 'var(--a-fg)' }}>{t('auth.createAccountTitle')}</h2>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true)}
                 </div>
 
-                {/* Math captcha */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-4 h-4" style={{ color: 'var(--a-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                    </svg>
-                    <span className="text-sm font-medium" style={{ color: 'var(--a-muted)' }}>{t('auth.securityCheck')}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex-1 flex items-center justify-center py-3 rounded-xl text-2xl font-bold tracking-wider"
-                      style={{ background: 'var(--a-input-bg)', border: '1px solid var(--a-input-border)', color: 'var(--a-fg)' }}
-                    >
-                      {mathNums[0]} + {mathNums[1]} = ?
-                    </div>
-                    <button
-                      onClick={refreshCaptcha}
-                      className="p-2.5 rounded-xl transition-all"
-                      style={{ background: 'var(--a-secondary-bg)', color: 'var(--a-muted)', border: '1px solid var(--a-border)' }}
-                      title={t('auth.captchaRefresh')}
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                      </svg>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={captchaAnswer}
-                    onChange={(e) => setCaptchaAnswer(e.target.value.replace(/\D/g, ''))}
-                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
-                    placeholder={t('auth.captchaAnswer')}
-                    className="auth-input mt-3"
-                  />
-                  {captchaVerified && (
-                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#22c55e' }}>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      {t('auth.captchaOk')}
-                    </p>
-                  )}
-                </div>
+                {captchaBlock(handleRegister)}
 
-                <button onClick={handleRegister} disabled={loading} className="auth-btn">
+                <button onClick={handleRegister} disabled={loading} className="auth-btn auth-btn-lg">
                   {loading ? t('auth.sending') : (
                     <span className="flex items-center justify-center gap-2">
                       {t('auth.getCode')}
-                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
                     </span>
                   )}
                 </button>
+
+                {yandexBlock}
               </div>
             )}
           </>

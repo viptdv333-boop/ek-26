@@ -176,6 +176,27 @@ function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
   );
 }
 
+/* ─── Theme Switcher ─── */
+function ThemeSwitcher({ dark, toggle }: { dark: boolean; toggle: () => void }) {
+  return (
+    <button
+      onClick={toggle}
+      className="p-2 rounded-xl bg-[var(--h-secondary)] border border-[var(--h-border)] hover:bg-[var(--h-border)] transition-all"
+      title={dark ? 'Light mode' : 'Dark mode'}
+    >
+      {dark ? (
+        <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--h-fg)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--h-fg)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 /* ─── Feature Card ─── */
 function FeatureCard({ icon, title, desc, delay }: { icon: React.ReactNode; title: string; desc: string; delay: number }) {
   return (
@@ -245,6 +266,7 @@ function StatItem({ value, label }: { value: string; label: string }) {
    ═══════════════════════════════════════════ */
 export function HomePage() {
   const [scrollY, setScrollY] = useState(0);
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('ek26_home_theme') === 'dark');
   const [lang, setLang] = useState<Lang>(() => {
     const saved = localStorage.getItem('ek26_home_lang');
     if (saved === 'en' || saved === 'zh') return saved;
@@ -256,6 +278,10 @@ export function HomePage() {
   useEffect(() => {
     localStorage.setItem('ek26_home_lang', lang);
   }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem('ek26_home_theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -285,7 +311,7 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="home-page home-light">
+    <div className={`home-page ${isDark ? 'home-dark' : 'home-light'}`}>
       {/* ── NAV ── */}
       <nav className={`home-nav ${scrollY > 40 ? 'home-nav-scrolled' : ''}`}>
         <div className="home-container flex items-center justify-between h-16">
@@ -307,6 +333,7 @@ export function HomePage() {
 
           <div className="flex items-center gap-3">
             <LangSwitcher lang={lang} setLang={setLang} />
+            <ThemeSwitcher dark={isDark} toggle={() => setIsDark(!isDark)} />
             <Link to="/auth" className="home-btn-primary text-sm px-6 py-2.5">{s.nav.login}</Link>
           </div>
         </div>

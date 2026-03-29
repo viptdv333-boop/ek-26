@@ -549,12 +549,18 @@ export function AuthPage() {
       </div>
 
       <div className="auth-card relative z-10 mx-4">
-        {/* Logo */}
-        <div className="flex items-center justify-center mb-5" style={{ gap: '0.6rem' }}>
-          <img src="/logo-f.png" alt="Chat" className="object-contain shrink-0" style={{ height: '2.2rem', width: 'auto' }} />
+        {/* Logo — black rounded square with chat bubble + CHAT */}
+        <div className="flex items-center justify-center mb-5" style={{ gap: '0.75rem' }}>
+          <div className="shrink-0 flex items-center justify-center rounded-2xl" style={{ width: '3.2rem', height: '3.2rem', background: 'var(--a-fg)' }}>
+            <svg viewBox="0 0 24 24" fill="none" style={{ width: '1.8rem', height: '1.8rem' }}>
+              <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill={isDark ? '#0a0a0f' : '#ffffff'} />
+              <rect x="7" y="7" width="10" height="1.5" rx="0.75" fill={isDark ? '#f5f5f5' : '#18181b'} />
+              <rect x="7" y="10.5" width="6" height="1.5" rx="0.75" fill={isDark ? '#f5f5f5' : '#18181b'} />
+            </svg>
+          </div>
           <div>
-            <h1 className="font-extrabold" style={{ fontSize: '1.4rem', lineHeight: 1, color: 'var(--a-accent)' }}>CHAT</h1>
-            <p className="uppercase tracking-widest font-semibold" style={{ color: 'var(--a-muted)', fontSize: '0.45rem', lineHeight: 1, marginTop: '0.15rem' }}>{t('auth.subtitle')}</p>
+            <h1 className="font-extrabold" style={{ fontSize: '1.6rem', lineHeight: 1, color: 'var(--a-accent)' }}>CHAT</h1>
+            <p className="uppercase tracking-widest font-semibold" style={{ color: 'var(--a-muted)', fontSize: '0.5rem', lineHeight: 1, marginTop: '0.2rem' }}>{t('auth.subtitle')}</p>
           </div>
         </div>
 

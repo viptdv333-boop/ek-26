@@ -524,20 +524,25 @@ export function AuthPage() {
                   <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
                 </div>
 
-                {/* Yandex login */}
-                <button
-                  onClick={() => {
-                    const clientId = 'cf2c3fae1c86457b92cfaa9c74a54cad';
-                    const redirectUri = encodeURIComponent(window.location.origin + '/auth/yandex/callback');
-                    window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
-                  }}
-                  className="auth-yandex-btn"
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13.32 7.67h-.67c-1.28 0-1.95.67-1.95 1.66 0 1.11.5 1.63 1.56 2.3l.87.55-2.52 3.82H8.68l2.2-3.34c-1.28-.88-2.01-1.73-2.01-3.22 0-1.96 1.37-3.28 3.73-3.28h2.72V20h-2v-5.33h-.01V7.67z" />
-                  </svg>
-                  {t('auth.yandexLogin')}
-                </button>
+                {/* Yandex login — round icon */}
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      const clientId = 'cf2c3fae1c86457b92cfaa9c74a54cad';
+                      const redirectUri = encodeURIComponent(window.location.origin + '/auth/yandex/callback');
+                      window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
+                    }}
+                    className="w-12 h-12 rounded-full overflow-hidden border transition-all hover:scale-110 hover:shadow-lg"
+                    style={{ borderColor: 'var(--a-border)' }}
+                    title={t('auth.yandexLogin')}
+                  >
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/5/58/Yandex_icon.svg"
+                      alt="Yandex"
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                </div>
               </div>
             )}
 

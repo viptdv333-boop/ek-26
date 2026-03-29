@@ -526,28 +526,30 @@
 /* Tabs */
 .auth-tabs {
   display: flex;
-  background: var(--a-tab-bg);
+  border: 1px solid var(--a-input-border);
   border-radius: 0.75rem;
-  padding: 0.25rem;
+  overflow: hidden;
   margin-bottom: 1.5rem;
 }
 .auth-tab {
   flex: 1;
-  padding: 0.625rem 1rem;
+  padding: 0.75rem 1rem;
   text-align: center;
   font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
   background: transparent;
   color: var(--a-muted);
 }
+.auth-tab + .auth-tab {
+  border-left: 1px solid var(--a-input-border);
+}
 .auth-tab.active {
-  background: var(--a-accent);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+  background: var(--a-input-bg);
+  color: var(--a-fg);
+  font-weight: 600;
 }
 
 /* Code inputs */

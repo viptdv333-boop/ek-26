@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { authApi, usersApi } from '../services/api/endpoints';
 import { useAuthStore } from '../stores/authStore';
 import { useTranslation } from '../i18n';
@@ -38,12 +39,6 @@ const COUNTRIES = [
   { code: '+61', nameKey: 'country.australia', isoCode: 'AU' },
 ];
 
-// ── Puzzle Captcha Constants ──────────────────────────────────────
-const PUZZLE_W = 280;
-const PUZZLE_H = 100;
-const PIECE_SIZE = 40;
-const PIECE_TOLERANCE = 6;
-
 type Tab = 'login' | 'register';
 type Step = 'phone' | 'code' | 'setPassword' | 'created' | 'linkEmail';
 
@@ -54,7 +49,7 @@ export function AuthPage() {
     return params.get('tab') === 'login' ? 'login' : 'register';
   });
   const [step, setStep] = useState<Step>('phone');
-  const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'light');
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -105,164 +100,26 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Puzzle captcha
-  const puzzleCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [puzzleTargetX, setPuzzleTargetX] = useState(() => Math.floor(Math.random() * (PUZZLE_W - PIECE_SIZE - 60)) + 50);
-  const [puzzleDragX, setPuzzleDragX] = useState(0);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef(0);
-  const dragStartXRef = useRef(0);
-
-  const drawPuzzle = useCallback((ctx: CanvasRenderingContext2D, targetX: number, dragX: number, verified: boolean) => {
-    // Background gradient
-    const grad = ctx.createLinearGradient(0, 0, PUZZLE_W, PUZZLE_H);
-    grad.addColorStop(0, '#4f46e5');
-    grad.addColorStop(0.5, '#7c3aed');
-    grad.addColorStop(1, '#2563eb');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, PUZZLE_W, PUZZLE_H);
-
-    // Decorative circles
-    for (let i = 0; i < 8; i++) {
-      ctx.beginPath();
-      ctx.arc((i * 41 + 20) % PUZZLE_W, (i * 17 + 10) % PUZZLE_H, 15 + (i % 3) * 8, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,0.${6 + i % 4})`;
-      ctx.fill();
-    }
-
-    // Cutout hole
-    const y = (PUZZLE_H - PIECE_SIZE) / 2;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(targetX, y, PIECE_SIZE, PIECE_SIZE);
-    // Puzzle tab on right
-    ctx.arc(targetX + PIECE_SIZE, y + PIECE_SIZE / 2, 8, -Math.PI / 2, Math.PI / 2);
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-
-    // Draggable piece
-    const pieceX = dragX;
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-
-    // Draw piece shape
-    ctx.beginPath();
-    ctx.rect(pieceX, y, PIECE_SIZE, PIECE_SIZE);
-    ctx.arc(pieceX + PIECE_SIZE, y + PIECE_SIZE / 2, 8, -Math.PI / 2, Math.PI / 2);
-    ctx.clip();
-
-    // Sample the background at target position for the piece texture
-    const pieceGrad = ctx.createLinearGradient(pieceX, 0, pieceX + PIECE_SIZE, PUZZLE_H);
-    pieceGrad.addColorStop(0, '#6366f1');
-    pieceGrad.addColorStop(1, '#4338ca');
-    ctx.fillStyle = pieceGrad;
-    ctx.fillRect(pieceX - 10, y - 10, PIECE_SIZE + 20, PIECE_SIZE + 20);
-
-    // Decorative circles on piece
-    for (let i = 0; i < 8; i++) {
-      ctx.beginPath();
-      const cx = (i * 41 + 20) % PUZZLE_W;
-      const cy = (i * 17 + 10) % PUZZLE_H;
-      ctx.arc(cx - targetX + pieceX, cy, 15 + (i % 3) * 8, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,0.${6 + i % 4})`;
-      ctx.fill();
-    }
-
-    ctx.restore();
-
-    // Piece border
-    ctx.beginPath();
-    ctx.rect(pieceX, y, PIECE_SIZE, PIECE_SIZE);
-    ctx.arc(pieceX + PIECE_SIZE, y + PIECE_SIZE / 2, 8, -Math.PI / 2, Math.PI / 2);
-    ctx.strokeStyle = verified ? '#22c55e' : 'rgba(255,255,255,0.8)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    if (verified) {
-      ctx.fillStyle = '#22c55e';
-      ctx.font = 'bold 20px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('\u2713', pieceX + PIECE_SIZE / 2, y + PIECE_SIZE / 2 + 7);
-    }
-  }, []);
-
-  useEffect(() => {
-    const canvas = puzzleCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, PUZZLE_W, PUZZLE_H);
-    drawPuzzle(ctx, puzzleTargetX, puzzleDragX, captchaVerified);
-  }, [puzzleTargetX, puzzleDragX, captchaVerified, drawPuzzle]);
-
-  const handlePuzzlePointerDown = (e: React.PointerEvent) => {
-    if (captchaVerified) return;
-    const canvas = puzzleCanvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (PUZZLE_W / rect.width);
-    const y = (PUZZLE_H - PIECE_SIZE) / 2;
-    if (x >= puzzleDragX && x <= puzzleDragX + PIECE_SIZE + 10 && e.clientY - rect.top >= 0) {
-      setIsDragging(true);
-      dragStartRef.current = e.clientX;
-      dragStartXRef.current = puzzleDragX;
-      canvas.setPointerCapture(e.pointerId);
-    }
-  };
-
-  const handlePuzzlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
-    const canvas = puzzleCanvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const scale = PUZZLE_W / rect.width;
-    const dx = (e.clientX - dragStartRef.current) * scale;
-    const newX = Math.max(0, Math.min(PUZZLE_W - PIECE_SIZE - 10, dragStartXRef.current + dx));
-    setPuzzleDragX(newX);
-  };
-
-  const handlePuzzlePointerUp = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    const diff = Math.abs(puzzleDragX - puzzleTargetX);
-    if (diff <= PIECE_TOLERANCE) {
-      setCaptchaVerified(true);
-      setPuzzleDragX(puzzleTargetX);
-    }
-  };
+  // Math captcha
+  const [mathNums, setMathNums] = useState<[number, number]>(() => [
+    Math.floor(Math.random() * 9) + 1,
+    Math.floor(Math.random() * 9) + 1,
+  ]);
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const captchaVerified = captchaAnswer.trim() === String(mathNums[0] + mathNums[1]);
 
   const refreshCaptcha = () => {
-    const newTarget = Math.floor(Math.random() * (PUZZLE_W - PIECE_SIZE - 60)) + 50;
-    setPuzzleTargetX(newTarget);
-    setPuzzleDragX(0);
-    setCaptchaVerified(false);
+    setMathNums([
+      Math.floor(Math.random() * 9) + 1,
+      Math.floor(Math.random() * 9) + 1,
+    ]);
+    setCaptchaAnswer('');
   };
 
   // UI state
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
-
-  // Auto-detect country by IP
-  useEffect(() => {
-    fetch('https://ipapi.co/json/')
-      .then(r => r.json())
-      .then(data => {
-        if (data.country_code) {
-          const match = COUNTRIES.find(c => c.isoCode === data.country_code);
-          if (match) setSelectedCountry(match);
-        }
-      })
-      .catch(() => {}); // silently fallback to default
-  }, []);
 
   // Close country picker on click outside
   useEffect(() => {
@@ -453,7 +310,6 @@ export function AuthPage() {
       usersApi.getProfile().then((profile) => {
         login(token, refreshToken, profile);
       }).catch(() => {
-        // Fallback — just login with minimal user info
         login(token, refreshToken, { id: '', phone, displayName: phone });
       });
     }
@@ -463,6 +319,7 @@ export function AuthPage() {
     ? COUNTRIES.filter(c => t(c.nameKey).toLowerCase().includes(countrySearch.toLowerCase()) || c.code.includes(countrySearch))
     : COUNTRIES;
 
+  // ── Shared UI pieces ──────────────────────────────────────────
   const phoneInput = (autoFocus?: boolean, onEnter?: () => void) => (
     <div className="relative" ref={countryPickerRef}>
       <div className="flex gap-2">
@@ -480,8 +337,9 @@ export function AuthPage() {
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s\-()]/g, ''))}
           onKeyDown={onEnter ? (e) => e.key === 'Enter' && onEnter() : undefined}
-          placeholder="999 123 45 67"
-          className="auth-input text-lg tracking-wider flex-1"
+          placeholder="(999) 123-45-67"
+          className="auth-input flex-1"
+          style={{ fontSize: '1rem', letterSpacing: '0.025em' }}
           autoFocus={autoFocus}
         />
       </div>
@@ -515,9 +373,6 @@ export function AuthPage() {
     </div>
   );
 
-  // ── Shared UI pieces ──────────────────────────────────────────
-  const linkClass = 'auth-link';
-
   const eyeIcon = (show: boolean) => (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       {show ? (
@@ -531,7 +386,7 @@ export function AuthPage() {
     </svg>
   );
 
-  const passwordInput = (
+  const passwordField = (
     value: string,
     onChange: (v: string) => void,
     placeholder: string,
@@ -547,7 +402,8 @@ export function AuthPage() {
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className="auth-input pr-12"
+        className="auth-input"
+        style={{ paddingRight: '3rem' }}
         autoFocus={autoFocus}
       />
       <button
@@ -568,13 +424,32 @@ export function AuthPage() {
     <div className={`auth-page ${themeClass}`}>
       {/* Gradient background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-blob" style={{ top: '-10%', right: '-5%', width: 500, height: 500, opacity: 0.25, background: 'radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%)' }} />
-        <div className="auth-blob" style={{ bottom: '-10%', left: '-5%', width: 400, height: 400, opacity: 0.15, background: 'radial-gradient(circle, rgba(59,130,246,0.35) 0%, transparent 70%)' }} />
-        <div className="auth-blob" style={{ top: '40%', left: '50%', width: 600, height: 600, opacity: 0.08, transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)' }} />
+        <div className="auth-blob" style={{ top: '-10%', right: '-5%', width: 500, height: 500, opacity: 0.2, background: 'radial-gradient(circle, rgba(239,68,68,0.3) 0%, transparent 70%)' }} />
+        <div className="auth-blob" style={{ bottom: '-10%', left: '-5%', width: 400, height: 400, opacity: 0.12, background: 'radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)' }} />
       </div>
 
-      {/* Top bar */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Top bar: theme toggle + language */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
+        {/* Language flags */}
+        <div className="flex items-center gap-1">
+          {([
+            { l: 'ru' as const, flag: 'ru' },
+            { l: 'en' as const, flag: 'gb' },
+            { l: 'zh' as const, flag: 'cn' },
+          ]).map(({ l, flag }) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className="w-7 h-7 rounded-full overflow-hidden border-2 transition-all"
+              style={lang === l
+                ? { borderColor: 'var(--a-accent)', transform: 'scale(1.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }
+                : { borderColor: 'transparent', opacity: 0.5 }
+              }
+            >
+              <img src={`https://flagcdn.com/w40/${flag}.png`} alt={l} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
         <button
           onClick={toggleTheme}
           className="p-2.5 rounded-xl transition-all"
@@ -594,11 +469,13 @@ export function AuthPage() {
       </div>
 
       <div className="auth-card relative z-10 mx-4">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <img src="/logo-f.png" alt="FOMO Chat" className="h-14 w-auto mx-auto mb-3 object-contain shrink-0" />
-          <h1 className="text-xl font-bold" style={{ color: 'var(--a-fg)' }}>FOMO <span style={{ color: 'var(--a-accent)' }}>Chat</span></h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--a-muted)' }}>{t('auth.appDescription')}</p>
+        {/* Logo — horizontal like reference */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <img src="/logo-f.png" alt="FOMO Chat" className="h-11 w-auto object-contain shrink-0" />
+          <div>
+            <h1 className="text-lg font-bold leading-tight" style={{ color: 'var(--a-fg)' }}>FOMO <span style={{ color: 'var(--a-accent)' }}>Chat</span></h1>
+            <p className="text-xs uppercase tracking-widest font-medium" style={{ color: 'var(--a-muted)' }}>{t('auth.appDescription')}</p>
+          </div>
         </div>
 
         {/* ── PHONE step (Login / Register tabs) ────────────────── */}
@@ -614,52 +491,34 @@ export function AuthPage() {
               </button>
             </div>
 
-            {/* Language selector with flag images */}
-            <div className="flex justify-center gap-2 mb-5">
-              {([
-                { l: 'ru' as const, flag: 'ru', label: 'Рус' },
-                { l: 'en' as const, flag: 'gb', label: 'Eng' },
-                { l: 'zh' as const, flag: 'cn', label: '中文' },
-              ]).map(({ l, flag, label }) => (
-                <button
-                  key={l}
-                  onClick={() => setLang(l)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={lang === l
-                    ? { background: 'rgba(239,68,68,0.1)', color: 'var(--a-accent)', border: '1px solid rgba(239,68,68,0.25)' }
-                    : { background: 'var(--a-secondary-bg)', color: 'var(--a-muted)', border: '1px solid transparent' }
-                  }
-                >
-                  <img src={`https://flagcdn.com/w20/${flag}.png`} alt={label} className="w-5 h-3.5 object-cover rounded-sm" />
-                  {label}
-                </button>
-              ))}
-            </div>
-
             {/* ── Login form ──────────────────────────────────── */}
             {tab === 'login' && (
-              <div className="space-y-4">
+              <div className="space-y-5">
+                {/* Title */}
+                <div className="text-center">
+                  <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--a-fg)' }}>{t('auth.signInTitle')}</h2>
+                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.signInDesc')}</p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true, handleLogin)}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
-                  {passwordInput(password, setPassword, t('auth.password'), showPassword, () => setShowPassword(!showPassword), (e) => e.key === 'Enter' && handleLogin())}
+                  {passwordField(password, setPassword, t('auth.password'), showPassword, () => setShowPassword(!showPassword), (e) => e.key === 'Enter' && handleLogin())}
                 </div>
                 <button onClick={handleLogin} disabled={loading} className="auth-btn">
-                  {loading ? t('auth.loginLoading') : t('auth.signIn')}
+                  {loading ? t('auth.loginLoading') : (
+                    <span className="flex items-center justify-center gap-2">
+                      {t('auth.signIn')}
+                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                    </span>
+                  )}
                 </button>
 
-                <p className="text-center text-sm" style={{ color: 'var(--a-subtle)' }}>
-                  {t('auth.noAccount')}{' '}
-                  <span onClick={() => switchTab('register')} className={linkClass}>
-                    {t('auth.signUp')}
-                  </span>
-                </p>
-
                 {/* OAuth divider */}
-                <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-3">
                   <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
                   <span className="text-xs" style={{ color: 'var(--a-subtle)' }}>{t('auth.or')}</span>
                   <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
@@ -682,68 +541,70 @@ export function AuthPage() {
               </div>
             )}
 
-            {/* ── Register form (phone + captcha only) ─────────── */}
+            {/* ── Register form ─────────────────────────────────── */}
             {tab === 'register' && (
-              <div className="space-y-4">
+              <div className="space-y-5">
+                {/* Title */}
+                <div className="text-center">
+                  <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--a-fg)' }}>{t('auth.createAccountTitle')}</h2>
+                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.createAccountDesc')}</p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true)}
                 </div>
-                {/* Puzzle captcha */}
+
+                {/* Math captcha */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.puzzleCaptcha')}</p>
-                    <button onClick={refreshCaptcha} className="auth-link text-xs">
-                      {t('auth.captchaRefresh')}
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4" style={{ color: 'var(--a-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    </svg>
+                    <span className="text-sm font-medium" style={{ color: 'var(--a-muted)' }}>{t('auth.securityCheck')}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex-1 flex items-center justify-center py-3 rounded-xl text-2xl font-bold tracking-wider"
+                      style={{ background: 'var(--a-input-bg)', border: '1px solid var(--a-input-border)', color: 'var(--a-fg)' }}
+                    >
+                      {mathNums[0]} + {mathNums[1]} = ?
+                    </div>
+                    <button
+                      onClick={refreshCaptcha}
+                      className="p-2.5 rounded-xl transition-all"
+                      style={{ background: 'var(--a-secondary-bg)', color: 'var(--a-muted)', border: '1px solid var(--a-border)' }}
+                      title={t('auth.captchaRefresh')}
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                      </svg>
                     </button>
                   </div>
-                  <canvas
-                    ref={puzzleCanvasRef}
-                    width={PUZZLE_W}
-                    height={PUZZLE_H}
-                    onPointerDown={handlePuzzlePointerDown}
-                    onPointerMove={handlePuzzlePointerMove}
-                    onPointerUp={handlePuzzlePointerUp}
-                    onPointerLeave={handlePuzzlePointerUp}
-                    className="w-full rounded-xl cursor-grab active:cursor-grabbing touch-none"
-                    style={{ aspectRatio: `${PUZZLE_W}/${PUZZLE_H}` }}
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={captchaAnswer}
+                    onChange={(e) => setCaptchaAnswer(e.target.value.replace(/\D/g, ''))}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+                    placeholder={t('auth.captchaAnswer')}
+                    className="auth-input mt-3"
                   />
-                  <p className="text-xs mt-1" style={{ color: captchaVerified ? '#22c55e' : 'var(--a-subtle)' }}>
-                    {captchaVerified ? '\u2713 ' + t('auth.captchaOk') : t('auth.puzzleHint')}
-                  </p>
+                  {captchaVerified && (
+                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#22c55e' }}>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                      {t('auth.captchaOk')}
+                    </p>
+                  )}
                 </div>
 
                 <button onClick={handleRegister} disabled={loading} className="auth-btn">
-                  {loading ? t('auth.sending') : t('auth.getCode')}
-                </button>
-
-                <p className="text-center text-sm" style={{ color: 'var(--a-subtle)' }}>
-                  {t('auth.haveAccount')}{' '}
-                  <span onClick={() => switchTab('login')} className={linkClass}>
-                    {t('auth.signIn')}
-                  </span>
-                </p>
-
-                {/* OAuth divider */}
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
-                  <span className="text-xs" style={{ color: 'var(--a-subtle)' }}>{t('auth.or')}</span>
-                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
-                </div>
-
-                {/* Yandex login */}
-                <button
-                  onClick={() => {
-                    const clientId = 'cf2c3fae1c86457b92cfaa9c74a54cad';
-                    const redirectUri = encodeURIComponent(window.location.origin + '/auth/yandex/callback');
-                    window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
-                  }}
-                  className="auth-yandex-btn"
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13.32 7.67h-.67c-1.28 0-1.95.67-1.95 1.66 0 1.11.5 1.63 1.56 2.3l.87.55-2.52 3.82H8.68l2.2-3.34c-1.28-.88-2.01-1.73-2.01-3.22 0-1.96 1.37-3.28 3.73-3.28h2.72V20h-2v-5.33h-.01V7.67z" />
-                  </svg>
-                  {t('auth.yandexLogin')}
+                  {loading ? t('auth.sending') : (
+                    <span className="flex items-center justify-center gap-2">
+                      {t('auth.getCode')}
+                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                    </span>
+                  )}
                 </button>
               </div>
             )}
@@ -752,11 +613,16 @@ export function AuthPage() {
 
         {/* ── CODE verification step ────────────────────────────── */}
         {step === 'code' && (
-          <div className="space-y-4">
-            <p className="text-center text-sm" style={{ color: 'var(--a-muted)' }}>
-              {t(verifyMethod === 'call' ? 'auth.weWillCallPhone' : 'auth.weWillCall')} <span style={{ color: 'var(--a-fg)', fontWeight: 600 }}>{phone}</span>,<br />
-              {t(verifyMethod === 'call' ? 'auth.enterLast4Call' : 'auth.enterLast4')}
-            </p>
+          <div className="space-y-5">
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--a-fg)' }}>
+                {t(verifyMethod === 'call' ? 'auth.weWillCallPhone' : 'auth.weWillCall')}
+              </h2>
+              <p className="text-sm" style={{ color: 'var(--a-muted)' }}>
+                <span style={{ color: 'var(--a-fg)', fontWeight: 600 }}>{phone}</span><br />
+                {t(verifyMethod === 'call' ? 'auth.enterLast4Call' : 'auth.enterLast4')}
+              </p>
+            </div>
             <div className="flex gap-3 justify-center">
               {code.map((digit, i) => (
                 <input
@@ -781,16 +647,13 @@ export function AuthPage() {
                   {t('auth.resendIn', { countdown })}
                 </span>
               ) : (
-                <button onClick={handleResendCode} className={linkClass}>
+                <button onClick={handleResendCode} className="auth-link">
                   {t('auth.resendCode')}
                 </button>
               )}
             </div>
             <button
-              onClick={() => {
-                setStep('phone');
-                setCode(['', '', '', '']);
-              }}
+              onClick={() => { setStep('phone'); setCode(['', '', '', '']); }}
               className="w-full text-center text-sm transition-colors"
               style={{ color: 'var(--a-subtle)' }}
             >
@@ -801,13 +664,15 @@ export function AuthPage() {
 
         {/* ── SET PASSWORD step ────────────────────────────────── */}
         {step === 'setPassword' && (
-          <div className="space-y-4">
-            <p className="text-center text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.passwordHint')}</p>
+          <div className="space-y-5">
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--a-fg)' }}>{t('auth.createAccount')}</h2>
+              <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.passwordHint')}</p>
+            </div>
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
-              {passwordInput(password, setPassword, t('auth.passwordPlaceholder'), showPassword, () => setShowPassword(!showPassword), undefined, true)}
+              {passwordField(password, setPassword, t('auth.passwordPlaceholder'), showPassword, () => setShowPassword(!showPassword), undefined, true)}
             </div>
-            {/* Password requirements */}
             <ul className="text-xs space-y-1" style={{ color: 'var(--a-subtle)' }}>
               <li style={password.length >= 6 ? { color: '#22c55e' } : {}}>{password.length >= 6 ? '\u2713' : '\u2022'} {t('auth.passwordMin')}</li>
               <li style={/[A-ZА-ЯЁ]/.test(password) ? { color: '#22c55e' } : {}}>{/[A-ZА-ЯЁ]/.test(password) ? '\u2713' : '\u2022'} {t('auth.passwordUppercase')}</li>
@@ -815,17 +680,22 @@ export function AuthPage() {
             </ul>
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.confirmPassword')}</label>
-              {passwordInput(confirmPassword, setConfirmPassword, t('auth.confirmPlaceholder'), showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleSetPassword())}
+              {passwordField(confirmPassword, setConfirmPassword, t('auth.confirmPlaceholder'), showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleSetPassword())}
             </div>
             <button onClick={handleSetPassword} disabled={loading} className="auth-btn">
-              {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
+              {loading ? t('auth.creatingAccount') : (
+                <span className="flex items-center justify-center gap-2">
+                  {t('auth.createAccount')}
+                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                </span>
+              )}
             </button>
           </div>
         )}
 
         {/* ── CREATED step ──────────────────────────────────────────── */}
         {step === 'created' && (
-          <div className="space-y-4 text-center">
+          <div className="space-y-5 text-center">
             <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>&#10003;</div>
             <p className="text-xl font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.accountCreated')}</p>
             <button onClick={() => setStep('linkEmail')} className="auth-btn">
@@ -839,10 +709,13 @@ export function AuthPage() {
 
         {/* ── LINK EMAIL step (optional) ─────────────────────────── */}
         {step === 'linkEmail' && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {!emailSent ? (
               <>
-                <p className="text-center text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.enterEmail')}</p>
+                <div className="text-center">
+                  <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--a-fg)' }}>{t('auth.linkEmail')}</h2>
+                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.enterEmail')}</p>
+                </div>
                 <input
                   type="email"
                   value={email}
@@ -860,7 +733,7 @@ export function AuthPage() {
                 </button>
               </>
             ) : (
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-5">
                 <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>&#9993;</div>
                 <p className="text-lg font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.emailSentTitle')}</p>
                 <p className="text-sm" style={{ color: 'var(--a-muted)' }}>
@@ -881,11 +754,14 @@ export function AuthPage() {
           </div>
         )}
 
-        {/* Footer links */}
-        <div className="auth-footer mt-8 text-center text-xs space-x-3">
-          <a href="/privacy">{t('auth.privacy')}</a>
-          <span style={{ color: 'var(--a-subtle)' }}>&middot;</span>
-          <a href="/terms">{t('auth.terms')}</a>
+        {/* Footer — consent text */}
+        <div className="auth-footer mt-8 text-center text-xs leading-relaxed" style={{ color: 'var(--a-muted)' }}>
+          <p>
+            {t('auth.consent')}{' '}
+            <Link to="/privacy" style={{ color: 'var(--a-accent)' }}>{t('auth.consentPrivacy')}</Link>
+            {' '}{t('auth.consentAnd')}{' '}
+            <Link to="/terms" style={{ color: 'var(--a-accent)' }}>{t('auth.consentTerms')}</Link>
+          </p>
         </div>
       </div>
     </div>

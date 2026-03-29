@@ -159,7 +159,7 @@ export function HomePage() {
   return (
     <div className={`home-page ${isDark ? 'home-dark' : 'home-light'}`}>
       {/* ── NAV ── */}
-      <nav className="home-container flex items-center justify-between h-16 relative z-10">
+      <nav className="flex items-center justify-between h-16 px-6 relative z-10">
         <div className="flex items-center gap-3">
           <img src="/logo-f.png" alt="FOMO Chat" className="h-10 w-auto" />
           <span className="text-xl font-bold tracking-tight text-[var(--h-fg)]">FOMO <span className="text-[var(--h-accent)]">Chat</span></span>
@@ -168,8 +168,8 @@ export function HomePage() {
         <div className="flex items-center gap-3">
           <LangSwitcher lang={lang} setLang={saveLang} />
           <ThemeSwitcher dark={isDark} toggle={toggleTheme} />
-          <Link to="/auth" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.login}</Link>
-          <Link to="/auth" className="home-btn-accent text-sm px-5 py-2.5">{s.register}</Link>
+          <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.login}</Link>
+          <Link to="/auth?tab=register" className="home-btn-accent text-sm px-5 py-2.5">{s.register}</Link>
         </div>
       </nav>
 
@@ -192,7 +192,7 @@ export function HomePage() {
               <p className="text-base md:text-lg text-[var(--h-muted)] mb-8 max-w-lg leading-relaxed">{s.heroDesc}</p>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link to="/auth" className="home-btn-accent text-base px-8 py-3.5 flex items-center justify-center gap-2">
+                <Link to="/auth?tab=register" className="home-btn-accent text-base px-8 py-3.5 flex items-center justify-center gap-2">
                   {s.heroBtn}
                   <IconArrowRight />
                 </Link>

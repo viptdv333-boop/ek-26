@@ -49,7 +49,10 @@ type Step = 'phone' | 'code' | 'setPassword' | 'created' | 'linkEmail';
 
 export function AuthPage() {
   const { t, lang, setLang } = useTranslation();
-  const [tab, setTab] = useState<Tab>('register');
+  const [tab, setTab] = useState<Tab>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') === 'login' ? 'login' : 'register';
+  });
   const [step, setStep] = useState<Step>('phone');
   const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'dark');
 

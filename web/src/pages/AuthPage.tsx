@@ -549,14 +549,12 @@ export function AuthPage() {
       </div>
 
       <div className="auth-card relative z-10 mx-4">
-        {/* Logo — icon left, text right */}
+        {/* Logo — icon height = CHAT + subtitle, centered */}
         <div className="flex items-center justify-center gap-3 mb-5">
-          <img src="/logo-f.png" alt="FOMO Chat" className="h-12 w-auto object-contain shrink-0" />
-          <div className="flex flex-col">
-            <h1 className="font-bold leading-none" style={{ fontSize: '1.5rem', color: 'var(--a-accent)' }}>
-              CHAT
-            </h1>
-            <p className="uppercase tracking-widest font-medium" style={{ color: 'var(--a-muted)', fontSize: '0.625rem', marginTop: '0.125rem' }}>{t('auth.subtitle')}</p>
+          <img src="/logo-f.png" alt="Chat" className="w-auto object-contain shrink-0" style={{ height: '2.75rem' }} />
+          <div className="flex flex-col justify-center">
+            <h1 className="font-extrabold leading-none" style={{ fontSize: '1.375rem', color: 'var(--a-accent)' }}>CHAT</h1>
+            <p className="uppercase tracking-widest font-medium leading-none" style={{ color: 'var(--a-muted)', fontSize: '0.6rem', marginTop: '0.2rem' }}>{t('auth.subtitle')}</p>
           </div>
         </div>
 

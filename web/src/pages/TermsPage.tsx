@@ -1,6 +1,36 @@
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
 export function TermsPage() {
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+    html.style.height = 'auto';
+    html.style.overflow = 'auto';
+    html.style.position = 'static';
+    body.style.height = 'auto';
+    body.style.overflow = 'auto';
+    body.style.position = 'static';
+    if (root) { root.style.height = 'auto'; root.style.overflow = 'auto'; }
+    window.scrollTo(0, 0);
+
+    return () => {
+      html.style.height = '';
+      html.style.overflow = '';
+      html.style.position = '';
+      body.style.height = '';
+      body.style.overflow = '';
+      body.style.position = '';
+      if (root) { root.style.height = ''; root.style.overflow = ''; }
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-dark-900 text-gray-300 px-4 py-8 max-w-3xl mx-auto">
+      <div className="mb-6">
+        <Link to="/home" className="text-accent hover:underline text-sm">&larr; FOMO Chat</Link>
+      </div>
       <h1 className="text-2xl font-bold text-white mb-6">Terms of Service</h1>
       <p className="text-sm text-gray-500 mb-6">Last updated: March 28, 2026</p>
 
@@ -77,8 +107,9 @@ export function TermsPage() {
         </p>
       </section>
 
-      <div className="mt-8 pt-4 border-t border-dark-600">
-        <a href="/" className="text-accent hover:underline text-sm">&larr; Back to FOMO Chat</a>
+      <div className="mt-8 pt-4 border-t border-dark-600 flex gap-6">
+        <Link to="/home" className="text-accent hover:underline text-sm">&larr; FOMO Chat</Link>
+        <Link to="/privacy" className="text-accent hover:underline text-sm">Privacy Policy</Link>
       </div>
     </div>
   );

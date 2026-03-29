@@ -10,12 +10,19 @@
   }
 
   html, body, #root {
-    height: 100dvh;
-    overflow: hidden;
+    min-height: 100dvh;
+    width: 100%;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Lock viewport only inside chat app */
+  .app-fixed-viewport,
+  .app-fixed-viewport body,
+  .app-fixed-viewport #root {
+    height: 100dvh;
+    overflow: hidden;
     position: fixed;
-    width: 100%;
   }
 
   /* Dark theme (default) */

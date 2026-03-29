@@ -284,30 +284,9 @@ export function HomePage() {
   }, [isDark]);
 
   useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const root = document.getElementById('root');
-    html.style.height = 'auto';
-    html.style.overflow = 'auto';
-    html.style.position = 'static';
-    body.style.height = 'auto';
-    body.style.overflow = 'auto';
-    body.style.position = 'static';
-    if (root) { root.style.height = 'auto'; root.style.overflow = 'auto'; }
-
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      html.style.height = '';
-      html.style.overflow = '';
-      html.style.position = '';
-      body.style.height = '';
-      body.style.overflow = '';
-      body.style.position = '';
-      if (root) { root.style.height = ''; root.style.overflow = ''; }
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
@@ -472,8 +451,8 @@ export function HomePage() {
             </div>
 
             <div className="flex items-center gap-6 text-sm">
-              <a href="/privacy" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.privacy}</a>
-              <a href="/terms" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.terms}</a>
+              <Link to="/privacy" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.privacy}</Link>
+              <Link to="/terms" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.terms}</Link>
               <a href="mailto:support@fomo.broker" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.support}</a>
             </div>
 

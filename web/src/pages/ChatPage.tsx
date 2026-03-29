@@ -17,6 +17,12 @@ export function ChatPage() {
   const setConversations = useChatStore((s) => s.setConversations);
   const prevActiveRef = useRef<string | null>(null);
 
+  // Lock viewport for chat layout
+  useEffect(() => {
+    document.documentElement.classList.add('app-fixed-viewport');
+    return () => { document.documentElement.classList.remove('app-fixed-viewport'); };
+  }, []);
+
   useEffect(() => {
     // Load conversations
     conversationsApi.list().then((res) => {

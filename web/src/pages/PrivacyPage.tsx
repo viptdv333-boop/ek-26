@@ -2,29 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 export function PrivacyPage() {
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const root = document.getElementById('root');
-    html.style.height = 'auto';
-    html.style.overflow = 'auto';
-    html.style.position = 'static';
-    body.style.height = 'auto';
-    body.style.overflow = 'auto';
-    body.style.position = 'static';
-    if (root) { root.style.height = 'auto'; root.style.overflow = 'auto'; }
-    window.scrollTo(0, 0);
-
-    return () => {
-      html.style.height = '';
-      html.style.overflow = '';
-      html.style.position = '';
-      body.style.height = '';
-      body.style.overflow = '';
-      body.style.position = '';
-      if (root) { root.style.height = ''; root.style.overflow = ''; }
-    };
-  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
     <div className="min-h-screen bg-dark-900 text-gray-300 px-4 py-8 max-w-3xl mx-auto">

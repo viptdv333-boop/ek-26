@@ -549,13 +549,15 @@ export function AuthPage() {
       </div>
 
       <div className="auth-card relative z-10 mx-4">
-        {/* Logo — icon + CHAT + subtitle, centered */}
-        <div className="flex flex-col items-center mb-5">
-          <div className="flex items-center gap-2">
-            <img src="/logo-f.png" alt="FOMO Chat" className="h-10 w-auto object-contain shrink-0" />
-            <span className="font-extrabold tracking-tight" style={{ color: 'var(--a-accent)', fontSize: '1.75rem', lineHeight: 1 }}>CHAT</span>
+        {/* Logo — icon left, text right */}
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <img src="/logo-f.png" alt="FOMO Chat" className="h-12 w-auto object-contain shrink-0" />
+          <div className="flex flex-col">
+            <h1 className="font-bold leading-none" style={{ fontSize: '1.5rem', color: 'var(--a-fg)' }}>
+              FOMO <span style={{ color: 'var(--a-accent)' }}>Chat</span>
+            </h1>
+            <p className="uppercase tracking-widest font-medium" style={{ color: 'var(--a-muted)', fontSize: '0.625rem', marginTop: '0.125rem' }}>{t('auth.subtitle')}</p>
           </div>
-          <p className="font-medium" style={{ color: 'var(--a-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>{t('auth.subtitle')}</p>
         </div>
 
         {/* ── PHONE step (Login / Register tabs) ────────────────── */}

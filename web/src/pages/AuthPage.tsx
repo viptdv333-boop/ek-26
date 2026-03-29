@@ -553,8 +553,8 @@ export function AuthPage() {
         <div className="flex items-center justify-center gap-3 mb-5">
           <img src="/logo-f.png" alt="FOMO Chat" className="h-12 w-auto object-contain shrink-0" />
           <div className="flex flex-col">
-            <h1 className="font-bold leading-none" style={{ fontSize: '1.5rem', color: 'var(--a-fg)' }}>
-              FOMO <span style={{ color: 'var(--a-accent)' }}>Chat</span>
+            <h1 className="font-bold leading-none" style={{ fontSize: '1.5rem', color: 'var(--a-accent)' }}>
+              Chat
             </h1>
             <p className="uppercase tracking-widest font-medium" style={{ color: 'var(--a-muted)', fontSize: '0.625rem', marginTop: '0.125rem' }}>{t('auth.subtitle')}</p>
           </div>

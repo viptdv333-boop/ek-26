@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 type Lang = 'ru' | 'en' | 'zh';
 const t = (lang: Lang) => ({
   ru: {
-    nav: { features: 'Возможности', security: 'Безопасность', download: 'Скачать', login: 'Войти' },
+    nav: { features: 'Возможности', security: 'Безопасность', download: 'Скачать', login: 'Войти', register: 'Регистрация' },
     badge: 'Безопасный мессенджер',
     heroTitle1: 'Общение без',
     heroTitle2: 'компромиссов',
@@ -39,7 +39,7 @@ const t = (lang: Lang) => ({
     mockM4: 'Жду!',
   },
   en: {
-    nav: { features: 'Features', security: 'Security', download: 'Download', login: 'Sign in' },
+    nav: { features: 'Features', security: 'Security', download: 'Download', login: 'Sign in', register: 'Sign up' },
     badge: 'Secure Messenger',
     heroTitle1: 'Communication',
     heroTitle2: 'without limits',
@@ -73,7 +73,7 @@ const t = (lang: Lang) => ({
     mockM4: "Can't wait!",
   },
   zh: {
-    nav: { features: '功能', security: '安全', download: '下载', login: '登录' },
+    nav: { features: '功能', security: '安全', download: '下载', login: '登录', register: '注册' },
     badge: '安全通讯',
     heroTitle1: '无妥协的',
     heroTitle2: '沟通体验',
@@ -316,12 +316,7 @@ export function HomePage() {
       <nav className={`home-nav ${scrollY > 40 ? 'home-nav-scrolled' : ''}`}>
         <div className="home-container flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-xl bg-[var(--h-primary)] flex items-center justify-center">
-              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--h-accent)] border-2 border-[var(--h-bg)]" />
-              <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </div>
+            <img src="/logo-f.png" alt="FOMO Chat" className="h-10 w-auto" />
             <span className="text-xl font-bold tracking-tight text-[var(--h-fg)]">FOMO <span className="text-[var(--h-accent)]">Chat</span></span>
           </div>
 
@@ -334,7 +329,8 @@ export function HomePage() {
           <div className="flex items-center gap-3">
             <LangSwitcher lang={lang} setLang={setLang} />
             <ThemeSwitcher dark={isDark} toggle={() => setIsDark(!isDark)} />
-            <Link to="/auth" className="home-btn-primary text-sm px-6 py-2.5">{s.nav.login}</Link>
+            <Link to="/auth" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.nav.login}</Link>
+            <Link to="/auth" className="home-btn-accent text-sm px-5 py-2.5">{s.nav.register}</Link>
           </div>
         </div>
       </nav>
@@ -471,15 +467,13 @@ export function HomePage() {
         <div className="home-container">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="relative w-9 h-9 rounded-xl bg-[var(--h-primary)] flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-              </div>
+              <img src="/logo-f.png" alt="FOMO Chat" className="h-8 w-auto" />
               <span className="font-bold text-[var(--h-fg)]">FOMO <span className="text-[var(--h-accent)]">Chat</span></span>
             </div>
 
             <div className="flex items-center gap-6 text-sm">
-              <Link to="/privacy" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.privacy}</Link>
-              <Link to="/terms" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.terms}</Link>
+              <a href="/privacy" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.privacy}</a>
+              <a href="/terms" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.terms}</a>
               <a href="mailto:support@fomo.broker" className="text-[var(--h-muted)] hover:text-[var(--h-accent)] transition-colors">{s.footer.support}</a>
             </div>
 

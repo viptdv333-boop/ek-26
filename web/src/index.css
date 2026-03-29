@@ -395,3 +395,287 @@
   0%, 100% { transform: scale(1); opacity: 0.5; }
   50% { transform: scale(1.05); opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════
+   AUTH PAGE — Kimi style
+   ═══════════════════════════════════════════ */
+.auth-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow-y: auto;
+  -webkit-font-smoothing: antialiased;
+}
+.auth-page.auth-light {
+  background: #fafafa;
+  --a-bg: #fafafa;
+  --a-card: rgba(255,255,255,0.85);
+  --a-card-shadow: 0 20px 60px -12px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+  --a-fg: #18181b;
+  --a-muted: #71717a;
+  --a-subtle: #a1a1aa;
+  --a-accent: #dc2626;
+  --a-accent-hover: #b91c1c;
+  --a-border: rgba(0,0,0,0.08);
+  --a-input-bg: rgba(0,0,0,0.03);
+  --a-input-border: rgba(0,0,0,0.12);
+  --a-input-focus: rgba(220,38,38,0.4);
+  --a-tab-bg: rgba(0,0,0,0.04);
+  --a-tab-active: #18181b;
+  --a-secondary-bg: rgba(0,0,0,0.04);
+  --a-secondary-hover: rgba(0,0,0,0.08);
+}
+.auth-page.auth-dark {
+  background: #0a0a0f;
+  --a-bg: #0a0a0f;
+  --a-card: rgba(15,15,23,0.85);
+  --a-card-shadow: 0 20px 60px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+  --a-fg: #f5f5f5;
+  --a-muted: #71717a;
+  --a-subtle: #52525b;
+  --a-accent: #ef4444;
+  --a-accent-hover: #dc2626;
+  --a-border: rgba(255,255,255,0.08);
+  --a-input-bg: rgba(255,255,255,0.05);
+  --a-input-border: rgba(255,255,255,0.1);
+  --a-input-focus: rgba(239,68,68,0.4);
+  --a-tab-bg: rgba(255,255,255,0.06);
+  --a-tab-active: #ffffff;
+  --a-secondary-bg: rgba(255,255,255,0.06);
+  --a-secondary-hover: rgba(255,255,255,0.1);
+}
+
+/* Card */
+.auth-card {
+  background: var(--a-card);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--a-border);
+  border-radius: 1.5rem;
+  padding: 2.5rem 2rem;
+  box-shadow: var(--a-card-shadow);
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Inputs */
+.auth-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--a-input-bg);
+  border: 1px solid var(--a-input-border);
+  border-radius: 0.75rem;
+  color: var(--a-fg);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+.auth-input:focus {
+  border-color: var(--a-accent);
+  box-shadow: 0 0 0 3px var(--a-input-focus);
+}
+.auth-input::placeholder {
+  color: var(--a-subtle);
+}
+
+/* Primary button */
+.auth-btn {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: var(--a-accent);
+  color: #fff;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px -3px rgba(239,68,68,0.4);
+}
+.auth-btn:hover:not(:disabled) {
+  background: var(--a-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px -5px rgba(239,68,68,0.5);
+}
+.auth-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Secondary button */
+.auth-btn-secondary {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: var(--a-secondary-bg);
+  color: var(--a-muted);
+  border: 1px solid var(--a-border);
+  border-radius: 0.75rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.auth-btn-secondary:hover {
+  background: var(--a-secondary-hover);
+  color: var(--a-fg);
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  background: var(--a-tab-bg);
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+.auth-tab {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  color: var(--a-muted);
+}
+.auth-tab.active {
+  background: var(--a-accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+}
+
+/* Code inputs */
+.auth-code-input {
+  width: 3.5rem;
+  height: 4rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--a-input-bg);
+  border: 1px solid var(--a-input-border);
+  border-radius: 0.75rem;
+  color: var(--a-fg);
+  outline: none;
+  transition: all 0.2s ease;
+}
+.auth-code-input:focus {
+  border-color: var(--a-accent);
+  box-shadow: 0 0 0 3px var(--a-input-focus);
+}
+
+/* Country picker */
+.auth-country-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: var(--a-input-bg);
+  border: 1px solid var(--a-input-border);
+  border-radius: 0.75rem;
+  color: var(--a-fg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.auth-country-btn:hover {
+  border-color: var(--a-accent);
+}
+.auth-country-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
+  width: 18rem;
+  background: var(--a-card);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--a-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  z-index: 50;
+  max-height: 16rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.auth-country-dropdown input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--a-input-bg);
+  border: none;
+  border-bottom: 1px solid var(--a-border);
+  color: var(--a-fg);
+  font-size: 0.875rem;
+  outline: none;
+}
+.auth-country-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  color: var(--a-fg);
+}
+.auth-country-item:hover {
+  background: var(--a-secondary-hover);
+}
+
+/* Link style */
+.auth-link {
+  color: var(--a-accent);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.auth-link:hover {
+  opacity: 0.8;
+}
+
+/* Gradient blobs */
+.auth-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(120px);
+}
+
+/* Yandex button override */
+.auth-yandex-btn {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: #FC3F1D;
+  color: #fff;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.auth-yandex-btn:hover {
+  background: #e0371a;
+  transform: translateY(-1px);
+}
+
+/* Footer */
+.auth-footer a {
+  color: var(--a-muted);
+  transition: color 0.2s;
+}
+.auth-footer a:hover {
+  color: var(--a-accent);
+}

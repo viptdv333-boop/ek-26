@@ -469,11 +469,11 @@ export function AuthPage() {
         <button
           type="button"
           onClick={() => { setShowCountryPicker(!showCountryPicker); setCountrySearch(''); }}
-          className="flex items-center gap-1 px-3 py-3 bg-dark-700 border border-dark-500 rounded-xl text-white hover:border-accent transition-colors shrink-0"
+          className="auth-country-btn"
         >
           <img src={flagUrl(selectedCountry.isoCode)} alt={selectedCountry.isoCode} className="w-6 h-4 object-cover rounded-sm" />
-          <span className="text-sm text-gray-400">{selectedCountry.code}</span>
-          <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          <span className="text-sm" style={{ color: 'var(--a-muted)' }}>{selectedCountry.code}</span>
+          <svg className="w-3 h-3" style={{ color: 'var(--a-subtle)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </button>
         <input
           type="tel"
@@ -481,19 +481,18 @@ export function AuthPage() {
           onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s\-()]/g, ''))}
           onKeyDown={onEnter ? (e) => e.key === 'Enter' && onEnter() : undefined}
           placeholder="999 123 45 67"
-          className={inputClass + ' text-lg tracking-wider flex-1'}
+          className="auth-input text-lg tracking-wider flex-1"
           autoFocus={autoFocus}
         />
       </div>
       {showCountryPicker && (
-        <div className="absolute top-full left-0 mt-1 w-72 bg-dark-700 border border-dark-500 rounded-xl shadow-xl z-50 max-h-64 overflow-hidden flex flex-col">
-          <div className="p-2 border-b border-dark-500">
+        <div className="auth-country-dropdown">
+          <div className="p-2">
             <input
               type="text"
               value={countrySearch}
               onChange={(e) => setCountrySearch(e.target.value)}
               placeholder={t('auth.searchCountry')}
-              className="w-full px-3 py-2 bg-dark-600 border border-dark-500 rounded-lg text-white text-sm focus:outline-none focus:border-accent"
               autoFocus
             />
           </div>
@@ -502,13 +501,12 @@ export function AuthPage() {
               <button
                 key={`${c.code}-${c.nameKey}-${i}`}
                 onClick={() => { setSelectedCountry(c); setShowCountryPicker(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 transition-colors text-left ${
-                  c.code === selectedCountry.code && c.nameKey === selectedCountry.nameKey ? 'bg-dark-600' : ''
-                }`}
+                className="auth-country-item"
+                style={c.code === selectedCountry.code && c.nameKey === selectedCountry.nameKey ? { background: 'var(--a-secondary-hover)' } : {}}
               >
                 <img src={flagUrl(c.isoCode)} alt={c.isoCode} className="w-6 h-4 object-cover rounded-sm" />
-                <span className="text-white text-sm flex-1">{t(c.nameKey)}</span>
-                <span className="text-gray-400 text-sm">{c.code}</span>
+                <span className="text-sm flex-1">{t(c.nameKey)}</span>
+                <span className="text-sm" style={{ color: 'var(--a-muted)' }}>{c.code}</span>
               </button>
             ))}
           </div>
@@ -518,11 +516,7 @@ export function AuthPage() {
   );
 
   // ── Shared UI pieces ──────────────────────────────────────────
-  const inputClass =
-    'w-full px-4 py-3 bg-dark-700 border border-dark-500 rounded-xl text-white focus:outline-none focus:border-accent transition-colors';
-  const btnClass =
-    'w-full py-3 bg-accent hover:bg-accent-hover disabled:opacity-50 rounded-xl text-white font-medium transition-colors';
-  const linkClass = 'text-accent text-sm hover:text-accent-hover cursor-pointer';
+  const linkClass = 'auth-link';
 
   const eyeIcon = (show: boolean) => (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -553,13 +547,14 @@ export function AuthPage() {
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className={inputClass + ' pr-12'}
+        className="auth-input pr-12"
         autoFocus={autoFocus}
       />
       <button
         type="button"
         onClick={toggleShow}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+        className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+        style={{ color: 'var(--a-muted)' }}
       >
         {eyeIcon(show)}
       </button>
@@ -567,19 +562,23 @@ export function AuthPage() {
   );
 
   // ── Render ─────────────────────────────────────────────────────
+  const themeClass = theme === 'dark' ? 'auth-dark' : 'auth-light';
+
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-dark-900 relative overflow-y-auto">
+    <div className={`auth-page ${themeClass}`}>
       {/* Gradient background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-30" style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] opacity-20" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[150px] opacity-10" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)' }} />
+        <div className="auth-blob" style={{ top: '-10%', right: '-5%', width: 500, height: 500, opacity: 0.25, background: 'radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%)' }} />
+        <div className="auth-blob" style={{ bottom: '-10%', left: '-5%', width: 400, height: 400, opacity: 0.15, background: 'radial-gradient(circle, rgba(59,130,246,0.35) 0%, transparent 70%)' }} />
+        <div className="auth-blob" style={{ top: '40%', left: '50%', width: 600, height: 600, opacity: 0.08, transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)' }} />
       </div>
-      {/* Top bar: theme toggle only */}
-      <div className="absolute top-4 right-4">
+
+      {/* Top bar */}
+      <div className="absolute top-4 right-4 z-10">
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-full bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
+          className="p-2.5 rounded-xl transition-all"
+          style={{ background: 'var(--a-secondary-bg)', color: 'var(--a-muted)', border: '1px solid var(--a-border)' }}
           title={theme === 'dark' ? t('auth.lightTheme') : t('auth.darkTheme')}
         >
           {theme === 'dark' ? (
@@ -594,43 +593,29 @@ export function AuthPage() {
         </button>
       </div>
 
-      <div className="w-full max-w-sm px-6">
+      <div className="auth-card relative z-10 mx-4">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo-f.png" alt="FOMO Chat" className="h-16 w-auto mx-auto mb-4 object-contain shrink-0" />
-          <h1 className="text-xl font-bold text-white">FOMO Chat</h1>
-          <p className="text-sm text-gray-400 mt-1">{t('auth.appDescription')}</p>
+          <img src="/logo-f.png" alt="FOMO Chat" className="h-14 w-auto mx-auto mb-3 object-contain shrink-0" />
+          <h1 className="text-xl font-bold" style={{ color: 'var(--a-fg)' }}>FOMO <span style={{ color: 'var(--a-accent)' }}>Chat</span></h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--a-muted)' }}>{t('auth.appDescription')}</p>
         </div>
 
         {/* ── PHONE step (Login / Register tabs) ────────────────── */}
         {step === 'phone' && (
           <>
             {/* Tabs */}
-            <div className="flex mb-6 bg-dark-700 rounded-xl p-1">
-              <button
-                onClick={() => switchTab('register')}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  tab === 'register'
-                    ? 'bg-accent text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
+            <div className="auth-tabs">
+              <button onClick={() => switchTab('register')} className={`auth-tab ${tab === 'register' ? 'active' : ''}`}>
                 {t('auth.register')}
               </button>
-              <button
-                onClick={() => switchTab('login')}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  tab === 'login'
-                    ? 'bg-accent text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
+              <button onClick={() => switchTab('login')} className={`auth-tab ${tab === 'login' ? 'active' : ''}`}>
                 {t('auth.login')}
               </button>
             </div>
 
             {/* Language selector with flag images */}
-            <div className="flex justify-center gap-3 mb-4">
+            <div className="flex justify-center gap-2 mb-5">
               {([
                 { l: 'ru' as const, flag: 'ru', label: 'Рус' },
                 { l: 'en' as const, flag: 'gb', label: 'Eng' },
@@ -639,11 +624,11 @@ export function AuthPage() {
                 <button
                   key={l}
                   onClick={() => setLang(l)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    lang === l
-                      ? 'bg-accent/20 text-accent border border-accent/40'
-                      : 'bg-dark-700 text-gray-400 hover:text-white border border-transparent'
-                  }`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={lang === l
+                    ? { background: 'rgba(239,68,68,0.1)', color: 'var(--a-accent)', border: '1px solid rgba(239,68,68,0.25)' }
+                    : { background: 'var(--a-secondary-bg)', color: 'var(--a-muted)', border: '1px solid transparent' }
+                  }
                 >
                   <img src={`https://flagcdn.com/w20/${flag}.png`} alt={label} className="w-5 h-3.5 object-cover rounded-sm" />
                   {label}
@@ -655,18 +640,18 @@ export function AuthPage() {
             {tab === 'login' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">{t('auth.phone')}</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true, handleLogin)}
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">{t('auth.password')}</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
                   {passwordInput(password, setPassword, t('auth.password'), showPassword, () => setShowPassword(!showPassword), (e) => e.key === 'Enter' && handleLogin())}
                 </div>
-                <button onClick={handleLogin} disabled={loading} className={btnClass}>
+                <button onClick={handleLogin} disabled={loading} className="auth-btn">
                   {loading ? t('auth.loginLoading') : t('auth.signIn')}
                 </button>
 
-                <p className="text-center text-gray-500 text-sm">
+                <p className="text-center text-sm" style={{ color: 'var(--a-subtle)' }}>
                   {t('auth.noAccount')}{' '}
                   <span onClick={() => switchTab('register')} className={linkClass}>
                     {t('auth.signUp')}
@@ -675,9 +660,9 @@ export function AuthPage() {
 
                 {/* OAuth divider */}
                 <div className="flex items-center gap-3 mt-2">
-                  <div className="flex-1 h-px bg-dark-500" />
-                  <span className="text-xs text-gray-500">{t('auth.or')}</span>
-                  <div className="flex-1 h-px bg-dark-500" />
+                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
+                  <span className="text-xs" style={{ color: 'var(--a-subtle)' }}>{t('auth.or')}</span>
+                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
                 </div>
 
                 {/* Yandex login */}
@@ -687,7 +672,7 @@ export function AuthPage() {
                     const redirectUri = encodeURIComponent(window.location.origin + '/auth/yandex/callback');
                     window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
                   }}
-                  className="w-full py-3 bg-[#FC3F1D] hover:bg-[#e0371a] text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                  className="auth-yandex-btn"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M13.32 7.67h-.67c-1.28 0-1.95.67-1.95 1.66 0 1.11.5 1.63 1.56 2.3l.87.55-2.52 3.82H8.68l2.2-3.34c-1.28-.88-2.01-1.73-2.01-3.22 0-1.96 1.37-3.28 3.73-3.28h2.72V20h-2v-5.33h-.01V7.67z" />
@@ -701,14 +686,14 @@ export function AuthPage() {
             {tab === 'register' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">{t('auth.phone')}</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true)}
                 </div>
                 {/* Puzzle captcha */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-gray-400">{t('auth.puzzleCaptcha')}</p>
-                    <button onClick={refreshCaptcha} className="text-xs text-gray-500 hover:text-accent transition-colors">
+                    <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.puzzleCaptcha')}</p>
+                    <button onClick={refreshCaptcha} className="auth-link text-xs">
                       {t('auth.captchaRefresh')}
                     </button>
                   </div>
@@ -723,16 +708,16 @@ export function AuthPage() {
                     className="w-full rounded-xl cursor-grab active:cursor-grabbing touch-none"
                     style={{ aspectRatio: `${PUZZLE_W}/${PUZZLE_H}` }}
                   />
-                  <p className={`text-xs mt-1 ${captchaVerified ? 'text-green-500' : 'text-gray-500'}`}>
+                  <p className="text-xs mt-1" style={{ color: captchaVerified ? '#22c55e' : 'var(--a-subtle)' }}>
                     {captchaVerified ? '\u2713 ' + t('auth.captchaOk') : t('auth.puzzleHint')}
                   </p>
                 </div>
 
-                <button onClick={handleRegister} disabled={loading} className={btnClass}>
+                <button onClick={handleRegister} disabled={loading} className="auth-btn">
                   {loading ? t('auth.sending') : t('auth.getCode')}
                 </button>
 
-                <p className="text-center text-gray-500 text-sm">
+                <p className="text-center text-sm" style={{ color: 'var(--a-subtle)' }}>
                   {t('auth.haveAccount')}{' '}
                   <span onClick={() => switchTab('login')} className={linkClass}>
                     {t('auth.signIn')}
@@ -741,9 +726,9 @@ export function AuthPage() {
 
                 {/* OAuth divider */}
                 <div className="flex items-center gap-3 mt-2">
-                  <div className="flex-1 h-px bg-dark-500" />
-                  <span className="text-xs text-gray-500">{t('auth.or')}</span>
-                  <div className="flex-1 h-px bg-dark-500" />
+                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
+                  <span className="text-xs" style={{ color: 'var(--a-subtle)' }}>{t('auth.or')}</span>
+                  <div className="flex-1 h-px" style={{ background: 'var(--a-border)' }} />
                 </div>
 
                 {/* Yandex login */}
@@ -753,7 +738,7 @@ export function AuthPage() {
                     const redirectUri = encodeURIComponent(window.location.origin + '/auth/yandex/callback');
                     window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
                   }}
-                  className="w-full py-3 bg-[#FC3F1D] hover:bg-[#e0371a] text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                  className="auth-yandex-btn"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M13.32 7.67h-.67c-1.28 0-1.95.67-1.95 1.66 0 1.11.5 1.63 1.56 2.3l.87.55-2.52 3.82H8.68l2.2-3.34c-1.28-.88-2.01-1.73-2.01-3.22 0-1.96 1.37-3.28 3.73-3.28h2.72V20h-2v-5.33h-.01V7.67z" />
@@ -768,8 +753,8 @@ export function AuthPage() {
         {/* ── CODE verification step ────────────────────────────── */}
         {step === 'code' && (
           <div className="space-y-4">
-            <p className="text-center text-gray-400 text-sm">
-              {t(verifyMethod === 'call' ? 'auth.weWillCallPhone' : 'auth.weWillCall')} <span className="text-white">{phone}</span>,<br />
+            <p className="text-center text-sm" style={{ color: 'var(--a-muted)' }}>
+              {t(verifyMethod === 'call' ? 'auth.weWillCallPhone' : 'auth.weWillCall')} <span style={{ color: 'var(--a-fg)', fontWeight: 600 }}>{phone}</span>,<br />
               {t(verifyMethod === 'call' ? 'auth.enterLast4Call' : 'auth.enterLast4')}
             </p>
             <div className="flex gap-3 justify-center">
@@ -786,13 +771,13 @@ export function AuthPage() {
                   onChange={(e) => handleCodeInput(i, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(i, e)}
                   onPaste={i === 0 ? handleCodePaste : undefined}
-                  className="w-14 h-16 text-center text-2xl font-mono bg-dark-700 border border-dark-500 rounded-xl text-white focus:outline-none focus:border-accent transition-colors"
+                  className="auth-code-input"
                 />
               ))}
             </div>
             <div className="text-center">
               {countdown > 0 ? (
-                <span className="text-gray-500 text-sm">
+                <span className="text-sm" style={{ color: 'var(--a-subtle)' }}>
                   {t('auth.resendIn', { countdown })}
                 </span>
               ) : (
@@ -806,7 +791,8 @@ export function AuthPage() {
                 setStep('phone');
                 setCode(['', '', '', '']);
               }}
-              className="w-full text-center text-gray-500 text-sm hover:text-gray-300"
+              className="w-full text-center text-sm transition-colors"
+              style={{ color: 'var(--a-subtle)' }}
             >
               {t('auth.changeNumber')}
             </button>
@@ -816,22 +802,22 @@ export function AuthPage() {
         {/* ── SET PASSWORD step ────────────────────────────────── */}
         {step === 'setPassword' && (
           <div className="space-y-4">
-            <p className="text-center text-gray-400 text-sm">{t('auth.passwordHint')}</p>
+            <p className="text-center text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.passwordHint')}</p>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">{t('auth.password')}</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
               {passwordInput(password, setPassword, t('auth.passwordPlaceholder'), showPassword, () => setShowPassword(!showPassword), undefined, true)}
             </div>
             {/* Password requirements */}
-            <ul className="text-xs space-y-1 text-gray-500">
-              <li className={password.length >= 6 ? 'text-green-500' : ''}>{password.length >= 6 ? '\u2713' : '\u2022'} {t('auth.passwordMin')}</li>
-              <li className={/[A-ZА-ЯЁ]/.test(password) ? 'text-green-500' : ''}>{/[A-ZА-ЯЁ]/.test(password) ? '\u2713' : '\u2022'} {t('auth.passwordUppercase')}</li>
-              <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? 'text-green-500' : ''}>{/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? '\u2713' : '\u2022'} {t('auth.passwordSpecial')}</li>
+            <ul className="text-xs space-y-1" style={{ color: 'var(--a-subtle)' }}>
+              <li style={password.length >= 6 ? { color: '#22c55e' } : {}}>{password.length >= 6 ? '\u2713' : '\u2022'} {t('auth.passwordMin')}</li>
+              <li style={/[A-ZА-ЯЁ]/.test(password) ? { color: '#22c55e' } : {}}>{/[A-ZА-ЯЁ]/.test(password) ? '\u2713' : '\u2022'} {t('auth.passwordUppercase')}</li>
+              <li style={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? { color: '#22c55e' } : {}}>{/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? '\u2713' : '\u2022'} {t('auth.passwordSpecial')}</li>
             </ul>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">{t('auth.confirmPassword')}</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.confirmPassword')}</label>
               {passwordInput(confirmPassword, setConfirmPassword, t('auth.confirmPlaceholder'), showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), (e) => e.key === 'Enter' && handleSetPassword())}
             </div>
-            <button onClick={handleSetPassword} disabled={loading} className={btnClass}>
+            <button onClick={handleSetPassword} disabled={loading} className="auth-btn">
               {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
             </button>
           </div>
@@ -840,15 +826,12 @@ export function AuthPage() {
         {/* ── CREATED step ──────────────────────────────────────────── */}
         {step === 'created' && (
           <div className="space-y-4 text-center">
-            <div className="text-5xl mb-2">&#10003;</div>
-            <p className="text-xl text-white font-medium">{t('auth.accountCreated')}</p>
-            <button onClick={() => setStep('linkEmail')} className={btnClass}>
+            <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>&#10003;</div>
+            <p className="text-xl font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.accountCreated')}</p>
+            <button onClick={() => setStep('linkEmail')} className="auth-btn">
               {t('auth.linkEmail')}
             </button>
-            <button
-              onClick={handleFinishRegistration}
-              className="w-full py-3 bg-dark-700 hover:bg-dark-600 rounded-xl text-gray-400 font-medium transition-colors"
-            >
+            <button onClick={handleFinishRegistration} className="auth-btn-secondary">
               {t('auth.skip')}
             </button>
           </div>
@@ -859,34 +842,31 @@ export function AuthPage() {
           <div className="space-y-4">
             {!emailSent ? (
               <>
-                <p className="text-center text-gray-400 text-sm">{t('auth.enterEmail')}</p>
+                <p className="text-center text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.enterEmail')}</p>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendEmailCode()}
                   placeholder="you@example.com"
-                  className={inputClass}
+                  className="auth-input"
                   autoFocus
                 />
-                <button onClick={handleSendEmailCode} disabled={loading} className={btnClass}>
+                <button onClick={handleSendEmailCode} disabled={loading} className="auth-btn">
                   {loading ? t('auth.sending') : t('auth.sendEmailCode')}
                 </button>
-                <button
-                  onClick={handleFinishRegistration}
-                  className="w-full py-3 bg-dark-700 hover:bg-dark-600 rounded-xl text-gray-400 font-medium transition-colors"
-                >
+                <button onClick={handleFinishRegistration} className="auth-btn-secondary">
                   {t('auth.skip')}
                 </button>
               </>
             ) : (
               <div className="text-center space-y-4">
-                <div className="text-5xl mb-2">&#9993;</div>
-                <p className="text-lg text-white font-medium">{t('auth.emailSentTitle')}</p>
-                <p className="text-sm text-gray-400">
+                <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>&#9993;</div>
+                <p className="text-lg font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.emailSentTitle')}</p>
+                <p className="text-sm" style={{ color: 'var(--a-muted)' }}>
                   {t('auth.emailSentDesc', { email })}
                 </p>
-                <button onClick={handleFinishRegistration} className={btnClass}>
+                <button onClick={handleFinishRegistration} className="auth-btn">
                   {t('auth.continue')}
                 </button>
               </div>
@@ -895,13 +875,17 @@ export function AuthPage() {
         )}
 
         {/* Error */}
-        {error && <p className="mt-4 text-center text-red-400 text-sm">{error}</p>}
+        {error && (
+          <div className="mt-4 px-4 py-3 rounded-xl text-center text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+            {error}
+          </div>
+        )}
 
         {/* Footer links */}
-        <div className="mt-8 text-center text-xs text-gray-500 space-x-3">
-          <a href="/privacy" className="hover:text-gray-300 transition-colors">{t('auth.privacy')}</a>
-          <span>&middot;</span>
-          <a href="/terms" className="hover:text-gray-300 transition-colors">{t('auth.terms')}</a>
+        <div className="auth-footer mt-8 text-center text-xs space-x-3">
+          <a href="/privacy">{t('auth.privacy')}</a>
+          <span style={{ color: 'var(--a-subtle)' }}>&middot;</span>
+          <a href="/terms">{t('auth.terms')}</a>
         </div>
       </div>
     </div>

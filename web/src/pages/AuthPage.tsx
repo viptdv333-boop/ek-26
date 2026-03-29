@@ -566,6 +566,12 @@ export function AuthPage() {
   // ── Render ─────────────────────────────────────────────────────
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-dark-900 relative overflow-y-auto">
+      {/* Gradient background blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-30" style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] opacity-20" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[150px] opacity-10" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)' }} />
+      </div>
       {/* Top bar: theme toggle only */}
       <div className="absolute top-4 right-4">
         <button

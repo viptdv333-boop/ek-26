@@ -6,7 +6,7 @@ import { useState } from 'react';
 type Lang = 'ru' | 'en' | 'zh';
 const t = (lang: Lang) => ({
   ru: {
-    login: 'Войти', register: 'Регистрация',
+    login: 'Войти', register: 'Регистрация', themeLight: 'Светлая', themeDark: 'Тёмная',
     badge: 'Безопасный мессенджер',
     heroTitle1: 'Общение без',
     heroTitle2: 'компромиссов',
@@ -18,7 +18,7 @@ const t = (lang: Lang) => ({
     mockM3: 'Договорились! 🎉', mockM4: 'Жду!',
   },
   en: {
-    login: 'Sign in', register: 'Sign up',
+    login: 'Sign in', register: 'Sign up', themeLight: 'Light', themeDark: 'Dark',
     badge: 'Secure Messenger',
     heroTitle1: 'Communication',
     heroTitle2: 'without limits',
@@ -30,7 +30,7 @@ const t = (lang: Lang) => ({
     mockM3: 'Deal! 🎉', mockM4: "Can't wait!",
   },
   zh: {
-    login: '登录', register: '注册',
+    login: '登录', register: '注册', themeLight: '浅色', themeDark: '深色',
     badge: '安全通讯',
     heroTitle1: '无妥协的',
     heroTitle2: '沟通体验',
@@ -77,23 +77,25 @@ function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
   );
 }
 
-/* ─── Theme Switcher ─── */
-function ThemeSwitcher({ dark, toggle }: { dark: boolean; toggle: () => void }) {
+/* ─── Theme Toggle (slider with labels) ─── */
+function ThemeToggle({ dark, toggle, labelLight, labelDark }: { dark: boolean; toggle: () => void; labelLight: string; labelDark: string }) {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-xl bg-[var(--h-secondary)] border border-[var(--h-border)] hover:bg-[var(--h-border)] transition-all"
-      title={dark ? 'Light mode' : 'Dark mode'}
+      className="relative flex items-center bg-[var(--h-secondary)] border border-[var(--h-border)] rounded-full h-9 w-[140px] cursor-pointer transition-all overflow-hidden"
     >
-      {dark ? (
-        <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--h-fg)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-        </svg>
-      ) : (
-        <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--h-fg)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      )}
+      {/* Sliding pill */}
+      <div
+        className="absolute top-0.5 h-8 w-[68px] rounded-full bg-[var(--h-primary)] shadow-md transition-transform duration-300 ease-out"
+        style={{ transform: dark ? 'translateX(68px)' : 'translateX(2px)' }}
+      />
+      {/* Labels */}
+      <span className={`relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-300 ${!dark ? 'text-white' : 'text-[var(--h-muted)]'}`}>
+        {labelLight}
+      </span>
+      <span className={`relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-300 ${dark ? 'text-white' : 'text-[var(--h-muted)]'}`}>
+        {labelDark}
+      </span>
     </button>
   );
 }
@@ -160,17 +162,19 @@ export function HomePage() {
   return (
     <div className={`home-page ${isDark ? 'home-dark' : 'home-light'}`}>
       {/* ── NAV ── */}
-      <nav className="flex items-center justify-between h-16 px-6 relative z-10">
+      <nav className="flex items-center h-16 px-8 relative z-10">
         <div className="flex items-center gap-3">
           <img src="/logo-f.png" alt="FOMO Chat" className="h-10 w-auto" />
           <span className="text-xl font-bold tracking-tight text-[var(--h-fg)]">FOMO <span className="text-[var(--h-accent)]">Chat</span></span>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex-1 flex items-center justify-end gap-10">
           <LangSwitcher lang={lang} setLang={saveLang} />
-          <ThemeSwitcher dark={isDark} toggle={toggleTheme} />
-          <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.login}</Link>
-          <Link to="/auth?tab=register" className="home-btn-accent text-sm px-6 py-2.5">{s.register}</Link>
+          <ThemeToggle dark={isDark} toggle={toggleTheme} labelLight={s.themeLight} labelDark={s.themeDark} />
+          <div className="flex items-center gap-5">
+            <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.login}</Link>
+            <Link to="/auth?tab=register" className="home-btn-accent text-sm px-6 py-2.5">{s.register}</Link>
+          </div>
         </div>
       </nav>
 

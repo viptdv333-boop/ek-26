@@ -550,11 +550,11 @@ export function AuthPage() {
 
       <div className="auth-card relative z-10 mx-4">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-4 mb-5">
-          <img src="/logo-f.png" alt="Chat" className="object-contain shrink-0" style={{ height: '3.5rem', width: 'auto' }} />
+        <div className="flex items-center justify-center gap-2 mb-5">
+          <img src="/logo-f.png" alt="Chat" className="object-contain shrink-0" style={{ height: '2.5rem', width: 'auto' }} />
           <div>
-            <h1 className="font-extrabold" style={{ fontSize: '1.75rem', lineHeight: 1, color: 'var(--a-accent)' }}>CHAT</h1>
-            <p className="uppercase tracking-widest font-semibold" style={{ color: 'var(--a-muted)', fontSize: '0.55rem', lineHeight: 1, marginTop: '0.35rem' }}>{t('auth.subtitle')}</p>
+            <h1 className="font-extrabold" style={{ fontSize: '1.5rem', lineHeight: 1, color: 'var(--a-accent)' }}>CHAT</h1>
+            <p className="uppercase tracking-widest font-semibold" style={{ color: 'var(--a-muted)', fontSize: '0.5rem', lineHeight: 1, marginTop: '0.2rem' }}>{t('auth.subtitle')}</p>
           </div>
         </div>
 

@@ -50,26 +50,27 @@ const IconArrowRight = () => (
   </svg>
 );
 
-/* ─── Language Switcher ─── */
+/* ─── Language Switcher (flags as images) ─── */
 function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
-  const langs: { code: Lang; label: string }[] = [
-    { code: 'ru', label: 'RU' },
-    { code: 'en', label: 'EN' },
-    { code: 'zh', label: '中' },
+  const langs: { code: Lang; flag: string; alt: string }[] = [
+    { code: 'ru', flag: 'https://flagcdn.com/w40/ru.png', alt: 'Русский' },
+    { code: 'en', flag: 'https://flagcdn.com/w40/gb.png', alt: 'English' },
+    { code: 'zh', flag: 'https://flagcdn.com/w40/cn.png', alt: '中文' },
   ];
   return (
-    <div className="flex items-center gap-1 bg-[var(--h-secondary)] rounded-lg p-0.5 border border-[var(--h-border)]">
+    <div className="flex items-center gap-1.5">
       {langs.map((l) => (
         <button
           key={l.code}
           onClick={() => setLang(l.code)}
-          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+          className={`w-8 h-8 rounded-full overflow-hidden border-2 transition-all ${
             lang === l.code
-              ? 'bg-[var(--h-primary)] text-white shadow-sm'
-              : 'text-[var(--h-muted)] hover:text-[var(--h-fg)]'
+              ? 'border-[var(--h-accent)] scale-110 shadow-md'
+              : 'border-transparent opacity-50 hover:opacity-80'
           }`}
+          title={l.alt}
         >
-          {l.label}
+          <img src={l.flag} alt={l.alt} className="w-full h-full object-cover" />
         </button>
       ))}
     </div>

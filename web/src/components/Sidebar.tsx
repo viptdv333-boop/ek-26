@@ -594,10 +594,13 @@ export function Sidebar() {
   return (
     <div className="w-full md:w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
       {/* Header */}
-      <div className="h-14 px-4 flex items-center justify-between border-b border-dark-600">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <img src="/logo-f.png" alt="F" className="h-7 w-auto object-contain shrink-0" />
-          <HeaderWidget />
+      <div className="px-4 py-3 flex items-center justify-between border-b border-dark-600">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <img src="/logo-f.png" alt="F" className="h-6 w-6 object-contain shrink-0" />
+          <div className="flex flex-col leading-tight">
+            <span className="text-[1.05rem] font-bold text-red-500 tracking-wide">CHAT</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500">{t('sidebar.subtitle') || 'Мессенджер для своих'}</span>
+          </div>
         </div>
         <button
           onClick={() => setShowAppSettings(true)}
@@ -611,21 +614,24 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Search */}
       {/* Tabs */}
-      <div className="flex border-b border-dark-600">
+      <div className="flex gap-1 px-3 py-2">
         <button
           onClick={() => setActiveTab('chats')}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === 'chats' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
+          className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors ${
+            activeTab === 'chats'
+              ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b]'
+              : 'text-gray-400 hover:text-white dark:hover:text-gray-200'
           }`}
         >
           {t('sidebar.chats')}
         </button>
         <button
           onClick={() => setActiveTab('contacts')}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === 'contacts' ? 'text-accent border-b-2 border-accent' : 'text-gray-400 hover:text-white'
+          className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors ${
+            activeTab === 'contacts'
+              ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b]'
+              : 'text-gray-400 hover:text-white dark:hover:text-gray-200'
           }`}
         >
           {t('sidebar.contacts')}
@@ -847,7 +853,7 @@ export function Sidebar() {
         <div className="px-4 py-2 border-t border-dark-600">
           <button
             onClick={() => setShowNewChat(true)}
-            className="w-full py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-colors text-sm"
+            className="w-full py-2.5 bg-[#18181b] hover:bg-[#27272a] text-white dark:bg-white dark:hover:bg-gray-100 dark:text-[#18181b] font-medium rounded-xl transition-colors text-sm"
           >
             {t('sidebar.newChat')}
           </button>

@@ -502,9 +502,9 @@ export function ChatRoom({ conversationId }: Props) {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-dark-900">
+    <div className="flex-1 flex flex-col bg-[var(--color-dark-900)]">
       {/* Header */}
-      <div className="h-14 px-4 md:px-6 flex items-center border-b border-dark-600 bg-dark-800">
+      <div className="h-14 px-4 md:px-6 flex items-center border-b border-[var(--color-border)] bg-[var(--color-dark-800)]">
         {/* Back button — mobile only */}
         <button
           onClick={() => { setActiveConversation(null); window.dispatchEvent(new Event('sidebar-shown')); }}
@@ -527,7 +527,7 @@ export function ChatRoom({ conversationId }: Props) {
           className={`flex-1 ${conv?.type === 'group' ? 'cursor-pointer' : ''}`}
           onClick={() => { if (conv?.type === 'group') setShowGroupInfo(true); }}
         >
-          <h2 className="text-sm font-medium text-white">{title}</h2>
+          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">{title}</h2>
           {subtitle && (
             <span className={`text-xs ${typingUsers.length > 0 ? 'text-accent' : subtitle === t('chat.online') ? 'text-green-400' : 'text-gray-400'}`}>
               {subtitle}
@@ -565,7 +565,7 @@ export function ChatRoom({ conversationId }: Props) {
 
       {/* Pinned messages — horizontal scroll */}
       {conv?.pinnedMessages && conv.pinnedMessages.length > 0 && (
-        <div className="border-b border-dark-600 bg-dark-800/80">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-dark-800)]/80">
           <div className="flex gap-2 px-3 py-2 overflow-x-auto scrollbar-hide">
             {conv.pinnedMessages.map((pin) => (
               <div
@@ -650,7 +650,7 @@ export function ChatRoom({ conversationId }: Props) {
 
       {/* Edit bar */}
       {editingMessage && (
-        <div className="px-4 py-2 border-t border-dark-600 bg-dark-800 flex items-center gap-3">
+        <div className="px-4 py-2 border-t border-[var(--color-border)] bg-[var(--color-dark-800)] flex items-center gap-3">
           <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
           </svg>
@@ -668,7 +668,7 @@ export function ChatRoom({ conversationId }: Props) {
 
       {/* Reply bar */}
       {replyingTo && replyingTo.conversationId === conversationId && (
-        <div className="px-4 py-2 border-t border-dark-600 bg-dark-800 flex items-center gap-3">
+        <div className="px-4 py-2 border-t border-[var(--color-border)] bg-[var(--color-dark-800)] flex items-center gap-3">
           <div className="border-l-2 border-accent pl-3 flex-1 min-w-0">
             <p className="text-xs font-medium text-accent">{replyingTo.senderName}</p>
             <p className="text-xs text-gray-400 truncate">{replyingTo.text || t('chat.message')}</p>
@@ -683,7 +683,7 @@ export function ChatRoom({ conversationId }: Props) {
 
       {/* Attachment preview */}
       {(pendingAttachment || uploading) && (
-        <div className="px-4 py-2 border-t border-dark-600 bg-dark-800">
+        <div className="px-4 py-2 border-t border-[var(--color-border)] bg-[var(--color-dark-800)]">
           <div className="flex items-center gap-3">
             {previewUrl ? (
               <img src={previewUrl} alt="" className="w-16 h-16 rounded-lg object-cover" />
@@ -713,7 +713,7 @@ export function ChatRoom({ conversationId }: Props) {
       )}
 
       {/* Input */}
-      <div className="border-t border-dark-600 bg-dark-800">
+      <div className="border-t border-[var(--color-border)] bg-[var(--color-dark-800)]">
         {isRecordingVoice ? (
           <VoiceRecorder
             onSend={(att) => {
@@ -787,7 +787,7 @@ export function ChatRoom({ conversationId }: Props) {
             onKeyDown={handleKeyDown}
             placeholder={t('chat.messagePlaceholder')}
             rows={1}
-            className="flex-1 px-4 py-2.5 bg-dark-700 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 resize-none focus:outline-none focus:border-accent transition-colors"
+            className="flex-1 px-4 py-2.5 bg-[var(--color-dark-700)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] resize-none focus:outline-none focus:border-accent transition-colors"
             style={{ maxHeight: '120px' }}
           />
 

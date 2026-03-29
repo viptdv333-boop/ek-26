@@ -13,9 +13,9 @@ export default {
           500: 'var(--color-dark-500)',
         },
         accent: {
-          DEFAULT: '#6366f1',
-          hover: '#818cf8',
-          dim: '#4f46e5',
+          DEFAULT: '#dc2626',
+          hover: '#b91c1c',
+          dim: '#991b1b',
         },
       },
     },

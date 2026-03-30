@@ -507,7 +507,41 @@ export function AuthPage() {
         <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: 500, height: 500, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(220,38,38,0.15) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 60%)', filter: 'blur(40px)' }} />
       </div>
 
-      {/* Clean — no top bar, matches Kimi */}
+      {/* Top bar — language + theme */}
+      <div className="absolute top-0 right-0 z-10 flex items-center gap-4 h-14 px-6">
+        <div className="flex items-center gap-1.5">
+          {([
+            { l: 'ru' as const, flag: 'ru', alt: 'Русский' },
+            { l: 'en' as const, flag: 'gb', alt: 'English' },
+            { l: 'zh' as const, flag: 'cn', alt: '中文' },
+          ]).map(({ l, flag, alt }) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={`w-7 h-7 rounded-lg overflow-hidden border transition-all ${
+                lang === l
+                  ? 'border-[var(--a-accent)] scale-110'
+                  : 'border-transparent opacity-50 hover:opacity-80'
+              }`}
+              title={alt}
+            >
+              <img src={`https://flagcdn.com/w40/${flag}.png`} alt={alt} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={toggleTheme}
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+          style={{ background: 'var(--a-secondary-bg)', color: 'var(--a-muted)' }}
+          title={isDark ? 'Light' : 'Dark'}
+        >
+          {isDark ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+          )}
+        </button>
+      </div>
 
       <div className="auth-card relative z-10 mx-4">
         {/* Logo */}

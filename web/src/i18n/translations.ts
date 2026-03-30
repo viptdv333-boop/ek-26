@@ -80,6 +80,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.verifying': 'Проверка...',
 
     // ── Sidebar ───────────────────────────────────────────────────
+    'sidebar.subtitle': 'Мессенджер для своих',
     'sidebar.chats': 'Чаты',
     'sidebar.contacts': 'Контакты',
     'sidebar.search': 'Поиск по чатам и сообщениям...',
@@ -517,6 +518,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.verifying': 'Verifying...',
 
     // ── Sidebar ───────────────────────────────────────────────────
+    'sidebar.subtitle': 'Messenger for your people',
     'sidebar.chats': 'Chats',
     'sidebar.contacts': 'Contacts',
     'sidebar.search': 'Search chats and messages...',
@@ -954,6 +956,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'auth.verifying': '\u9A8C\u8BC1\u4E2D...',
 
     // ── Sidebar ───────────────────────────────────────────────────
+    'sidebar.subtitle': '\u4F60\u7684\u4E13\u5C5E\u4FE1\u4F7F',
     'sidebar.chats': '\u804A\u5929',
     'sidebar.contacts': '\u8054\u7CFB\u4EBA',
     'sidebar.search': '\u641C\u7D22\u804A\u5929\u548C\u6D88\u606F...',

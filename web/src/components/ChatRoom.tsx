@@ -91,13 +91,15 @@ export function ChatRoom({ conversationId }: Props) {
   const getWallpaperStyle = (): React.CSSProperties => {
     const wallpaper = currentWallpaper;
     const presets: Record<string, string> = {
-      default: '#1a1a2e',
       'dark-blue': '#0f1b2d',
       'dark-green': '#0d1f17',
       'dark-purple': '#1a0f2e',
       'gradient-blue-purple': 'linear-gradient(135deg, #0f1b2d, #1a0f2e)',
       'gradient-green-teal': 'linear-gradient(135deg, #0d1f17, #0f2027)',
     };
+    if (wallpaper === 'default') {
+      return { backgroundColor: 'var(--color-dark-900)' };
+    }
     if (presets[wallpaper]) {
       const val = presets[wallpaper];
       if (val.startsWith('linear-gradient')) {

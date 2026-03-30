@@ -231,12 +231,16 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // ── Wallpaper presets ─────────────────────────────────────────
     'wallpaper.default': 'По умолчанию',
-    'wallpaper.darkBlue': 'Тёмно-синий',
-    'wallpaper.darkGreen': 'Тёмно-зелёный',
-    'wallpaper.lightBeige': 'Бежевый',
-    'wallpaper.lightBlue': 'Голубой',
-    'wallpaper.lightMint': 'Мятный',
-    'wallpaper.sunset': 'Закат',
+    'wallpaper.midnightAurora': 'Полярное сияние',
+    'wallpaper.obsidianGlow': 'Обсидиан',
+    'wallpaper.deepOcean': 'Глубокий океан',
+    'wallpaper.emeraldNight': 'Изумрудная ночь',
+    'wallpaper.cosmicPurple': 'Космос',
+    'wallpaper.carbonEmber': 'Тлеющий уголь',
+    'wallpaper.arcticFrost': 'Арктический иней',
+    'wallpaper.roseQuartz': 'Розовый кварц',
+    'wallpaper.morningMist': 'Утренний туман',
+    'wallpaper.goldenHour': 'Золотой час',
 
     // ── New chat dialog ───────────────────────────────────────────
     'newChat.title': 'Новый чат',
@@ -681,12 +685,16 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // ── Wallpaper presets ─────────────────────────────────────────
     'wallpaper.default': 'Default',
-    'wallpaper.darkBlue': 'Dark blue',
-    'wallpaper.darkGreen': 'Dark green',
-    'wallpaper.lightBeige': 'Beige',
-    'wallpaper.lightBlue': 'Light blue',
-    'wallpaper.lightMint': 'Mint',
-    'wallpaper.sunset': 'Sunset',
+    'wallpaper.midnightAurora': 'Midnight Aurora',
+    'wallpaper.obsidianGlow': 'Obsidian Glow',
+    'wallpaper.deepOcean': 'Deep Ocean',
+    'wallpaper.emeraldNight': 'Emerald Night',
+    'wallpaper.cosmicPurple': 'Cosmic Purple',
+    'wallpaper.carbonEmber': 'Carbon Ember',
+    'wallpaper.arcticFrost': 'Arctic Frost',
+    'wallpaper.roseQuartz': 'Rose Quartz',
+    'wallpaper.morningMist': 'Morning Mist',
+    'wallpaper.goldenHour': 'Golden Hour',
 
     // ── New chat dialog ───────────────────────────────────────────
     'newChat.title': 'New chat',
@@ -1125,12 +1133,16 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // ── Wallpaper presets ─────────────────────────────────────────
     'wallpaper.default': '\u9ED8\u8BA4',
-    'wallpaper.darkBlue': '\u6DF1\u84DD',
-    'wallpaper.darkGreen': '\u6DF1\u7EFF',
-    'wallpaper.lightBeige': '\u7C73\u8272',
-    'wallpaper.lightBlue': '\u6D45\u84DD',
-    'wallpaper.lightMint': '\u8584\u8377',
-    'wallpaper.sunset': '\u65E5\u843D',
+    'wallpaper.midnightAurora': '\u6781\u5149\u4E4B\u591C',
+    'wallpaper.obsidianGlow': '\u9ED1\u66DC\u5149\u8292',
+    'wallpaper.deepOcean': '\u6DF1\u6D77',
+    'wallpaper.emeraldNight': '\u7FE0\u7FE1\u4E4B\u591C',
+    'wallpaper.cosmicPurple': '\u5B87\u5B99\u7D2B',
+    'wallpaper.carbonEmber': '\u70AD\u706B\u4F59\u70EC',
+    'wallpaper.arcticFrost': '\u5317\u6781\u971C',
+    'wallpaper.roseQuartz': '\u7384\u7470\u77F3\u82F1',
+    'wallpaper.morningMist': '\u6668\u96FE',
+    'wallpaper.goldenHour': '\u9EC4\u91D1\u65F6\u523B',
 
     // ── New chat dialog ───────────────────────────────────────────
     'newChat.title': '\u65B0\u804A\u5929',

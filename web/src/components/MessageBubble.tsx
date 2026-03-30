@@ -293,7 +293,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           )}
 
           <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''}`}
-               style={{ color: isMine ? fontColor + '80' : fontColorOther + '80' }} style={{ fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
+               style={{ color: isMine ? fontColor + '80' : fontColorOther + '80', fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
             {message.editedAt && <span className="italic">{t('message.edited')}</span>}
             <span>{time}</span>
             {statusIcon()}

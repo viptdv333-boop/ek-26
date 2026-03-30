@@ -358,11 +358,11 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-dark-700 rounded-2xl w-full max-w-md mx-4 overflow-hidden shadow-xl max-h-[90vh] flex flex-col"
+        className="bg-dark-700 rounded-2xl w-full max-w-lg mx-4 overflow-hidden shadow-xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-dark-500">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-dark-500">
           <h2 className="text-lg font-semibold text-white">{t('settings.title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -401,7 +401,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
 
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'contacts' ? (
-            <div className="px-6 py-5 space-y-5">
+            <div className="px-5 py-3 space-y-5">
               {/* Import from vCard */}
               <div>
                 <h3 className="text-sm font-medium text-white mb-2">{t('settings.importVcf')}</h3>
@@ -462,7 +462,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               </div>
             </div>
           ) : activeTab === 'profile' ? (
-            <div className="px-6 py-5 space-y-5">
+            <div className="px-5 py-3 space-y-5">
               {/* Avatar */}
               <div className="flex flex-col items-center gap-3">
                 <button
@@ -633,7 +633,7 @@ export function SettingsModal({ onClose, initialTab = 'profile' }: Props) {
               </div>
             </div>
           ) : (
-            <div className="px-6 py-5 space-y-6">
+            <div className="px-5 py-3 space-y-6">
               {/* Language selector */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.language')}</label>

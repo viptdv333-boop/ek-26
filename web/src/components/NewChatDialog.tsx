@@ -162,7 +162,7 @@ export function NewChatDialog({ onClose }: Props) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="w-full max-w-sm bg-dark-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
+        className="w-full max-w-md bg-dark-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-dark-600">

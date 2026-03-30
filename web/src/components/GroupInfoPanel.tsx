@@ -200,7 +200,7 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="w-full max-w-sm bg-dark-700 rounded-2xl shadow-2xl flex flex-col max-h-[85vh]"
+        className="w-full max-w-md bg-dark-700 rounded-2xl shadow-2xl flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

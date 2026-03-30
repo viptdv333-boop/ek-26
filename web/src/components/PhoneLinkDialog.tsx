@@ -100,7 +100,7 @@ export function PhoneLinkDialog({ onClose }: Props) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="w-full max-w-sm bg-dark-700 rounded-2xl p-6 shadow-2xl"
+        className="w-full max-w-md bg-dark-700 rounded-2xl p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-white mb-1">Привязать номер телефона</h2>

@@ -257,7 +257,7 @@ export function AppSettingsModal({ onClose }: Props) {
   // --- Section renderers ---
 
   const renderLanguageSection = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.language')}</label>
         <div className="flex flex-col gap-2">
@@ -301,7 +301,7 @@ export function AppSettingsModal({ onClose }: Props) {
   );
 
   const renderAppearanceSection = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Theme toggle */}
       <div>
         <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.theme')}</label>
@@ -613,7 +613,7 @@ export function AppSettingsModal({ onClose }: Props) {
   const [hasCustomCall, setHasCustomCall] = useState(() => hasCustomSound('call'));
 
   const renderNotificationsSection = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Notifications toggle */}
       <div className="flex items-center justify-between">
         <div>
@@ -1158,13 +1158,13 @@ export function AppSettingsModal({ onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-dark-700 rounded-2xl w-full max-w-2xl mx-4 overflow-hidden shadow-xl flex"
+        className="bg-dark-700 rounded-2xl w-full max-w-3xl mx-4 overflow-hidden shadow-xl flex"
         style={{ minHeight: '480px', maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left sidebar */}
         <div className="w-[200px] shrink-0 bg-dark-800 border-r border-dark-500 flex flex-col">
-          <div className="px-4 py-4 border-b border-dark-500">
+          <div className="px-4 py-3 border-b border-dark-500">
             <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">{t('appSettings.title')}</h2>
           </div>
           <nav className="flex-1 py-2 overflow-y-auto">
@@ -1187,7 +1187,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
         {/* Right content */}
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-dark-500">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-dark-500">
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
               {t(menuItems.find(m => m.id === activeSection)?.labelKey || '')}
             </h3>
@@ -1197,7 +1197,7 @@ export function AppSettingsModal({ onClose }: Props) {
               </svg>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="flex-1 overflow-y-auto px-5 py-3">
             {renderContent()}
           </div>
           <div className="px-6 py-3 border-t border-dark-500 flex justify-end">

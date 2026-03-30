@@ -56,7 +56,7 @@ export function ContactCard({ contact, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-dark-700 rounded-2xl w-full max-w-sm mx-4 overflow-hidden shadow-xl"
+        className="bg-dark-700 rounded-2xl w-full max-w-md mx-4 overflow-hidden shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

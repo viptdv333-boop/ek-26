@@ -912,7 +912,7 @@ export function Sidebar() {
       {showContacts && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowContacts(false)}>
           <div
-            className="w-full max-w-md bg-[var(--color-dark-800)] rounded-2xl shadow-2xl flex flex-col mx-4"
+            className="w-full max-w-lg bg-[var(--color-dark-800)] rounded-2xl shadow-2xl flex flex-col mx-4"
             style={{ maxHeight: '80vh' }}
             onClick={(e) => e.stopPropagation()}
           >

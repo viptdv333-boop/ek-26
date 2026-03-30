@@ -443,107 +443,114 @@
 .auth-page.auth-light {
   background: #fafafa;
   --a-bg: #fafafa;
-  --a-card: rgba(255,255,255,0.85);
-  --a-card-shadow: 0 20px 60px -12px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
-  --a-fg: #18181b;
-  --a-muted: #71717a;
-  --a-subtle: #a1a1aa;
+  --a-card: #ffffff;
+  --a-card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 16px 48px -12px rgba(0,0,0,0.12);
+  --a-fg: #141414;
+  --a-muted: #737373;
+  --a-subtle: #a3a3a3;
   --a-accent: #dc2626;
   --a-accent-hover: #b91c1c;
-  --a-border: rgba(0,0,0,0.08);
-  --a-input-bg: rgba(0,0,0,0.03);
-  --a-input-border: rgba(0,0,0,0.12);
-  --a-input-focus: rgba(220,38,38,0.4);
-  --a-tab-bg: rgba(0,0,0,0.04);
-  --a-tab-active: #18181b;
-  --a-secondary-bg: rgba(0,0,0,0.04);
-  --a-secondary-hover: rgba(0,0,0,0.08);
+  --a-border: #e5e5e5;
+  --a-input-bg: #f5f5f5;
+  --a-input-border: #e5e5e5;
+  --a-input-focus: rgba(220,38,38,0.1);
+  --a-tab-bg: #f5f5f5;
+  --a-tab-active: #ffffff;
+  --a-tab-active-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px -6px rgba(0,0,0,0.08);
+  --a-secondary-bg: #f5f5f5;
+  --a-secondary-hover: #e5e5e5;
 }
 .auth-page.auth-dark {
-  background: #0f0f0f;
-  --a-bg: #0f0f0f;
-  --a-card: rgba(20,20,20,0.9);
-  --a-card-shadow: 0 20px 60px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
-  --a-fg: #f2f2f2;
-  --a-muted: #8c8c8c;
-  --a-subtle: #666666;
-  --a-accent: #ef4444;
-  --a-accent-hover: #dc2626;
-  --a-border: rgba(255,255,255,0.08);
-  --a-input-bg: #1a1a1a;
-  --a-input-border: #2e2e2e;
-  --a-input-focus: rgba(239,68,68,0.3);
-  --a-tab-bg: #1a1a1a;
-  --a-tab-active: #f2f2f2;
-  --a-secondary-bg: #1a1a1a;
-  --a-secondary-hover: #242424;
+  background: hsl(0 0% 6%);
+  --a-bg: hsl(0 0% 6%);
+  --a-card: hsl(0 0% 8%);
+  --a-card-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 16px 48px -12px rgba(0,0,0,0.4);
+  --a-fg: hsl(0 0% 95%);
+  --a-muted: hsl(0 0% 55%);
+  --a-subtle: hsl(0 0% 40%);
+  --a-accent: hsl(0 84% 55%);
+  --a-accent-hover: hsl(0 84% 45%);
+  --a-border: hsl(0 0% 18%);
+  --a-input-bg: hsl(0 0% 14%);
+  --a-input-border: hsl(0 0% 18%);
+  --a-input-focus: hsla(0, 84%, 55%, 0.15);
+  --a-tab-bg: hsl(0 0% 14%);
+  --a-tab-active: hsl(0 0% 6%);
+  --a-tab-active-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px -6px rgba(0,0,0,0.08);
+  --a-secondary-bg: hsl(0 0% 14%);
+  --a-secondary-hover: hsl(0 0% 18%);
 }
 
-/* Card */
+/* Card — Kimi premium style */
 .auth-card {
   background: var(--a-card);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--a-border);
-  border-radius: 1.5rem;
-  padding: 2.5rem 2rem;
+  border-radius: 1rem;
+  padding: 2rem;
   box-shadow: var(--a-card-shadow);
   width: 100%;
   max-width: 420px;
+  animation: auth-slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes auth-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Inputs */
+/* Inputs — Kimi input-premium */
 .auth-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   background: var(--a-input-bg);
   border: 1px solid var(--a-input-border);
   border-radius: 0.75rem;
   color: var(--a-fg);
-  font-size: 0.875rem;
+  font-size: 1rem;
   transition: all 0.2s ease;
   outline: none;
 }
 .auth-input:focus {
   border-color: var(--a-accent);
   box-shadow: 0 0 0 3px var(--a-input-focus);
+  background: var(--a-bg);
 }
 .auth-input::placeholder {
   color: var(--a-subtle);
+  opacity: 0.6;
 }
 
-/* Primary button */
+/* Primary button — Kimi btn-accent */
 .auth-btn {
   width: 100%;
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   background: var(--a-accent);
   color: #fff;
   border: none;
   border-radius: 0.75rem;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px -3px rgba(239,68,68,0.4);
+  box-shadow: 0 4px 12px -2px hsla(0, 84%, 50%, 0.35), 0 2px 4px rgba(0,0,0,0.1);
 }
 .auth-btn:hover:not(:disabled) {
   background: var(--a-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px -5px rgba(239,68,68,0.5);
+  box-shadow: 0 10px 25px -5px hsla(0, 84%, 50%, 0.45), 0 4px 6px -2px rgba(0,0,0,0.1);
 }
 .auth-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 .auth-btn.auth-btn-lg {
-  padding: 0.875rem 1.5rem;
+  padding: 1rem 1.5rem;
   font-size: 1rem;
 }
 
-/* Secondary button */
+/* Secondary button — Kimi style */
 .auth-btn-secondary {
   width: 100%;
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   background: var(--a-secondary-bg);
   color: var(--a-muted);
   border: 1px solid var(--a-border);
@@ -558,42 +565,46 @@
   color: var(--a-fg);
 }
 
-/* Tabs */
+/* Tabs — Kimi pill style */
 .auth-tabs {
-  display: flex;
-  border: 1px solid var(--a-input-border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 0.25rem;
+  background: var(--a-tab-bg);
   border-radius: 0.75rem;
-  overflow: hidden;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  gap: 0.25rem;
 }
 .auth-tab {
-  flex: 1;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
+  border-radius: 0.625rem;
   background: transparent;
   color: var(--a-muted);
 }
 .auth-tab + .auth-tab {
-  border-left: 1px solid var(--a-input-border);
+  border-left: none;
 }
 .auth-tab.active {
-  background: var(--a-input-bg);
+  background: var(--a-tab-active);
   color: var(--a-fg);
   font-weight: 600;
+  box-shadow: var(--a-tab-active-shadow);
 }
 
-/* Code inputs */
+/* Code inputs — Kimi style */
 .auth-code-input {
   width: 3.5rem;
   height: 4rem;
   text-align: center;
-  font-size: 1.5rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   background: var(--a-input-bg);
   border: 1px solid var(--a-input-border);
   border-radius: 0.75rem;
@@ -604,6 +615,7 @@
 .auth-code-input:focus {
   border-color: var(--a-accent);
   box-shadow: 0 0 0 3px var(--a-input-focus);
+  background: var(--a-bg);
 }
 
 /* Country picker */

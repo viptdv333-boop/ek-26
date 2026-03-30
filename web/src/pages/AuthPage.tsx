@@ -500,10 +500,10 @@ export function AuthPage() {
 
   return (
     <div className={`auth-page ${themeClass}`}>
-      {/* Gradient background blobs */}
+      {/* Kimi-style subtle background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-blob" style={{ top: '-10%', right: '-5%', width: 500, height: 500, opacity: 0.2, background: 'radial-gradient(circle, rgba(239,68,68,0.3) 0%, transparent 70%)' }} />
-        <div className="auth-blob" style={{ bottom: '-10%', left: '-5%', width: 400, height: 400, opacity: 0.12, background: 'radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: '-15%', right: '-10%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.08) 0%, transparent 60%)', filter: 'blur(80px)' }} />
+        <div style={{ position: 'absolute', bottom: '-15%', left: '-10%', width: 500, height: 500, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(220,38,38,0.04) 0%, transparent 60%)', filter: 'blur(80px)' }} />
       </div>
 
       {/* ── Top bar — identical to HomePage navbar right side ── */}

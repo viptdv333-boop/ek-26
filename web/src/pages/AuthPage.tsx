@@ -107,6 +107,7 @@ export function AuthPage() {
   ]);
   const [captchaAnswer, setCaptchaAnswer] = useState('');
   const captchaVerified = captchaAnswer.trim() === String(mathNums[0] + mathNums[1]);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const refreshCaptcha = () => {
     setMathNums([
@@ -166,7 +167,7 @@ export function AuthPage() {
     setLoading(true);
     try {
       const res = await authApi.login(phone, password);
-      login(res.accessToken, res.refreshToken, res.user);
+      login(res.accessToken, res.refreshToken, res.user, rememberMe);
     } catch (e: any) {
       setError(e.message || t('auth.wrongCredentials'));
     } finally {
@@ -312,9 +313,9 @@ export function AuthPage() {
     const { token, refreshToken } = useAuthStore.getState();
     if (token && refreshToken) {
       usersApi.getProfile().then((profile) => {
-        login(token, refreshToken, profile);
+        login(token, refreshToken, profile, rememberMe);
       }).catch(() => {
-        login(token, refreshToken, { id: '', phone, displayName: phone });
+        login(token, refreshToken, { id: '', phone, displayName: phone }, rememberMe);
       });
     }
   };
@@ -549,6 +550,17 @@ export function AuthPage() {
                 </div>
 
                 {captchaBlock(handleLogin)}
+
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded accent-[var(--a-accent)]"
+                    style={{ accentColor: 'var(--a-accent)' }}
+                  />
+                  <span className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.rememberMe')}</span>
+                </label>
 
                 <button onClick={handleLogin} disabled={loading} className="auth-btn-premium auth-btn-lg">
                   {loading ? t('auth.loginLoading') : t('auth.signIn')}

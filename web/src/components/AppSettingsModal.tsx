@@ -67,7 +67,7 @@ export function AppSettingsModal({ onClose }: Props) {
   const [bubbleColorOther, setBubbleColorOther] = useState(() => localStorage.getItem('ek26_bubble_color_other') || '#22222f');
   // Font color
   const [fontColor, setFontColor] = useState(() => localStorage.getItem('ek26_font_color') || '#ffffff');
-  const [fontColorOther, setFontColorOther] = useState(() => localStorage.getItem('ek26_font_color_other') || '#18181b');
+  const [fontColorOther, setFontColorOther] = useState(() => localStorage.getItem('ek26_font_color_other') || '#e5e7eb');
   // Wallpaper
   const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('ek26_wallpaper') || 'default');
   const [wallpaperUploading, setWallpaperUploading] = useState(false);
@@ -464,7 +464,7 @@ export function AppSettingsModal({ onClose }: Props) {
       <div>
         <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.otherFontColor')}</label>
         <div className="flex items-center gap-2 flex-wrap">
-          {['#18181b', '#374151', '#4b5563', '#ffffff', '#dc2626', '#2563eb', '#059669', '#7c3aed'].map((color) => (
+          {['#e5e7eb', '#ffffff', '#d1d5db', '#18181b', '#fbbf24', '#67e8f9', '#f9a8d4', '#a78bfa'].map((color) => (
             <button
               key={color}
               onClick={() => handleFontColorOtherChange(color)}

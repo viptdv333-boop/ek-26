@@ -260,7 +260,7 @@ export function AppSettingsModal({ onClose }: Props) {
               key={item.code}
               onClick={() => setLang(item.code)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                lang === item.code ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
+                lang === item.code ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
               }`}
             >
               <img src={item.flag} alt={item.code} className="w-6 h-4 object-cover rounded-sm" />
@@ -303,7 +303,7 @@ export function AppSettingsModal({ onClose }: Props) {
           <button
             onClick={() => handleThemeChange('dark')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              theme === 'dark' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
+              theme === 'dark' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
             }`}
           >
             {t('settings.dark')}
@@ -311,7 +311,7 @@ export function AppSettingsModal({ onClose }: Props) {
           <button
             onClick={() => handleThemeChange('light')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              theme === 'light' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
+              theme === 'light' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
             }`}
           >
             {t('settings.light')}
@@ -357,8 +357,8 @@ export function AppSettingsModal({ onClose }: Props) {
               }`}
             >
               <div
-                className="px-3 py-1.5 text-xs text-white"
-                style={{ backgroundColor: bubbleColor, borderRadius: shape.borderRadius }}
+                className="px-3 py-1.5 text-xs"
+                style={{ backgroundColor: bubbleColor, borderRadius: shape.borderRadius, color: fontColor }}
               >
                 {t('settings.bubbleHello')}
               </div>
@@ -611,7 +611,7 @@ export function AppSettingsModal({ onClose }: Props) {
       {/* Notifications toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-white">Уведомления</p>
+          <p className="text-sm font-medium text-[var(--color-text-primary)]">Уведомления</p>
           <p className="text-xs text-gray-500">Push-уведомления о сообщениях и звонках</p>
         </div>
         <button
@@ -736,7 +736,7 @@ export function AppSettingsModal({ onClose }: Props) {
       {/* Vibration toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-white">Вибрация</p>
+          <p className="text-sm font-medium text-[var(--color-text-primary)]">Вибрация</p>
           <p className="text-xs text-gray-500">Вибрация при входящих</p>
         </div>
         <button
@@ -807,7 +807,7 @@ export function AppSettingsModal({ onClose }: Props) {
           key={option.id}
           onClick={() => handleWidgetChange(option.id)}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-            headerWidget === option.id ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-white'
+            headerWidget === option.id ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
           }`}
         >
           {headerWidget === option.id && (
@@ -1041,7 +1041,7 @@ export function AppSettingsModal({ onClose }: Props) {
     <div className="space-y-5">
       {/* Import from vCard */}
       <div>
-        <h3 className="text-sm font-medium text-white mb-2">{t('settings.importVcf')}</h3>
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">{t('settings.importVcf')}</h3>
         <p className="text-xs text-gray-500 mb-3">{t('settings.importVcfDesc')}</p>
         <input
           ref={vcfInputRef}
@@ -1062,7 +1062,7 @@ export function AppSettingsModal({ onClose }: Props) {
         </button>
         {vcfResults && (
           <div className="mt-3 p-3 bg-dark-800 rounded-xl space-y-1">
-            <p className="text-sm font-medium text-white">{t('settings.importResults')}</p>
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('settings.importResults')}</p>
             <p className="text-xs text-green-400">{t('settings.importedRegistered', { count: vcfResults.registered })}</p>
             <p className="text-xs text-gray-400">{t('settings.importedUnregistered', { count: vcfResults.unregistered })}</p>
           </div>
@@ -1074,7 +1074,7 @@ export function AppSettingsModal({ onClose }: Props) {
         <button
           onClick={handleGoogleSync}
           disabled={googleSyncing}
-          className="w-full px-4 py-2.5 bg-dark-600 hover:bg-dark-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="w-full px-4 py-2.5 bg-dark-600 hover:bg-dark-500 text-[var(--color-text-primary)] rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -1086,7 +1086,7 @@ export function AppSettingsModal({ onClose }: Props) {
         </button>
         {googleResults && (
           <div className="mt-3 p-3 bg-dark-800 rounded-xl space-y-1">
-            <p className="text-sm font-medium text-white">{t('settings.importResults')}</p>
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('settings.importResults')}</p>
             <p className="text-xs text-green-400">{t('settings.importedRegistered', { count: googleResults.registered })}</p>
             <p className="text-xs text-gray-400">{t('settings.importedUnregistered', { count: googleResults.unregistered })}</p>
           </div>
@@ -1104,7 +1104,7 @@ export function AppSettingsModal({ onClose }: Props) {
         <button
           onClick={handleGoogleSync}
           disabled={googleSyncing}
-          className="w-full px-4 py-2.5 bg-dark-600 hover:bg-dark-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="w-full px-4 py-2.5 bg-dark-600 hover:bg-dark-500 text-[var(--color-text-primary)] rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
@@ -1159,7 +1159,7 @@ export function AppSettingsModal({ onClose }: Props) {
         {/* Left sidebar */}
         <div className="w-[200px] shrink-0 bg-dark-800 border-r border-dark-500 flex flex-col">
           <div className="px-4 py-4 border-b border-dark-500">
-            <h2 className="text-sm font-semibold text-white">{t('appSettings.title')}</h2>
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">{t('appSettings.title')}</h2>
           </div>
           <nav className="flex-1 py-2 overflow-y-auto">
             {menuItems.map(item => (
@@ -1168,8 +1168,8 @@ export function AppSettingsModal({ onClose }: Props) {
                 onClick={() => setActiveSection(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                   activeSection === item.id
-                    ? 'text-white bg-accent/20 border-r-2 border-accent'
-                    : 'text-gray-400 hover:text-white hover:bg-dark-600'
+                    ? 'text-[var(--color-text-primary)] bg-accent/20 border-r-2 border-accent'
+                    : 'text-gray-400 hover:text-[var(--color-text-primary)] hover:bg-dark-600'
                 }`}
               >
                 {item.icon}
@@ -1182,10 +1182,10 @@ export function AppSettingsModal({ onClose }: Props) {
         {/* Right content */}
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex items-center justify-between px-6 py-4 border-b border-dark-500">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
               {t(menuItems.find(m => m.id === activeSection)?.labelKey || '')}
             </h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>

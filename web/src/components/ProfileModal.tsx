@@ -98,8 +98,8 @@ export function ProfileModal({ onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-dark-500">
-          <h2 className="text-lg font-semibold text-white">{t('settings.profile')}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{t('settings.profile')}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -140,7 +140,7 @@ export function ProfileModal({ onClose }: Props) {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder={t('settings.namePlaceholder')}
-              className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+              className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
             />
           </div>
 
@@ -152,7 +152,7 @@ export function ProfileModal({ onClose }: Props) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@example.com"
-              className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+              className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
             />
           </div>
 
@@ -164,7 +164,7 @@ export function ProfileModal({ onClose }: Props) {
               onChange={(e) => setStatus(e.target.value.slice(0, 140))}
               placeholder={t('settings.statusPlaceholder')}
               maxLength={140}
-              className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+              className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
             />
             <p className="text-xs text-gray-600 mt-1 text-right">{status.length}/140</p>
           </div>
@@ -181,7 +181,7 @@ export function ProfileModal({ onClose }: Props) {
 
           {/* Save */}
           <div className="flex justify-end gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
               {t('settings.cancel')}
             </button>
             <button
@@ -197,7 +197,7 @@ export function ProfileModal({ onClose }: Props) {
           <div className="pt-4 border-t border-dark-500">
             <button
               onClick={() => { authLogout(); onClose(); }}
-              className="w-full py-2.5 bg-dark-600 hover:bg-dark-500 text-white font-medium rounded-xl transition-colors text-sm border border-dark-400"
+              className="w-full py-2.5 bg-dark-600 hover:bg-dark-500 text-[var(--color-text-primary)] font-medium rounded-xl transition-colors text-sm border border-dark-400"
             >
               {t('settings.logout')}
             </button>
@@ -220,10 +220,10 @@ export function ProfileModal({ onClose }: Props) {
                   value={deleteInput}
                   onChange={(e) => setDeleteInput(e.target.value)}
                   placeholder={t('settings.deleteWord')}
-                  className="w-full px-4 py-2.5 bg-dark-600 border border-red-500/50 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500 transition-colors"
+                  className="w-full px-4 py-2.5 bg-dark-600 border border-red-500/50 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-red-500 transition-colors"
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); }} className="flex-1 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+                  <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); }} className="flex-1 py-2 text-sm text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
                     {t('settings.cancel')}
                   </button>
                   <button

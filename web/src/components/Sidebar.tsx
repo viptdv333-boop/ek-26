@@ -50,7 +50,7 @@ function WeatherWidget() {
   return (
     <div className="flex items-center gap-1.5 text-sm" title={`${weather.city}: ${weather.desc}`}>
       <span>{weather.icon}</span>
-      <span className="text-white font-medium">{weather.temp}</span>
+      <span className="text-[var(--color-text-primary)] font-medium">{weather.temp}</span>
       <span className="text-gray-400 text-xs truncate max-w-[100px]">{weather.city}</span>
     </div>
   );
@@ -233,7 +233,7 @@ function RemindersWidget() {
     <div className="relative">
       <button
         onClick={() => setShowAdd(!showAdd)}
-        className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white transition-colors"
+        className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-[var(--color-text-primary)] transition-colors"
         title={nextReminder ? `${nextReminder.text} — ${new Date(nextReminder.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Добавить напоминание'}
       >
         <span className="text-accent">🔔</span>
@@ -248,13 +248,13 @@ function RemindersWidget() {
       {showAdd && (
         <div className="absolute top-8 left-0 w-64 bg-dark-700 border border-dark-500 rounded-xl shadow-xl z-50 p-3 space-y-2">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-medium text-white">Напоминания</span>
-            <button onClick={() => setShowAdd(false)} className="text-gray-400 hover:text-white text-xs">✕</button>
+            <span className="text-xs font-medium text-[var(--color-text-primary)]">Напоминания</span>
+            <button onClick={() => setShowAdd(false)} className="text-gray-400 hover:text-[var(--color-text-primary)] text-xs">✕</button>
           </div>
           {reminders.map(r => (
             <div key={r.id} className="flex items-center gap-2 text-xs">
               <span className="text-gray-400">{new Date(r.time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-              <span className="text-white flex-1 truncate">{r.text}</span>
+              <span className="text-[var(--color-text-primary)] flex-1 truncate">{r.text}</span>
               <button onClick={() => removeReminder(r.id)} className="text-red-400 hover:text-red-300">✕</button>
             </div>
           ))}
@@ -264,14 +264,14 @@ function RemindersWidget() {
               value={newText}
               onChange={e => setNewText(e.target.value)}
               placeholder="Текст..."
-              className="flex-1 px-2 py-1.5 bg-dark-600 border border-dark-500 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent"
+              className="flex-1 px-2 py-1.5 bg-dark-600 border border-dark-500 rounded-lg text-xs text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent"
               onKeyDown={e => e.key === 'Enter' && addReminder()}
             />
             <input
               type="datetime-local"
               value={newTime}
               onChange={e => setNewTime(e.target.value)}
-              className="px-1.5 py-1.5 bg-dark-600 border border-dark-500 rounded-lg text-xs text-white focus:outline-none focus:border-accent w-[130px]"
+              className="px-1.5 py-1.5 bg-dark-600 border border-dark-500 rounded-lg text-xs text-[var(--color-text-primary)] focus:outline-none focus:border-accent w-[130px]"
             />
           </div>
           <button
@@ -818,7 +818,7 @@ export function Sidebar() {
           <>
             <button
               onClick={() => setShowArchive(!showArchive)}
-              className="w-full px-4 py-2.5 flex items-center gap-2 text-gray-400 hover:text-white hover:bg-dark-700 transition-colors text-sm"
+              className="w-full px-4 py-2.5 flex items-center gap-2 text-gray-400 hover:text-[var(--color-text-primary)] hover:bg-dark-700 transition-colors text-sm"
             >
               <svg className={`w-4 h-4 transition-transform ${showArchive ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -858,7 +858,7 @@ export function Sidebar() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-white truncate block">{name}</span>
+                    <span className="text-sm font-medium text-[var(--color-text-primary)] truncate block">{name}</span>
                     {conv.lastMessage && (
                       <p className="text-xs text-gray-400 truncate mt-0.5">{conv.lastMessage.text}</p>
                     )}

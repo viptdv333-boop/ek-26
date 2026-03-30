@@ -57,12 +57,14 @@ interface Props {
   bubbleShape?: string;
   bubbleColor?: string;
   bubbleColorOther?: string;
+  fontColor?: string;
+  fontColorOther?: string;
 }
 
 // Global translate cache per session
 const translatedCache = new Map<string, string>();
 
-export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'cloud', bubbleColor = '#18181b', bubbleColorOther = '#f3f4f6' }: Props) {
+export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'cloud', bubbleColor = '#18181b', bubbleColorOther = '#f3f4f6', fontColor = '#ffffff', fontColorOther = '#18181b' }: Props) {
   const { t, lang, locale } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);
@@ -200,7 +202,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       >
         {!isMine && renderAvatar()}
 
-        <div className="max-w-[70%] relative" style={{ color: isMine ? '#ffffff' : '#18181b' }}>
+        <div className="max-w-[70%] relative" style={{ color: isMine ? fontColor : fontColorOther }}>
           {/* SVG cloud background (skip for media-only messages) */}
           {bubbleShape === 'cloud' && !isMediaOnly && (
             <svg
@@ -248,15 +250,15 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           )}
 
           {message.forwardedFrom && (
-            <div className={`text-[11px] mb-1 ${isMine ? 'text-white/60' : 'text-[#6b7280]'}`}>
+            <div className="text-[11px] mb-1" style={{ color: isMine ? fontColor + '99' : fontColorOther + '99' }}>
               {t('message.forwardedFrom', { name: message.forwardedFrom.originalSenderName })}
             </div>
           )}
 
           {message.replyTo && (
-            <div className={`border-l-2 pl-2 mb-1.5 py-0.5 ${isMine ? 'border-white/40' : 'border-accent'}`}>
-              <p className={`text-[11px] font-medium ${isMine ? 'text-white/70' : 'text-accent'}`}>{message.replyTo.senderName}</p>
-              <p className={`text-[11px] truncate ${isMine ? 'text-white/50' : 'text-[#6b7280]'}`}>{message.replyTo.text || t('message.message')}</p>
+            <div className="border-l-2 pl-2 mb-1.5 py-0.5" style={{ borderColor: isMine ? fontColor + '66' : 'var(--color-accent, #ef4444)' }}>
+              <p className={`text-[11px] font-medium ${isMine ? '' : 'text-accent'}`} style={isMine ? { color: fontColor + 'B3' } : undefined}>{message.replyTo.senderName}</p>
+              <p className="text-[11px] truncate" style={{ color: isMine ? fontColor + '80' : fontColorOther + '80' }}>{message.replyTo.text || t('message.message')}</p>
             </div>
           )}
 
@@ -276,20 +278,22 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           {/* Translated text */}
           {translatedText && (
             <div className={`mt-1 ${hasAttachments ? 'px-3.5' : ''}`}>
-              <p className={`whitespace-pre-wrap break-words italic ${isMine ? 'text-white/70' : 'text-[#71717a]'}`} style={{ fontSize: `${Math.max(fontSize - 2, 11)}px` }}>{translatedText}</p>
+              <p className="whitespace-pre-wrap break-words italic" style={{ fontSize: `${Math.max(fontSize - 2, 11)}px`, color: isMine ? fontColor + 'B3' : fontColorOther + 'B3' }}>{translatedText}</p>
               <button
                 onClick={(e) => { e.stopPropagation(); setTranslatedText(null); translatedCache.delete(message.id); }}
-                className={`text-[10px] mt-0.5 ${isMine ? 'text-white/40 hover:text-white/70' : 'text-[#6b7280] hover:text-[#52525b]'} transition-colors`}
+                className="text-[10px] mt-0.5 transition-colors cursor-pointer"
+                style={{ color: isMine ? fontColor + '66' : fontColorOther + '66' }}
               >
                 {t('translate.hide')}
               </button>
             </div>
           )}
           {translating && (
-            <p className={`text-[10px] mt-0.5 italic ${isMine ? 'text-white/40' : 'text-[#6b7280]'}`}>...</p>
+            <p className="text-[10px] mt-0.5 italic" style={{ color: isMine ? fontColor + '66' : fontColorOther + '66' }}>...</p>
           )}
 
-          <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''} ${isMine ? 'text-white/50' : 'text-[#6b7280]'}`} style={{ fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
+          <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''}`}
+               style={{ color: isMine ? fontColor + '80' : fontColorOther + '80' }} style={{ fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
             {message.editedAt && <span className="italic">{t('message.edited')}</span>}
             <span>{time}</span>
             {statusIcon()}
@@ -379,7 +383,7 @@ function AttachmentView({ attachment, isMine, onImageClick }: { attachment: Atta
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium truncate">{attachment.fileName}</p>
-        <p className={`text-[11px] ${isMine ? 'text-white/50' : 'text-[#6b7280]'}`}>{formatFileSize(attachment.size)}</p>
+        <p className="text-[11px]" style={{ color: isMine ? fontColor + '80' : fontColorOther + '80' }}>{formatFileSize(attachment.size)}</p>
       </div>
     </a>
   );

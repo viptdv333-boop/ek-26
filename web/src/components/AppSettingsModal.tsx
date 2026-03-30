@@ -65,6 +65,9 @@ export function AppSettingsModal({ onClose }: Props) {
   const [bubbleShape, setBubbleShape] = useState(() => localStorage.getItem('ek26_bubble_shape') || 'rounded');
   const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '#6366f1');
   const [bubbleColorOther, setBubbleColorOther] = useState(() => localStorage.getItem('ek26_bubble_color_other') || '#22222f');
+  // Font color
+  const [fontColor, setFontColor] = useState(() => localStorage.getItem('ek26_font_color') || '#ffffff');
+  const [fontColorOther, setFontColorOther] = useState(() => localStorage.getItem('ek26_font_color_other') || '#18181b');
   // Wallpaper
   const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('ek26_wallpaper') || 'default');
   const [wallpaperUploading, setWallpaperUploading] = useState(false);
@@ -120,6 +123,18 @@ export function AppSettingsModal({ onClose }: Props) {
   const handleBubbleColorOtherChange = (color: string) => {
     setBubbleColorOther(color);
     localStorage.setItem('ek26_bubble_color_other', color);
+    window.dispatchEvent(new Event('bubble-style-changed'));
+  };
+
+  const handleFontColorChange = (color: string) => {
+    setFontColor(color);
+    localStorage.setItem('ek26_font_color', color);
+    window.dispatchEvent(new Event('bubble-style-changed'));
+  };
+
+  const handleFontColorOtherChange = (color: string) => {
+    setFontColorOther(color);
+    localStorage.setItem('ek26_font_color_other', color);
     window.dispatchEvent(new Event('bubble-style-changed'));
   };
 
@@ -409,6 +424,72 @@ export function AppSettingsModal({ onClose }: Props) {
               </svg>
             </div>
           </label>
+        </div>
+      </div>
+
+      {/* Font color — own */}
+      <div>
+        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.ownFontColor')}</label>
+        <div className="flex items-center gap-2 flex-wrap">
+          {['#ffffff', '#e5e7eb', '#d1d5db', '#fbbf24', '#a78bfa', '#67e8f9', '#f9a8d4', '#18181b'].map((color) => (
+            <button
+              key={color}
+              onClick={() => handleFontColorChange(color)}
+              className={`w-8 h-8 rounded-full border-2 transition-all ${
+                fontColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+              }`}
+              style={{ backgroundColor: color }}
+            />
+          ))}
+          <label className="relative">
+            <input
+              type="color"
+              value={fontColor}
+              onChange={(e) => handleFontColorChange(e.target.value)}
+              className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
+            />
+            <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
+              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </div>
+          </label>
+        </div>
+        <div className="mt-2 px-3 py-1.5 rounded-lg inline-block" style={{ backgroundColor: bubbleColor }}>
+          <span className="text-sm" style={{ color: fontColor }}>{t('settings.sampleText')}</span>
+        </div>
+      </div>
+
+      {/* Font color — other */}
+      <div>
+        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.otherFontColor')}</label>
+        <div className="flex items-center gap-2 flex-wrap">
+          {['#18181b', '#374151', '#4b5563', '#ffffff', '#dc2626', '#2563eb', '#059669', '#7c3aed'].map((color) => (
+            <button
+              key={color}
+              onClick={() => handleFontColorOtherChange(color)}
+              className={`w-8 h-8 rounded-full border-2 transition-all ${
+                fontColorOther === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+              }`}
+              style={{ backgroundColor: color }}
+            />
+          ))}
+          <label className="relative">
+            <input
+              type="color"
+              value={fontColorOther}
+              onChange={(e) => handleFontColorOtherChange(e.target.value)}
+              className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
+            />
+            <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
+              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </div>
+          </label>
+        </div>
+        <div className="mt-2 px-3 py-1.5 rounded-lg inline-block" style={{ backgroundColor: bubbleColorOther }}>
+          <span className="text-sm" style={{ color: fontColorOther }}>{t('settings.sampleText')}</span>
         </div>
       </div>
 

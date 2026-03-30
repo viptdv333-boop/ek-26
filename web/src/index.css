@@ -27,19 +27,19 @@
     position: fixed;
   }
 
-  /* Dark theme (default) */
+  /* Dark theme (default) — Kimi-style pure grays */
   :root {
-    --color-dark-900: #09090b;
-    --color-dark-800: #111113;
-    --color-dark-700: #1a1a1d;
-    --color-dark-600: #222225;
-    --color-dark-500: #2c2c30;
-    --color-text-primary: #ffffff;
-    --color-text-secondary: #9ca3af;
-    --color-text-muted: #6b7280;
-    --color-border: #2c2c30;
-    --color-scrollbar: #2c2c30;
-    --color-scrollbar-hover: #3a3a3f;
+    --color-dark-900: #0f0f0f;
+    --color-dark-800: #141414;
+    --color-dark-700: #242424;
+    --color-dark-600: #292929;
+    --color-dark-500: #2e2e2e;
+    --color-text-primary: #f2f2f2;
+    --color-text-secondary: #8c8c8c;
+    --color-text-muted: #666666;
+    --color-border: #2e2e2e;
+    --color-scrollbar: #2e2e2e;
+    --color-scrollbar-hover: #3d3d3d;
   }
 
   /* Light theme */

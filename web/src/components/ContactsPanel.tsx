@@ -211,9 +211,14 @@ export function ContactsPanel() {
     ? unregisteredSynced.filter(sc => sc.name?.toLowerCase().includes(q) || sc.phone?.toLowerCase().includes(q))
     : unregisteredSynced;
 
+  const [contactsTab, setContactsTab] = useState<'all' | 'import'>('all');
+
+  const favorites = filteredContacts.filter(c => c.isFavorite);
+  const nonFavorites = filteredContacts.filter(c => !c.isFavorite);
+
   return (
     <>
-      {/* Search field */}
+      {/* Search */}
       <div className="px-3 py-2">
         <div className="relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -226,31 +231,34 @@ export function ContactsPanel() {
             className="w-full pl-9 pr-8 py-2 bg-[var(--color-dark-700)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] text-sm placeholder-[var(--color-text-muted)] focus:outline-none focus:border-accent transition-colors"
           />
           {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] text-lg"
-            >
-              &times;
-            </button>
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] text-lg">&times;</button>
           )}
         </div>
       </div>
 
-      {/* All contacts in one scrollable list */}
+      {/* Add Contact button (black, top) */}
+      <div className="px-3 pb-2">
+        <button
+          onClick={() => { setShowAddDialog(true); setAddPhone('+'); setAddError(''); setSearchResults([]); setNoAccountFound(false); }}
+          className="w-full py-2.5 bg-[var(--color-text-primary)] text-[var(--color-dark-800)] rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 hover:opacity-90"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+          {t('contacts.addContact')}
+        </button>
+      </div>
+
+      {/* Contacts list */}
       <div className="flex-1 overflow-y-auto px-2" style={{ minHeight: 0 }}>
         {loading && <p className="text-center text-[var(--color-text-muted)] text-sm py-4">{t('contacts.loading')}</p>}
 
-        {/* Registered contacts (regular + synced) sorted alphabetically */}
-        {(filteredContacts.length > 0 || filteredRegisteredSynced.length > 0) && (
+        {/* FAVORITES section */}
+        {favorites.length > 0 && (
           <>
-            {filteredContacts.length + filteredRegisteredSynced.length > 0 && filteredUnregisteredSynced.length > 0 && (
-              <p className="text-xs text-green-400 px-3 py-1 font-medium">{t('contacts.registered')} ({filteredContacts.length + filteredRegisteredSynced.length})</p>
-            )}
-            {filteredContacts.map((contact) => (
-              <div
-                key={contact.id}
-                className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors group"
-              >
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 py-2">{t('contacts.favorites')}</p>
+            {favorites.map((contact) => (
+              <div key={contact.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors group">
                 <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
                   {contact.avatarUrl ? (
                     <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
@@ -263,40 +271,52 @@ export function ContactsPanel() {
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--color-dark-800)]" />
                   )}
                 </div>
-
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenChat(contact)}>
-                  <p className="text-sm text-[var(--color-text-primary)] truncate flex items-center gap-1">
-                    {contact.isFavorite && <span className="text-yellow-400 flex-shrink-0">&#11088;</span>}
-                    {contact.displayName}
-                  </p>
-                  {contact.phone && (
-                    <p className="text-xs text-[var(--color-text-muted)] truncate">{contact.phone}</p>
-                  )}
-                  {isOnline(contact.userId) ? (
-                    <p className="text-xs text-green-400">{t('contacts.online')}</p>
+                  <p className="text-sm text-[var(--color-text-primary)] truncate">{contact.displayName}</p>
+                  {contact.phone && <p className="text-xs text-[var(--color-text-muted)] truncate">{contact.phone}</p>}
+                </div>
+                {/* Star + menu */}
+                <button onClick={() => handleToggleFavorite(contact)} className="text-yellow-400 hover:scale-110 transition-transform">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                </button>
+                <div onClick={(e) => { e.stopPropagation(); const rect = (e.target as HTMLElement).getBoundingClientRect(); setContactMenu({ x: rect.left, y: rect.bottom, contact }); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[var(--color-dark-500)] text-[var(--color-text-muted)] cursor-pointer">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* ALL CONTACTS section */}
+        {(nonFavorites.length > 0 || filteredRegisteredSynced.length > 0) && (
+          <>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 py-2 mt-1">{t('contacts.allContacts')}</p>
+            {nonFavorites.map((contact) => (
+              <div key={contact.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors group">
+                <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
+                  {contact.avatarUrl ? (
+                    <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                   ) : (
-                    (() => {
-                      const status = formatLastSeen(contact.lastSeen, t);
-                      return status ? <p className="text-xs text-[var(--color-text-muted)]">{status}</p> : null;
-                    })()
+                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                      <span className="text-accent text-sm font-medium">{contact.displayName[0]?.toUpperCase()}</span>
+                    </div>
+                  )}
+                  {isOnline(contact.userId) && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--color-dark-800)]" />
                   )}
                 </div>
-
-                <div className="flex items-center gap-1">
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const rect = (e.target as HTMLElement).getBoundingClientRect();
-                      setContactMenu({ x: rect.left, y: rect.bottom, contact });
-                    }}
-                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-dark-500)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <circle cx="12" cy="5" r="2" />
-                      <circle cx="12" cy="12" r="2" />
-                      <circle cx="12" cy="19" r="2" />
-                    </svg>
-                  </div>
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenChat(contact)}>
+                  <p className="text-sm text-[var(--color-text-primary)] truncate">{contact.displayName}</p>
+                  {contact.phone && <p className="text-xs text-[var(--color-text-muted)] truncate">{contact.phone}</p>}
+                </div>
+                {/* Star (empty) + menu */}
+                <button onClick={() => handleToggleFavorite(contact)} className="text-[var(--color-text-muted)] hover:text-yellow-400 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>
+                </button>
+                <div onClick={(e) => { e.stopPropagation(); const rect = (e.target as HTMLElement).getBoundingClientRect(); setContactMenu({ x: rect.left, y: rect.bottom, contact }); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[var(--color-dark-500)] text-[var(--color-text-muted)] cursor-pointer">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg>
                 </div>
               </div>
             ))}
@@ -318,10 +338,10 @@ export function ContactsPanel() {
           </>
         )}
 
-        {/* Unregistered synced contacts */}
+        {/* Not registered */}
         {filteredUnregisteredSynced.length > 0 && (
           <>
-            <p className="text-xs text-[var(--color-text-secondary)] px-3 py-2 font-medium mt-2">{t('contacts.notRegistered')} ({filteredUnregisteredSynced.length})</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 py-2 mt-1">{t('contacts.notRegistered')} ({filteredUnregisteredSynced.length})</p>
             {filteredUnregisteredSynced.map((sc) => (
               <div key={`unreg-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors">
                 <div className="w-10 h-10 rounded-full bg-[var(--color-dark-500)] flex items-center justify-center">
@@ -331,10 +351,7 @@ export function ContactsPanel() {
                   <p className="text-sm text-[var(--color-text-primary)] truncate">{sc.name || sc.phone}</p>
                   <p className="text-xs text-[var(--color-text-muted)] truncate">{sc.phone}</p>
                 </div>
-                <button
-                  onClick={() => handleInvite(sc.phone)}
-                  className="px-2 py-1 bg-[var(--color-dark-500)] hover:bg-dark-400 text-[var(--color-text-secondary)] text-xs rounded-lg flex-shrink-0"
-                >
+                <button onClick={() => handleInvite(sc.phone)} className="px-2.5 py-1 border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs rounded-lg hover:bg-[var(--color-dark-600)] transition-colors">
                   {t('contacts.invite')}
                 </button>
               </div>
@@ -347,19 +364,6 @@ export function ContactsPanel() {
             {q ? t('contacts.nothingFound') : t('contacts.noContacts')}
           </p>
         )}
-      </div>
-
-      {/* Add Contact button at bottom */}
-      <div className="px-4 py-3 border-t border-[var(--color-border)]">
-        <button
-          onClick={() => { setShowAddDialog(true); setAddPhone('+'); setAddError(''); setSearchResults([]); setNoAccountFound(false); }}
-          className="w-full py-3 bg-[var(--color-text-primary)] text-[var(--color-dark-800)] rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 hover:opacity-90"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-          </svg>
-          {t('contacts.addContact')}
-        </button>
       </div>
 
       {/* Add Contact Dialog */}

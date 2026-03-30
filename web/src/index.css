@@ -83,18 +83,7 @@
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-  /* Light theme text overrides — applied globally so text-white adapts */
-  .light .text-white { color: var(--color-text-primary) !important; }
-  .light .text-gray-100 { color: #374151 !important; }
-  .light .text-gray-300 { color: #4b5563 !important; }
-  .light .text-gray-400 { color: var(--color-text-secondary) !important; }
-  .light .text-gray-200 { color: #374151 !important; }
-  .light .text-gray-500 { color: var(--color-text-muted) !important; }
-  .light .border-dark-500 { border-color: var(--color-border) !important; }
-  .light .border-dark-600 { border-color: var(--color-border) !important; }
-  .light .placeholder-gray-500::placeholder { color: #9ca3af !important; }
-
-  /* Light theme: green-500 online indicator needs dark border */
+  /* Light theme: online indicator border */
   .light .border-dark-800 { border-color: #ffffff !important; }
 }
 

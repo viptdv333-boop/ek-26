@@ -333,6 +333,7 @@ export function Sidebar() {
   const [showProfile, setShowProfile] = useState(false);
   const [showAppSettings, setShowAppSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<'chats' | 'contacts'>('chats');
+  const [showContacts, setShowContacts] = useState(false);
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -655,30 +656,18 @@ export function Sidebar() {
       {/* Tabs */}
       <div className="flex gap-1 px-3 py-2 bg-[var(--color-dark-700)] mx-3 mt-2 rounded-full">
         <button
-          onClick={() => setActiveTab('chats')}
-          className={`flex-1 py-2 text-sm font-semibold rounded-full transition-all ${
-            activeTab === 'chats'
-              ? 'bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm'
-              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
-          }`}
+          className="flex-1 py-2 text-sm font-semibold rounded-full bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm"
         >
           {t('sidebar.chats')}
         </button>
         <button
-          onClick={() => setActiveTab('contacts')}
-          className={`flex-1 py-2 text-sm font-semibold rounded-full transition-all ${
-            activeTab === 'contacts'
-              ? 'bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm'
-              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
-          }`}
+          onClick={() => setShowContacts(true)}
+          className="flex-1 py-2 text-sm font-semibold rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all"
         >
           {t('sidebar.contacts')}
         </button>
       </div>
 
-      {activeTab === 'contacts' ? (
-        <ContactsPanel />
-      ) : (
       <>
       <div className="p-3">
         <input
@@ -887,7 +876,7 @@ export function Sidebar() {
       )}
 
       {/* New chat button */}
-      {activeTab === 'chats' && (
+      {(
         <div className="px-4 py-3 border-t border-[var(--color-border)]">
           <button
             onClick={() => setShowNewChat(true)}
@@ -910,6 +899,29 @@ export function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
             </svg>
           </a>
+        </div>
+      )}
+
+      {/* Contacts modal */}
+      {showContacts && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowContacts(false)}>
+          <div
+            className="w-full max-w-md bg-[var(--color-dark-800)] rounded-2xl shadow-2xl flex flex-col mx-4"
+            style={{ maxHeight: '80vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">{t('contacts.title')}</h2>
+              <button onClick={() => setShowContacts(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-dark-600)] text-[var(--color-text-muted)] transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            {/* Contacts panel content */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <ContactsPanel />
+            </div>
+          </div>
         </div>
       )}
 

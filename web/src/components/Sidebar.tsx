@@ -593,7 +593,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-full md:w-80 flex-shrink-0 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-dark-800)]">
+    <div className="w-full md:w-80 flex-shrink-0 border-r border-[var(--color-border)] flex flex-col" style={{ backgroundColor: 'color-mix(in srgb, var(--color-dark-800) 85%, transparent)' , backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
       {/* Header — logo + widget + settings gear */}
       <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">

@@ -623,7 +623,7 @@ export function ChatRoom({ conversationId }: Props) {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1" style={getWallpaperStyle()}>
+      <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
         {loading && (
           <div className="text-center text-gray-500 text-sm py-4">{t('chat.loading')}</div>
         )}

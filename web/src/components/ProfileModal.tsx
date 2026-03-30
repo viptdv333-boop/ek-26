@@ -61,7 +61,7 @@ export function ProfileModal({ onClose }: Props) {
       const res = await fetch('/api/users/me/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ currentPassword: currentPw || undefined, newPassword: newPw }),
+        body: JSON.stringify({ newPassword: newPw }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -252,16 +252,6 @@ export function ProfileModal({ onClose }: Props) {
             ) : (
               <div className="space-y-3">
                 <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('settings.changePassword')}</p>
-                <div className="relative">
-                  <input
-                    type={showCurrentPw ? 'text' : 'password'}
-                    value={currentPw}
-                    onChange={(e) => setCurrentPw(e.target.value)}
-                    placeholder={t('settings.currentPassword')}
-                    className="w-full px-4 py-2.5 pr-10 bg-dark-600 border border-dark-500 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
-                  />
-                  <EyeToggle show={showCurrentPw} onToggle={() => setShowCurrentPw(!showCurrentPw)} />
-                </div>
                 <div className="relative">
                   <input
                     type={showNewPw ? 'text' : 'password'}

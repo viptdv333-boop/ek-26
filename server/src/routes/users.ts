@@ -63,20 +63,12 @@ export async function userRoutes(app: FastifyInstance) {
     };
   });
 
-  // Change password
+  // Change password — user is already authenticated, no current password needed
   app.post('/api/users/me/change-password', { preHandler: [app.authenticate] }, async (request, reply) => {
-    const { currentPassword, newPassword } = request.body as { currentPassword?: string; newPassword: string };
+    const { newPassword } = request.body as { newPassword: string };
     const user = await User.findById(request.userId);
     if (!user) return reply.code(404).send({ error: 'User not found' });
 
-    // If user has a password, verify current
-    if (user.passwordHash) {
-      if (!currentPassword) return reply.code(400).send({ error: 'Current password required' });
-      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-      if (!valid) return reply.code(400).send({ error: 'Wrong current password' });
-    }
-
-    // Validate new password
     if (!newPassword || newPassword.length < 6) {
       return reply.code(400).send({ error: 'Password must be at least 6 characters' });
     }

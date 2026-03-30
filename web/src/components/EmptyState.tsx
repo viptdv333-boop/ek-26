@@ -63,10 +63,10 @@ export function EmptyState() {
 
   return (
     <div className="flex-1 flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto px-6 space-y-6">
+      <div className="text-center max-w-xl mx-auto px-6 space-y-6">
         {/* Greeting */}
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+          <h2 className="text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
             {greeting}{user?.displayName ? `, ${user.displayName}` : ''}
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
@@ -89,27 +89,27 @@ export function EmptyState() {
           )}
         </div>
 
-        {/* Feature cards — NOT clickable */}
-        <div className="grid grid-cols-2 gap-3 text-left">
-          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
-            <span className="text-lg">🔒</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>E2E шифрование</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Все сообщения защищены</p>
+        {/* Feature cards */}
+        <div className="grid grid-cols-2 gap-4 text-left">
+          <div className="px-5 py-5 rounded-2xl" style={cardStyle}>
+            <span className="text-2xl">🔒</span>
+            <p className="text-sm mt-2 font-semibold" style={{ color: 'var(--color-text-primary)' }}>E2E шифрование</p>
+            <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Все сообщения защищены сквозным шифрованием</p>
           </div>
-          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
-            <span className="text-lg">📞</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Звонки</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Голосовые и видео</p>
+          <div className="px-5 py-5 rounded-2xl" style={cardStyle}>
+            <span className="text-2xl">📞</span>
+            <p className="text-sm mt-2 font-semibold" style={{ color: 'var(--color-text-primary)' }}>Звонки</p>
+            <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Голосовые и видеозвонки в HD качестве</p>
           </div>
-          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
-            <span className="text-lg">📎</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Файлы</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Фото, видео, документы</p>
+          <div className="px-5 py-5 rounded-2xl" style={cardStyle}>
+            <span className="text-2xl">📎</span>
+            <p className="text-sm mt-2 font-semibold" style={{ color: 'var(--color-text-primary)' }}>Файлы</p>
+            <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Отправляйте фото, видео и документы любого размера</p>
           </div>
-          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
-            <span className="text-lg">🌍</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Переводчик</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Автоперевод сообщений</p>
+          <div className="px-5 py-5 rounded-2xl" style={cardStyle}>
+            <span className="text-2xl">🌍</span>
+            <p className="text-sm mt-2 font-semibold" style={{ color: 'var(--color-text-primary)' }}>Переводчик</p>
+            <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Мгновенный перевод сообщений на любой язык</p>
           </div>
         </div>
       </div>

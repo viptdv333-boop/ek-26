@@ -62,7 +62,7 @@ interface Props {
 // Global translate cache per session
 const translatedCache = new Map<string, string>();
 
-export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'cloud', bubbleColor = '#6366f1', bubbleColorOther = '#22222f' }: Props) {
+export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'cloud', bubbleColor = '#18181b', bubbleColorOther = '#f3f4f6' }: Props) {
   const { t, lang, locale } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);
@@ -200,7 +200,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       >
         {!isMine && renderAvatar()}
 
-        <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-gray-100'}`}>
+        <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-[var(--color-text-primary)]'}`}>
           {/* SVG cloud background (skip for media-only messages) */}
           {bubbleShape === 'cloud' && !isMediaOnly && (
             <svg
@@ -248,7 +248,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           )}
 
           {message.forwardedFrom && (
-            <div className={`text-[11px] mb-1 ${isMine ? 'text-white/60' : 'text-gray-400'}`}>
+            <div className={`text-[11px] mb-1 ${isMine ? 'text-white/60' : 'text-[var(--color-text-muted)]'}`}>
               {t('message.forwardedFrom', { name: message.forwardedFrom.originalSenderName })}
             </div>
           )}
@@ -256,7 +256,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           {message.replyTo && (
             <div className={`border-l-2 pl-2 mb-1.5 py-0.5 ${isMine ? 'border-white/40' : 'border-accent'}`}>
               <p className={`text-[11px] font-medium ${isMine ? 'text-white/70' : 'text-accent'}`}>{message.replyTo.senderName}</p>
-              <p className={`text-[11px] truncate ${isMine ? 'text-white/50' : 'text-gray-400'}`}>{message.replyTo.text || t('message.message')}</p>
+              <p className={`text-[11px] truncate ${isMine ? 'text-white/50' : 'text-[var(--color-text-muted)]'}`}>{message.replyTo.text || t('message.message')}</p>
             </div>
           )}
 
@@ -276,20 +276,20 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
           {/* Translated text */}
           {translatedText && (
             <div className={`mt-1 ${hasAttachments ? 'px-3.5' : ''}`}>
-              <p className="whitespace-pre-wrap break-words italic text-gray-300" style={{ fontSize: `${Math.max(fontSize - 2, 11)}px` }}>{translatedText}</p>
+              <p className="whitespace-pre-wrap break-words italic text-[var(--color-text-secondary)]" style={{ fontSize: `${Math.max(fontSize - 2, 11)}px` }}>{translatedText}</p>
               <button
                 onClick={(e) => { e.stopPropagation(); setTranslatedText(null); translatedCache.delete(message.id); }}
-                className={`text-[10px] mt-0.5 ${isMine ? 'text-white/40 hover:text-white/70' : 'text-gray-500 hover:text-gray-300'} transition-colors`}
+                className={`text-[10px] mt-0.5 ${isMine ? 'text-white/40 hover:text-white/70' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'} transition-colors`}
               >
                 {t('translate.hide')}
               </button>
             </div>
           )}
           {translating && (
-            <p className={`text-[10px] mt-0.5 italic ${isMine ? 'text-white/40' : 'text-gray-500'}`}>...</p>
+            <p className={`text-[10px] mt-0.5 italic ${isMine ? 'text-white/40' : 'text-[var(--color-text-muted)]'}`}>...</p>
           )}
 
-          <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''} ${isMine ? 'text-white/50' : 'text-gray-500'}`} style={{ fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
+          <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''} ${isMine ? 'text-white/50' : 'text-[var(--color-text-muted)]'}`} style={{ fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
             {message.editedAt && <span className="italic">{t('message.edited')}</span>}
             <span>{time}</span>
             {statusIcon()}
@@ -318,7 +318,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
               className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors ${
                 message.reactions?.some(r => r.emoji === emoji && r.userId === userId)
                   ? 'bg-accent/20 border-accent/50 text-accent'
-                  : 'bg-dark-600 border-dark-500 text-gray-300 hover:bg-dark-500'
+                  : 'bg-[var(--color-dark-600)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-dark-500)]'
               }`}
             >
               <span>{emoji}</span>
@@ -379,7 +379,7 @@ function AttachmentView({ attachment, isMine, onImageClick }: { attachment: Atta
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium truncate">{attachment.fileName}</p>
-        <p className={`text-[11px] ${isMine ? 'text-white/50' : 'text-gray-500'}`}>{formatFileSize(attachment.size)}</p>
+        <p className={`text-[11px] ${isMine ? 'text-white/50' : 'text-[var(--color-text-muted)]'}`}>{formatFileSize(attachment.size)}</p>
       </div>
     </a>
   );

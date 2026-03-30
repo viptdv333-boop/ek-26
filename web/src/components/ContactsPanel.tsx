@@ -216,19 +216,19 @@ export function ContactsPanel() {
       {/* Search field */}
       <div className="px-3 py-2">
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('contacts.searchPlaceholder')}
-            className="w-full pl-9 pr-8 py-2 bg-dark-700 border border-dark-500 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+            className="w-full pl-9 pr-8 py-2 bg-[var(--color-dark-700)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] text-sm placeholder-[var(--color-text-muted)] focus:outline-none focus:border-accent transition-colors"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-lg"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] text-lg"
             >
               &times;
             </button>
@@ -238,7 +238,7 @@ export function ContactsPanel() {
 
       {/* All contacts in one scrollable list */}
       <div className="flex-1 overflow-y-auto px-2" style={{ minHeight: 0 }}>
-        {loading && <p className="text-center text-gray-500 text-sm py-4">{t('contacts.loading')}</p>}
+        {loading && <p className="text-center text-[var(--color-text-muted)] text-sm py-4">{t('contacts.loading')}</p>}
 
         {/* Registered contacts (regular + synced) sorted alphabetically */}
         {(filteredContacts.length > 0 || filteredRegisteredSynced.length > 0) && (
@@ -249,7 +249,7 @@ export function ContactsPanel() {
             {filteredContacts.map((contact) => (
               <div
                 key={contact.id}
-                className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors group"
+                className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors group"
               >
                 <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
                   {contact.avatarUrl ? (
@@ -260,24 +260,24 @@ export function ContactsPanel() {
                     </div>
                   )}
                   {isOnline(contact.userId) && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-800" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--color-dark-800)]" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenChat(contact)}>
-                  <p className="text-sm text-white truncate flex items-center gap-1">
+                  <p className="text-sm text-[var(--color-text-primary)] truncate flex items-center gap-1">
                     {contact.isFavorite && <span className="text-yellow-400 flex-shrink-0">&#11088;</span>}
                     {contact.displayName}
                   </p>
                   {contact.phone && (
-                    <p className="text-xs text-gray-500 truncate">{contact.phone}</p>
+                    <p className="text-xs text-[var(--color-text-muted)] truncate">{contact.phone}</p>
                   )}
                   {isOnline(contact.userId) ? (
                     <p className="text-xs text-green-400">{t('contacts.online')}</p>
                   ) : (
                     (() => {
                       const status = formatLastSeen(contact.lastSeen, t);
-                      return status ? <p className="text-xs text-gray-500">{status}</p> : null;
+                      return status ? <p className="text-xs text-[var(--color-text-muted)]">{status}</p> : null;
                     })()
                   )}
                 </div>
@@ -289,7 +289,7 @@ export function ContactsPanel() {
                       const rect = (e.target as HTMLElement).getBoundingClientRect();
                       setContactMenu({ x: rect.left, y: rect.bottom, contact });
                     }}
-                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-dark-500 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-dark-500)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <circle cx="12" cy="5" r="2" />
@@ -301,7 +301,7 @@ export function ContactsPanel() {
               </div>
             ))}
             {filteredRegisteredSynced.map((sc) => (
-              <div key={`synced-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors">
+              <div key={`synced-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors">
                 {sc.avatarUrl ? (
                   <img src={sc.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                 ) : (
@@ -310,8 +310,8 @@ export function ContactsPanel() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white truncate">{sc.name}</p>
-                  <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
+                  <p className="text-sm text-[var(--color-text-primary)] truncate">{sc.name}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] truncate">{sc.phone}</p>
                 </div>
               </div>
             ))}
@@ -321,19 +321,19 @@ export function ContactsPanel() {
         {/* Unregistered synced contacts */}
         {filteredUnregisteredSynced.length > 0 && (
           <>
-            <p className="text-xs text-gray-400 px-3 py-2 font-medium mt-2">{t('contacts.notRegistered')} ({filteredUnregisteredSynced.length})</p>
+            <p className="text-xs text-[var(--color-text-secondary)] px-3 py-2 font-medium mt-2">{t('contacts.notRegistered')} ({filteredUnregisteredSynced.length})</p>
             {filteredUnregisteredSynced.map((sc) => (
-              <div key={`unreg-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-dark-600 rounded-xl transition-colors">
-                <div className="w-10 h-10 rounded-full bg-dark-500 flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">{sc.name?.[0]?.toUpperCase() || '?'}</span>
+              <div key={`unreg-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-dark-500)] flex items-center justify-center">
+                  <span className="text-[var(--color-text-secondary)] text-sm">{sc.name?.[0]?.toUpperCase() || '?'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white truncate">{sc.name || sc.phone}</p>
-                  <p className="text-xs text-gray-500 truncate">{sc.phone}</p>
+                  <p className="text-sm text-[var(--color-text-primary)] truncate">{sc.name || sc.phone}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] truncate">{sc.phone}</p>
                 </div>
                 <button
                   onClick={() => handleInvite(sc.phone)}
-                  className="px-2 py-1 bg-dark-500 hover:bg-dark-400 text-gray-300 text-xs rounded-lg flex-shrink-0"
+                  className="px-2 py-1 bg-[var(--color-dark-500)] hover:bg-dark-400 text-[var(--color-text-secondary)] text-xs rounded-lg flex-shrink-0"
                 >
                   {t('contacts.invite')}
                 </button>
@@ -343,17 +343,17 @@ export function ContactsPanel() {
         )}
 
         {!loading && filteredContacts.length === 0 && filteredRegisteredSynced.length === 0 && filteredUnregisteredSynced.length === 0 && (
-          <p className="text-center text-gray-500 text-sm py-8">
+          <p className="text-center text-[var(--color-text-muted)] text-sm py-8">
             {q ? t('contacts.nothingFound') : t('contacts.noContacts')}
           </p>
         )}
       </div>
 
       {/* Add Contact button at bottom */}
-      <div className="px-4 py-3 border-t border-dark-600">
+      <div className="px-4 py-3 border-t border-[var(--color-border)]">
         <button
           onClick={() => { setShowAddDialog(true); setAddPhone('+'); setAddError(''); setSearchResults([]); setNoAccountFound(false); }}
-          className="w-full py-2.5 bg-accent hover:bg-accent-hover text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 bg-[var(--color-text-primary)] text-[var(--color-dark-800)] rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 hover:opacity-90"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -366,18 +366,18 @@ export function ContactsPanel() {
       {showAddDialog && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowAddDialog(false)}>
           <div
-            className="w-full max-w-sm bg-dark-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] mx-4"
+            className="w-full max-w-sm bg-[var(--color-dark-700)] rounded-2xl shadow-2xl flex flex-col max-h-[80vh] mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-dark-600">
-              <h2 className="text-lg font-semibold text-white mb-3">{t('contacts.addContact')}</h2>
+            <div className="p-4 border-b border-[var(--color-border)]">
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">{t('contacts.addContact')}</h2>
               <div className="flex gap-2">
                 <input
                   value={addPhone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddByPhone()}
                   placeholder={t('contacts.enterNumber')}
-                  className="flex-1 px-4 py-2.5 bg-dark-800 border border-dark-500 rounded-xl text-white text-sm focus:outline-none focus:border-accent transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-[var(--color-dark-800)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] text-sm focus:outline-none focus:border-accent transition-colors"
                   autoFocus
                   inputMode="tel"
                 />
@@ -390,7 +390,7 @@ export function ContactsPanel() {
                 </button>
               </div>
               {addError && <p className="text-xs text-red-400 mt-2">{addError}</p>}
-              {searchingPhone && <p className="text-xs text-gray-500 mt-1">{t('contacts.searching')}</p>}
+              {searchingPhone && <p className="text-xs text-[var(--color-text-muted)] mt-1">{t('contacts.searching')}</p>}
             </div>
 
             <div className="flex-1 overflow-y-auto py-1 max-h-64">
@@ -398,7 +398,7 @@ export function ContactsPanel() {
               {searchResults.map((user) => {
                 const alreadyAdded = contacts.some(c => c.userId === user.id);
                 return (
-                  <div key={user.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-dark-600 transition-colors">
+                  <div key={user.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--color-dark-600)] transition-colors">
                     {user.avatarUrl ? (
                       <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                     ) : (
@@ -407,8 +407,8 @@ export function ContactsPanel() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{user.displayName}</p>
-                      {user.phone && <p className="text-xs text-gray-500 truncate">{user.phone}</p>}
+                      <p className="text-sm text-[var(--color-text-primary)] truncate">{user.displayName}</p>
+                      {user.phone && <p className="text-xs text-[var(--color-text-muted)] truncate">{user.phone}</p>}
                     </div>
                     {alreadyAdded ? (
                       <span className="text-xs text-green-400">{t('contacts.added')} ✓</span>
@@ -436,7 +436,7 @@ export function ContactsPanel() {
               {/* Invite when no account */}
               {noAccountFound && searchResults.length === 0 && !searchingPhone && (
                 <div className="px-4 py-4 text-center">
-                  <p className="text-sm text-gray-400 mb-3">{t('contacts.notFound')}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-3">{t('contacts.notFound')}</p>
                   <button
                     onClick={() => handleInvite(addPhone)}
                     className="w-full py-2.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
@@ -450,10 +450,10 @@ export function ContactsPanel() {
               )}
             </div>
 
-            <div className="p-4 border-t border-dark-600">
+            <div className="p-4 border-t border-[var(--color-border)]">
               <button
                 onClick={() => setShowAddDialog(false)}
-                className="w-full py-2.5 rounded-xl border border-dark-500 text-gray-400 hover:text-white transition-colors text-sm"
+                className="w-full py-2.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors text-sm"
               >
                 {t('newChat.cancel')}
               </button>

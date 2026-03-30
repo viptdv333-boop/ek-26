@@ -500,10 +500,10 @@ export function AuthPage() {
 
   return (
     <div className={`auth-page ${themeClass}`}>
-      {/* Kimi background — white sphere top-right, red sphere bottom-left */}
+      {/* Background — bright white sphere + red sphere */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: 500, height: 500, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 65%)' : 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 65%)', filter: 'blur(60px)' }} />
-        <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.06) 0%, transparent 65%)', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: 600, height: 600, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, transparent 60%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: 500, height: 500, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(220,38,38,0.15) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 60%)', filter: 'blur(40px)' }} />
       </div>
 
       {/* Clean — no top bar, matches Kimi */}
@@ -550,7 +550,7 @@ export function AuthPage() {
 
                 {captchaBlock(handleLogin)}
 
-                <button onClick={handleLogin} disabled={loading} className="auth-btn-premium auth-btn-lg" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <button onClick={handleLogin} disabled={loading} className="auth-btn-premium auth-btn-lg">
                   {loading ? t('auth.loginLoading') : t('auth.signIn')}
                 </button>
 

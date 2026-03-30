@@ -14,11 +14,13 @@ const QUOTES = [
 ];
 
 function WeatherMini() {
-  const [w, setW] = useState<{ temp: string; icon: string; city: string; desc: string } | null>(null);
+  const [w, setW] = useState<{ temp: string; icon: string; city: string; country: string; desc: string } | null>(null);
   useEffect(() => {
     fetch('https://wttr.in/?format=j1').then(r => r.json()).then(data => {
       const c = data.current_condition?.[0];
-      const city = data.nearest_area?.[0]?.areaName?.[0]?.value || '';
+      const area = data.nearest_area?.[0];
+      const city = area?.areaName?.[0]?.value || '';
+      const country = area?.country?.[0]?.value || '';
       if (c) {
         const code = parseInt(c.weatherCode);
         let icon = '☀️';
@@ -29,7 +31,7 @@ function WeatherMini() {
         else if (code === 116) icon = '⛅';
         else if (code === 119 || code === 122) icon = '☁️';
         else if (code >= 176) icon = '🌧️';
-        setW({ temp: c.temp_C + '°C', icon, city, desc: c.lang_ru?.[0]?.value || c.weatherDesc?.[0]?.value || '' });
+        setW({ temp: c.temp_C + '°C', icon, city, country, desc: c.lang_ru?.[0]?.value || c.weatherDesc?.[0]?.value || '' });
       }
     }).catch(() => {});
   }, []);
@@ -38,20 +40,14 @@ function WeatherMini() {
     <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--color-dark-700) 85%, transparent)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
       <span className="text-3xl">{w.icon}</span>
       <div>
-        <p className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>{w.temp} <span className="font-normal text-sm" style={{ color: 'var(--color-text-secondary)' }}>{w.city}</span></p>
+        <p className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>{w.temp} <span className="font-normal text-sm" style={{ color: 'var(--color-text-secondary)' }}>{w.city}, {w.country}</span></p>
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{w.desc}</p>
       </div>
     </div>
   );
 }
 
-interface Props {
-  onNewChat?: () => void;
-  onContacts?: () => void;
-  onSettings?: () => void;
-}
-
-export function EmptyState({ onNewChat, onContacts, onSettings }: Props) {
+export function EmptyState() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
@@ -93,39 +89,27 @@ export function EmptyState({ onNewChat, onContacts, onSettings }: Props) {
           )}
         </div>
 
-        {/* Quick actions — clickable */}
+        {/* Feature cards — NOT clickable */}
         <div className="grid grid-cols-2 gap-3 text-left">
-          <button
-            onClick={onNewChat}
-            className="px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={cardStyle}
-          >
-            <span className="text-lg">💬</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Новый чат</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Начните общение</p>
-          </button>
-          <button
-            onClick={onContacts}
-            className="px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={cardStyle}
-          >
-            <span className="text-lg">👥</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Контакты</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Найти собеседника</p>
-          </button>
-          <button
-            onClick={onSettings}
-            className="px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={cardStyle}
-          >
-            <span className="text-lg">🎨</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Оформление</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Обои и цвета</p>
-          </button>
           <div className="px-4 py-3 rounded-xl" style={cardStyle}>
             <span className="text-lg">🔒</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Защищено</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Все сообщения зашифрованы end-to-end</p>
+            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>E2E шифрование</p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Все сообщения защищены</p>
+          </div>
+          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
+            <span className="text-lg">📞</span>
+            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Звонки</p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Голосовые и видео</p>
+          </div>
+          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
+            <span className="text-lg">📎</span>
+            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Файлы</p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Фото, видео, документы</p>
+          </div>
+          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
+            <span className="text-lg">🌍</span>
+            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Переводчик</p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Автоперевод сообщений</p>
           </div>
         </div>
       </div>

@@ -151,11 +151,7 @@ export function ChatPage() {
         <Sidebar />
       </div>
       <div className={`${activeConversationId ? 'flex' : 'hidden md:flex'} flex-1`}>
-        {activeConversationId ? <ChatRoom conversationId={activeConversationId} /> : <EmptyState
-          onNewChat={() => window.dispatchEvent(new Event('open-new-chat'))}
-          onContacts={() => window.dispatchEvent(new Event('open-contacts'))}
-          onSettings={() => window.dispatchEvent(new Event('open-app-settings'))}
-        />}
+        {activeConversationId ? <ChatRoom conversationId={activeConversationId} /> : <EmptyState />}
       </div>
       <CallOverlay />
     </div>

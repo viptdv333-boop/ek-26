@@ -346,6 +346,21 @@ export function Sidebar() {
   const [showArchive, setShowArchive] = useState(false);
   const [connStatus, setConnStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
 
+  // Listen for events from EmptyState quick actions
+  useEffect(() => {
+    const onNewChat = () => setShowNewChat(true);
+    const onContacts = () => setShowContacts(true);
+    const onAppSettings = () => setShowAppSettings(true);
+    window.addEventListener('open-new-chat', onNewChat);
+    window.addEventListener('open-contacts', onContacts);
+    window.addEventListener('open-app-settings', onAppSettings);
+    return () => {
+      window.removeEventListener('open-new-chat', onNewChat);
+      window.removeEventListener('open-contacts', onContacts);
+      window.removeEventListener('open-app-settings', onAppSettings);
+    };
+  }, []);
+
   useEffect(() => {
     const unsub = wsTransport.on('connection', (data: { status: string }) => {
       setConnStatus(data.status as any);

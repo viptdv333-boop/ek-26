@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n';
 import { useAuthStore } from '../stores/authStore';
 
-// Quotes
 const QUOTES = [
   { t: 'Единственный способ делать великую работу — любить то, что делаешь.', a: 'Стив Джобс' },
   { t: 'Будь собой, остальные роли уже заняты.', a: 'Оскар Уайльд' },
@@ -36,7 +35,7 @@ function WeatherMini() {
   }, []);
   if (!w) return null;
   return (
-    <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ backgroundColor: 'var(--color-dark-700)', opacity: 0.9 }}>
+    <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--color-dark-700) 85%, transparent)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
       <span className="text-3xl">{w.icon}</span>
       <div>
         <p className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>{w.temp} <span className="font-normal text-sm" style={{ color: 'var(--color-text-secondary)' }}>{w.city}</span></p>
@@ -46,7 +45,13 @@ function WeatherMini() {
   );
 }
 
-export function EmptyState() {
+interface Props {
+  onNewChat?: () => void;
+  onContacts?: () => void;
+  onSettings?: () => void;
+}
+
+export function EmptyState({ onNewChat, onContacts, onSettings }: Props) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
@@ -54,13 +59,19 @@ export function EmptyState() {
   const hour = new Date().getHours();
   const greeting = hour < 6 ? 'Доброй ночи' : hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
 
+  const cardStyle: React.CSSProperties = {
+    backgroundColor: 'color-mix(in srgb, var(--color-dark-700) 85%, transparent)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+  };
+
   return (
     <div className="flex-1 flex items-center justify-center">
       <div className="text-center max-w-md mx-auto px-6 space-y-6">
         {/* Greeting */}
         <div>
           <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-            {greeting}{user?.displayName ? `, ${user.displayName}` : ''} 👋
+            {greeting}{user?.displayName ? `, ${user.displayName}` : ''}
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
             {t('empty.selectChat')}
@@ -71,7 +82,7 @@ export function EmptyState() {
         <WeatherMini />
 
         {/* Quote */}
-        <div className="px-5 py-4 rounded-xl" style={{ backgroundColor: 'var(--color-dark-700)', opacity: 0.9 }}>
+        <div className="px-5 py-4 rounded-xl" style={cardStyle}>
           <p className="text-sm italic leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
             «{quote.t}»
           </p>
@@ -82,27 +93,39 @@ export function EmptyState() {
           )}
         </div>
 
-        {/* Quick tips */}
+        {/* Quick actions — clickable */}
         <div className="grid grid-cols-2 gap-3 text-left">
-          <div className="px-4 py-3 rounded-xl" style={{ backgroundColor: 'var(--color-dark-700)', opacity: 0.9 }}>
+          <button
+            onClick={onNewChat}
+            className="px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={cardStyle}
+          >
             <span className="text-lg">💬</span>
             <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Новый чат</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Нажмите «+ Новый чат»</p>
-          </div>
-          <div className="px-4 py-3 rounded-xl" style={{ backgroundColor: 'var(--color-dark-700)', opacity: 0.9 }}>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Начните общение</p>
+          </button>
+          <button
+            onClick={onContacts}
+            className="px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={cardStyle}
+          >
             <span className="text-lg">👥</span>
             <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Контакты</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Импорт из телефона</p>
-          </div>
-          <div className="px-4 py-3 rounded-xl" style={{ backgroundColor: 'var(--color-dark-700)', opacity: 0.9 }}>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Найти собеседника</p>
+          </button>
+          <button
+            onClick={onSettings}
+            className="px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={cardStyle}
+          >
             <span className="text-lg">🎨</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Темы</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Настройки → Оформление</p>
-          </div>
-          <div className="px-4 py-3 rounded-xl" style={{ backgroundColor: 'var(--color-dark-700)', opacity: 0.9 }}>
+            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Оформление</p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Обои и цвета</p>
+          </button>
+          <div className="px-4 py-3 rounded-xl" style={cardStyle}>
             <span className="text-lg">🔒</span>
-            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Безопасность</p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Сквозное шифрование</p>
+            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>Защищено</p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Все сообщения зашифрованы end-to-end</p>
           </div>
         </div>
       </div>

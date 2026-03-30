@@ -894,6 +894,8 @@ export function Sidebar() {
           </a>
         </div>
       )}
+      </>
+      )}
 
       {/* Contacts modal */}
       {showContacts && (

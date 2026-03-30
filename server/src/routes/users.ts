@@ -1,13 +1,18 @@
 import { FastifyInstance } from 'fastify';
 import { User } from '../models/User';
 
-function getDevicePlatform(ua: string): string {
-  if (/Android/i.test(ua)) return 'Android';
-  if (/iPhone|iPad/i.test(ua)) return 'iOS';
-  if (/Windows/i.test(ua)) return 'Windows';
-  if (/Macintosh/i.test(ua)) return 'macOS';
-  if (/Linux/i.test(ua)) return 'Linux';
-  return 'Unknown';
+function getDeviceNameFromUA(ua: string): string {
+  let name = 'Unknown';
+  if (/Android/i.test(ua)) name = 'Android';
+  else if (/iPhone|iPad/i.test(ua)) name = 'iOS';
+  else if (/Windows/i.test(ua)) name = 'Windows';
+  else if (/Macintosh/i.test(ua)) name = 'macOS';
+  else if (/Linux/i.test(ua)) name = 'Linux';
+  if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) name += ' Chrome';
+  else if (/Firefox/i.test(ua)) name += ' Firefox';
+  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) name += ' Safari';
+  else if (/Edg/i.test(ua)) name += ' Edge';
+  return name;
 }
 
 export async function userRoutes(app: FastifyInstance) {
@@ -147,18 +152,26 @@ export async function userRoutes(app: FastifyInstance) {
   // ── Device / Session management ─────────────────────────────────
   app.get('/api/users/me/sessions', { preHandler: [app.authenticate] }, async (request) => {
     const { Session } = await import('../models/Session.js');
-    const sessions = await Session.find({ userId: request.userId, expiresAt: { $gt: new Date() } })
+    // Get all active sessions, then deduplicate by deviceName — keep only the latest per device
+    const allSessions = await Session.find({ userId: request.userId, expiresAt: { $gt: new Date() } })
       .sort({ lastActiveAt: -1 })
       .select('deviceId deviceName ip lastActiveAt createdAt')
       .lean();
 
+    const seen = new Map<string, typeof allSessions[0]>();
+    for (const s of allSessions) {
+      const key = s.deviceName || s.deviceId;
+      if (!seen.has(key)) seen.set(key, s);
+    }
+    const sessions = [...seen.values()];
+
     const requestIp = ((request.headers as any)['x-real-ip'] || (request.headers as any)['x-forwarded-for'] || request.ip || '').split(',')[0].trim();
     const ua = (request.headers as any)['user-agent'] || '';
 
-    return sessions.map((s, i) => {
-      // Match current session: same IP prefix in stored ip field + same device type
-      const storedIp = (s.ip || '').split(' ·')[0].trim();
-      const isCurrent = storedIp === requestIp && (s.deviceName || '').split(' ')[0] === getDevicePlatform(ua);
+    const currentDeviceName = getDeviceNameFromUA(ua);
+
+    return sessions.map((s) => {
+      const isCurrent = (s.deviceName || '') === currentDeviceName;
       return {
         id: s._id.toString(),
         deviceId: s.deviceId,
@@ -166,7 +179,7 @@ export async function userRoutes(app: FastifyInstance) {
         ip: s.ip || '',
         lastActiveAt: s.lastActiveAt,
         createdAt: s.createdAt,
-        isCurrent: isCurrent || (i === 0 && !sessions.some((ss, j) => j !== i && (ss.ip || '').startsWith(requestIp))),
+        isCurrent,
       };
     });
   });

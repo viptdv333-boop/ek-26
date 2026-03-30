@@ -430,8 +430,8 @@ export function AuthPage() {
 
   // ── Math captcha block (reusable) ─────────────────────────────
   const captchaBlock = (onSubmit: () => void) => (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
+    <div className="p-4 rounded-xl border" style={{ background: 'var(--a-secondary-bg)', borderColor: 'var(--a-border)' }}>
+      <div className="flex items-center gap-2 mb-3">
         <svg className="w-4 h-4" style={{ color: 'var(--a-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
         </svg>
@@ -506,47 +506,7 @@ export function AuthPage() {
         <div style={{ position: 'absolute', bottom: '-15%', left: '-10%', width: 500, height: 500, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(220,38,38,0.04) 0%, transparent 60%)', filter: 'blur(80px)' }} />
       </div>
 
-      {/* ── Top bar — identical to HomePage navbar right side ── */}
-      <div className="absolute top-0 right-0 z-10 flex items-center gap-10 h-16 px-8">
-        {/* Language flags — same as HomePage */}
-        <div className="flex items-center gap-1.5">
-          {([
-            { l: 'ru' as const, flag: 'ru', alt: 'Русский' },
-            { l: 'en' as const, flag: 'gb', alt: 'English' },
-            { l: 'zh' as const, flag: 'cn', alt: '中文' },
-          ]).map(({ l, flag, alt }) => (
-            <button
-              key={l}
-              onClick={() => setLang(l)}
-              className={`w-8 h-8 rounded-full overflow-hidden border-2 transition-all ${
-                lang === l
-                  ? 'border-[var(--a-accent)] scale-110 shadow-md'
-                  : 'border-transparent opacity-50 hover:opacity-80'
-              }`}
-              title={alt}
-            >
-              <img src={`https://flagcdn.com/w40/${flag}.png`} alt={alt} className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
-        {/* Theme toggle slider — same as HomePage */}
-        <button
-          onClick={toggleTheme}
-          className="relative flex items-center rounded-full h-9 w-[140px] cursor-pointer transition-all overflow-hidden"
-          style={{ background: 'var(--a-secondary-bg)', border: '1px solid var(--a-border)' }}
-        >
-          <div
-            className="absolute top-0.5 h-8 w-[68px] rounded-full shadow-md transition-transform duration-300 ease-out"
-            style={{ background: isDark ? '#fff' : 'var(--a-fg)', transform: isDark ? 'translateX(68px)' : 'translateX(2px)' }}
-          />
-          <span className="relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-300" style={{ color: !isDark ? '#fff' : 'var(--a-muted)' }}>
-            {t('auth.lightTheme')}
-          </span>
-          <span className="relative z-10 flex-1 text-center text-xs font-semibold transition-colors duration-300" style={{ color: isDark ? (isDark ? '#18181b' : '#fff') : 'var(--a-muted)' }}>
-            {t('auth.darkTheme')}
-          </span>
-        </button>
-      </div>
+      {/* Clean — no top bar, matches Kimi */}
 
       <div className="auth-card relative z-10 mx-4">
         {/* Logo */}
@@ -573,21 +533,24 @@ export function AuthPage() {
 
             {/* ── Login form ──────────────────────────────────── */}
             {tab === 'login' && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-center" style={{ color: 'var(--a-fg)' }}>{t('auth.signInTitle')}</h2>
+              <div className="space-y-5">
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.signInTitle')}</h2>
+                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.signInSubtitle') || 'Введите номер телефона для входа'}</p>
+                </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true, handleLogin)}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.password')}</label>
                   {passwordField(password, setPassword, t('auth.password'), showPassword, () => setShowPassword(!showPassword), (e) => e.key === 'Enter' && handleLogin())}
                 </div>
 
                 {captchaBlock(handleLogin)}
 
-                <button onClick={handleLogin} disabled={loading} className="auth-btn auth-btn-lg">
+                <button onClick={handleLogin} disabled={loading} className="auth-btn-premium auth-btn-lg">
                   {loading ? t('auth.loginLoading') : (
                     <span className="flex items-center justify-center gap-2">
                       {t('auth.signIn')}
@@ -602,17 +565,20 @@ export function AuthPage() {
 
             {/* ── Register form ─────────────────────────────────── */}
             {tab === 'register' && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-center" style={{ color: 'var(--a-fg)' }}>{t('auth.createAccountTitle')}</h2>
+              <div className="space-y-5">
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.createAccountTitle')}</h2>
+                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.createAccountSubtitle') || 'Введите номер телефона для регистрации'}</p>
+                </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--a-fg)' }}>{t('auth.phone')}</label>
                   {phoneInput(true)}
                 </div>
 
                 {captchaBlock(handleRegister)}
 
-                <button onClick={handleRegister} disabled={loading} className="auth-btn auth-btn-lg">
+                <button onClick={handleRegister} disabled={loading} className="auth-btn-premium auth-btn-lg">
                   {loading ? t('auth.sending') : (
                     <span className="flex items-center justify-center gap-2">
                       {t('auth.getCode')}

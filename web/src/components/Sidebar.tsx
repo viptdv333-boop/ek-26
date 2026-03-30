@@ -594,18 +594,14 @@ export function Sidebar() {
 
   return (
     <div className="w-full md:w-80 flex-shrink-0 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-dark-800)]">
-      {/* Header */}
+      {/* Header — widget + settings gear */}
       <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <img src="/logo-f.png" alt="F" className="h-8 w-8 object-contain shrink-0 rounded-lg" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-[1.1rem] font-extrabold text-[#dc2626] tracking-wide">CHAT</span>
-            <span className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">{t('sidebar.subtitle') || 'Мессенджер для своих'}</span>
-          </div>
+        <div className="min-w-0 flex-1">
+          <HeaderWidget />
         </div>
         <button
           onClick={() => setShowAppSettings(true)}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-dark-600)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-dark-600)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors flex-shrink-0"
           title={t('sidebar.settingsApp')}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

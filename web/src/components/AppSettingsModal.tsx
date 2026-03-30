@@ -766,7 +766,7 @@ export function AppSettingsModal({ onClose }: Props) {
           <div key={s.id} className="flex items-center gap-3 p-3 bg-dark-600 rounded-xl">
             <span className="text-2xl">{deviceIcon(s.deviceName)}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white font-medium">
+              <p className="text-sm text-[var(--color-text-primary)] font-medium">
                 {s.deviceName}
                 {s.isCurrent && <span className="text-accent text-xs ml-1.5">({t('appSettings.currentDevice')})</span>}
               </p>

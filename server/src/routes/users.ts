@@ -147,7 +147,7 @@ export async function userRoutes(app: FastifyInstance) {
   // ── Device / Session management ─────────────────────────────────
   app.get('/api/users/me/sessions', { preHandler: [app.authenticate] }, async (request) => {
     const { Session } = await import('../models/Session.js');
-    const sessions = await Session.find({ userId: request.userId })
+    const sessions = await Session.find({ userId: request.userId, expiresAt: { $gt: new Date() } })
       .sort({ lastActiveAt: -1 })
       .select('deviceId deviceName ip lastActiveAt createdAt')
       .lean();

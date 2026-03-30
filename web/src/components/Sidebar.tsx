@@ -668,7 +668,6 @@ export function Sidebar() {
         </button>
       </div>
 
-      <>
       <div className="p-3">
         <input
           type="text"
@@ -870,19 +869,16 @@ export function Sidebar() {
           </>
         )}
       </div>
-      </>
 
       {/* New chat button */}
-      {(
-        <div className="px-4 py-3 border-t border-[var(--color-border)]">
-          <button
-            onClick={() => setShowNewChat(true)}
-            className="w-full py-3 bg-[var(--color-text-primary)] text-[var(--color-dark-800)] font-semibold rounded-xl transition-colors text-sm hover:opacity-90 flex items-center justify-center gap-2"
-          >
-            <span className="text-lg leading-none">+</span> {t('sidebar.newChat')}
-          </button>
-        </div>
-      )}
+      <div className="px-4 py-3 border-t border-[var(--color-border)]">
+        <button
+          onClick={() => setShowNewChat(true)}
+          className="w-full py-3 bg-[var(--color-text-primary)] text-[var(--color-dark-800)] font-semibold rounded-xl transition-colors text-sm hover:opacity-90 flex items-center justify-center gap-2"
+        >
+          <span className="text-lg leading-none">+</span> {t('sidebar.newChat')}
+        </button>
+      </div>
 
       {/* Bottom actions */}
       {user?.isAdmin && (

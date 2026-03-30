@@ -4,13 +4,7 @@
  * Generates identity keys, signed pre-keys, and one-time pre-keys.
  * Uploads public portions to the server. Replenishes OPKs when supply is low.
  */
-import {
-  generateKeyPair,
-  generateSigningKeyPair,
-  generateSignedPreKey,
-  generateOneTimePreKeys,
-  keyToBase64,
-} from '@ek-26/shared';
+import { generateKeyPair, generateSigningKeyPair, generateSignedPreKey, generateOneTimePreKeys, keyToBase64 } from '../../../../shared/src/crypto/keys';
 import { KeyStore } from './KeyStore';
 import { keysApi } from '../api/endpoints';
 

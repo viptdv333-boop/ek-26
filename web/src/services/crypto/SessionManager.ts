@@ -4,24 +4,12 @@
  * Handles X3DH session establishment and Double Ratchet encrypt/decrypt.
  * Uses per-recipient mutex to prevent race conditions on ratchet state.
  */
-import {
-  x3dhInitiate,
-  x3dhRespond,
-  ratchetInitAlice,
-  ratchetInitBob,
-  ratchetEncrypt,
-  ratchetDecrypt,
-  serializeRatchetState,
-  deserializeRatchetState,
-  createInitialEnvelope,
-  createRegularEnvelope,
-  encodeEnvelope,
-  decodeEnvelope,
-  deserializeMessage,
-  keyToBase64,
-  base64ToKey,
-} from '@ek-26/shared';
-import type { PreKeyBundle, RatchetState, Envelope, InitialEnvelope } from '@ek-26/shared';
+import { x3dhInitiate, x3dhRespond } from '../../../../shared/src/crypto/x3dh';
+import { ratchetInitAlice, ratchetInitBob, ratchetEncrypt, ratchetDecrypt, serializeRatchetState, deserializeRatchetState } from '../../../../shared/src/crypto/doubleRatchet';
+import { createInitialEnvelope, createRegularEnvelope, encodeEnvelope, decodeEnvelope, deserializeMessage } from '../../../../shared/src/crypto/envelope';
+import { keyToBase64, base64ToKey } from '../../../../shared/src/crypto/keys';
+import type { PreKeyBundle, RatchetState } from '../../../../shared/src/crypto/x3dh';
+import type { Envelope, InitialEnvelope } from '../../../../shared/src/crypto/envelope';
 import { KeyStore } from './KeyStore';
 import { keysApi } from '../api/endpoints';
 

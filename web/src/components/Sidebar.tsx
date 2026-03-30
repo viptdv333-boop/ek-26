@@ -592,19 +592,19 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-full md:w-80 flex-shrink-0 border-r border-dark-600 flex flex-col bg-dark-800">
+    <div className="w-full md:w-80 flex-shrink-0 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-dark-800)]">
       {/* Header */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-dark-600">
+      <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <img src="/logo-f.png" alt="F" className="h-6 w-6 object-contain shrink-0" />
+          <img src="/logo-f.png" alt="F" className="h-8 w-8 object-contain shrink-0 rounded-lg" />
           <div className="flex flex-col leading-tight">
-            <span className="text-[1.05rem] font-bold text-red-500 tracking-wide">CHAT</span>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">{t('sidebar.subtitle') || 'Мессенджер для своих'}</span>
+            <span className="text-[1.1rem] font-extrabold text-[#dc2626] tracking-wide">CHAT</span>
+            <span className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">{t('sidebar.subtitle') || 'Мессенджер для своих'}</span>
           </div>
         </div>
         <button
           onClick={() => setShowAppSettings(true)}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-dark-600)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           title={t('sidebar.settingsApp')}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -615,23 +615,23 @@ export function Sidebar() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 px-3 py-2">
+      <div className="flex gap-1 px-3 py-2 bg-[var(--color-dark-700)] mx-3 rounded-full">
         <button
           onClick={() => setActiveTab('chats')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-full transition-all ${
             activeTab === 'chats'
-              ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b]'
-              : 'text-gray-400 hover:text-white dark:hover:text-gray-200'
+              ? 'bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
           }`}
         >
           {t('sidebar.chats')}
         </button>
         <button
           onClick={() => setActiveTab('contacts')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-full transition-all ${
             activeTab === 'contacts'
-              ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b]'
-              : 'text-gray-400 hover:text-white dark:hover:text-gray-200'
+              ? 'bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
           }`}
         >
           {t('sidebar.contacts')}
@@ -649,7 +649,7 @@ export function Sidebar() {
           onChange={(e) => handleSearchChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           placeholder={t('sidebar.search')}
-          className="w-full px-3 py-2 bg-dark-700 border border-dark-500 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+          className="w-full px-3 py-2 bg-[var(--color-dark-700)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-accent transition-colors"
         />
       </div>
 
@@ -657,10 +657,10 @@ export function Sidebar() {
       {searchResults !== null && search.trim() ? (
         <div className="flex-1 overflow-y-auto">
           {searchLoading && (
-            <div className="px-4 py-4 text-center text-gray-500 text-sm">{t('sidebar.searching')}</div>
+            <div className="px-4 py-4 text-center text-[var(--color-text-muted)] text-sm">{t('sidebar.searching')}</div>
           )}
           {!searchLoading && searchResults.length === 0 && (
-            <div className="px-4 py-8 text-center text-gray-500 text-sm">{t('sidebar.nothingFound')}</div>
+            <div className="px-4 py-8 text-center text-[var(--color-text-muted)] text-sm">{t('sidebar.nothingFound')}</div>
           )}
           {!searchLoading && searchResults.map((result, i) => (
             <button
@@ -671,14 +671,14 @@ export function Sidebar() {
                 setSearch('');
                 setSearchResults(null);
               }}
-              className="w-full px-4 py-3 flex flex-col gap-1 hover:bg-dark-700 transition-colors text-left border-b border-dark-600/50"
+              className="w-full px-4 py-3 flex flex-col gap-1 hover:bg-[var(--color-dark-700)] transition-colors text-left border-b border-[var(--color-border)]"
             >
               <div className="flex justify-between items-baseline">
                 <span className="text-sm font-medium text-accent truncate">{result.conversationName || t('sidebar.chat')}</span>
-                <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatTime(result.createdAt)}</span>
+                <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0 ml-2">{formatTime(result.createdAt)}</span>
               </div>
-              <p className="text-xs text-gray-400">{result.senderName || t('sidebar.user')}</p>
-              <p className="text-xs text-gray-300 line-clamp-2">
+              <p className="text-xs text-[var(--color-text-muted)]">{result.senderName || t('sidebar.user')}</p>
+              <p className="text-xs text-[var(--color-text-secondary)] line-clamp-2">
                 {highlightMatch(result.text || '', search)}
               </p>
             </button>
@@ -689,7 +689,7 @@ export function Sidebar() {
       {/* Conversation list */}
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 && (
-          <div className="px-4 py-8 text-center text-gray-500 text-sm">
+          <div className="px-4 py-8 text-center text-[var(--color-text-muted)] text-sm">
             {search ? t('sidebar.nothingFound') : t('sidebar.noChats')}
           </div>
         )}
@@ -710,8 +710,8 @@ export function Sidebar() {
               onTouchStart={(e) => handleTouchStart(conv.id, e)}
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchMove}
-              className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-dark-700 transition-colors text-left ${
-                isActive ? 'bg-dark-600' : ''
+              className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--color-dark-700)] transition-colors text-left ${
+                isActive ? 'bg-[var(--color-dark-600)]' : ''
               }`}
             >
               {/* Avatar */}
@@ -736,30 +736,30 @@ export function Sidebar() {
                   </div>
                 )}
                 {!isGroup && isOnline && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-800" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--color-dark-800)]" />
                 )}
               </div>
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm font-medium text-white truncate flex items-center gap-1">
+                  <span className="text-sm font-medium text-[var(--color-text-primary)] truncate flex items-center gap-1">
                     {name}
-                    {isMuted && <span className="text-gray-500 text-xs" title={t('sidebar.mutedNotif')}>🔇</span>}
+                    {isMuted && <span className="text-[var(--color-text-muted)] text-xs" title={t('sidebar.mutedNotif')}>🔇</span>}
                   </span>
                   {conv.lastMessage && (
-                    <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                    <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0 ml-2">
                       {formatTime(conv.lastMessage.createdAt)}
                     </span>
                   )}
                 </div>
                 {conv.lastMessage && (
-                  <p className="text-xs text-gray-400 truncate mt-0.5">{conv.lastMessage.text}</p>
+                  <p className="text-xs text-[var(--color-text-secondary)] truncate mt-0.5">{conv.lastMessage.text}</p>
                 )}
               </div>
               {/* Right side: menu button + pin + unread */}
               <div className="flex items-center gap-1 flex-shrink-0">
                 {isPinned && (
-                  <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-[var(--color-text-muted)]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
                   </svg>
                 )}
@@ -774,7 +774,7 @@ export function Sidebar() {
                     const rect = (e.target as HTMLElement).getBoundingClientRect();
                     setChatMenu({ x: rect.left, y: rect.bottom, convId: conv.id });
                   }}
-                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-dark-500 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[var(--color-dark-600)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <circle cx="12" cy="5" r="2" />
@@ -850,18 +850,18 @@ export function Sidebar() {
 
       {/* New chat button */}
       {activeTab === 'chats' && (
-        <div className="px-4 py-2 border-t border-dark-600">
+        <div className="px-4 py-3 border-t border-[var(--color-border)]">
           <button
             onClick={() => setShowNewChat(true)}
-            className="w-full py-2.5 bg-[#18181b] hover:bg-[#27272a] text-white dark:bg-white dark:hover:bg-gray-100 dark:text-[#18181b] font-medium rounded-xl transition-colors text-sm"
+            className="w-full py-3 bg-[var(--color-text-primary)] text-[var(--color-dark-800)] font-semibold rounded-xl transition-colors text-sm hover:opacity-90 flex items-center justify-center gap-2"
           >
-            {t('sidebar.newChat')}
+            <span className="text-lg leading-none">+</span> {t('sidebar.newChat')}
           </button>
         </div>
       )}
 
       {/* User info */}
-      <div className="px-4 py-3 border-t border-dark-600">
+      <div className="px-4 py-3 border-t border-[var(--color-border)]">
         <div className="flex items-center">
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover mr-3" />
@@ -871,7 +871,7 @@ export function Sidebar() {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <span className="text-sm text-gray-300 truncate block">{user?.displayName}</span>
+            <span className="text-sm text-[var(--color-text-secondary)] truncate block">{user?.displayName}</span>
             <div className="flex items-center gap-1">
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                 connStatus === 'connected' ? 'bg-green-500' :

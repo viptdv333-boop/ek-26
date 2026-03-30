@@ -200,7 +200,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
       >
         {!isMine && renderAvatar()}
 
-        <div className={`max-w-[70%] relative ${isMine ? 'text-white' : 'text-[#18181b]'}`}>
+        <div className="max-w-[70%] relative" style={{ color: isMine ? '#ffffff' : '#18181b' }}>
           {/* SVG cloud background (skip for media-only messages) */}
           {bubbleShape === 'cloud' && !isMediaOnly && (
             <svg

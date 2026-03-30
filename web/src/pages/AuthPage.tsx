@@ -500,10 +500,10 @@ export function AuthPage() {
 
   return (
     <div className={`auth-page ${themeClass}`}>
-      {/* Kimi-style subtle background glow */}
+      {/* Kimi background — white sphere top-right, red sphere bottom-left */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div style={{ position: 'absolute', top: '-15%', right: '-10%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.08) 0%, transparent 60%)', filter: 'blur(80px)' }} />
-        <div style={{ position: 'absolute', bottom: '-15%', left: '-10%', width: 500, height: 500, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%)' : 'radial-gradient(circle, rgba(220,38,38,0.04) 0%, transparent 60%)', filter: 'blur(80px)' }} />
+        <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: 500, height: 500, borderRadius: '50%', background: isDark ? 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 65%)' : 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 65%)', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.06) 0%, transparent 65%)', filter: 'blur(60px)' }} />
       </div>
 
       {/* Clean — no top bar, matches Kimi */}
@@ -536,7 +536,7 @@ export function AuthPage() {
               <div className="space-y-5">
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.signInTitle')}</h2>
-                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.signInSubtitle') || 'Введите номер телефона для входа'}</p>
+                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.signInDesc')}</p>
                 </div>
 
                 <div>
@@ -550,13 +550,8 @@ export function AuthPage() {
 
                 {captchaBlock(handleLogin)}
 
-                <button onClick={handleLogin} disabled={loading} className="auth-btn-premium auth-btn-lg">
-                  {loading ? t('auth.loginLoading') : (
-                    <span className="flex items-center justify-center gap-2">
-                      {t('auth.signIn')}
-                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-                    </span>
-                  )}
+                <button onClick={handleLogin} disabled={loading} className="auth-btn-premium auth-btn-lg" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {loading ? t('auth.loginLoading') : t('auth.signIn')}
                 </button>
 
                 {yandexBlock}
@@ -568,7 +563,7 @@ export function AuthPage() {
               <div className="space-y-5">
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-semibold" style={{ color: 'var(--a-fg)' }}>{t('auth.createAccountTitle')}</h2>
-                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.createAccountSubtitle') || 'Введите номер телефона для регистрации'}</p>
+                  <p className="text-sm" style={{ color: 'var(--a-muted)' }}>{t('auth.createAccountDesc')}</p>
                 </div>
 
                 <div>
@@ -582,7 +577,7 @@ export function AuthPage() {
                   {loading ? t('auth.sending') : (
                     <span className="flex items-center justify-center gap-2">
                       {t('auth.getCode')}
-                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                      <span>→</span>
                     </span>
                   )}
                 </button>
@@ -737,7 +732,7 @@ export function AuthPage() {
         )}
 
         {/* Footer — consent text */}
-        <div className="auth-footer mt-8 text-center text-xs leading-relaxed" style={{ color: 'var(--a-muted)' }}>
+        <div className="mt-8 pt-6 text-center leading-relaxed" style={{ color: 'var(--a-muted)', fontSize: '0.7rem', borderTop: '1px solid var(--a-border)' }}>
           <p>
             {t('auth.consent')}{' '}
             <Link to="/privacy" style={{ color: 'var(--a-accent)' }}>{t('auth.consentPrivacy')}</Link>

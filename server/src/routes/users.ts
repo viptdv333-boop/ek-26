@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { User } from '../models/User';
+import bcrypt from 'bcryptjs';
 
 function getDeviceNameFromUA(ua: string): string {
   let name = 'Unknown';
@@ -60,6 +61,29 @@ export async function userRoutes(app: FastifyInstance) {
       email: (user as any).email,
       status: user!.status,
     };
+  });
+
+  // Change password
+  app.post('/api/users/me/change-password', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { currentPassword, newPassword } = request.body as { currentPassword?: string; newPassword: string };
+    const user = await User.findById(request.userId);
+    if (!user) return reply.code(404).send({ error: 'User not found' });
+
+    // If user has a password, verify current
+    if (user.passwordHash) {
+      if (!currentPassword) return reply.code(400).send({ error: 'Current password required' });
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) return reply.code(400).send({ error: 'Wrong current password' });
+    }
+
+    // Validate new password
+    if (!newPassword || newPassword.length < 6) {
+      return reply.code(400).send({ error: 'Password must be at least 6 characters' });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 12);
+    await user.save();
+    return { success: true };
   });
 
   // Get another user's profile

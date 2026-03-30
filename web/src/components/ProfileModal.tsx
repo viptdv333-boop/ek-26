@@ -25,6 +25,35 @@ export function ProfileModal({ onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState(false);
+
+  const handleChangePassword = async () => {
+    setPwError('');
+    if (newPw.length < 6) { setPwError(t('auth.passwordMin') || 'Minimum 6 characters'); return; }
+    if (newPw !== confirmPw) { setPwError(t('auth.passwordMismatch') || 'Passwords do not match'); return; }
+    setPwSaving(true);
+    try {
+      const token = localStorage.getItem('ek26_token');
+      const res = await fetch('/api/users/me/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: currentPw || undefined, newPassword: newPw }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setPwError(data.error || 'Error');
+        return;
+      }
+      setPwSuccess(true);
+      setTimeout(() => { setShowChangePassword(false); setCurrentPw(''); setNewPw(''); setConfirmPw(''); setPwSuccess(false); }, 1500);
+    } catch { setPwError('Network error'); } finally { setPwSaving(false); }
+  };
 
   useEffect(() => {
     usersApi.getProfile().then((profile: any) => {
@@ -191,6 +220,60 @@ export function ProfileModal({ onClose }: Props) {
             >
               {saved ? t('settings.saved') : saving ? t('settings.saving') : t('settings.save')}
             </button>
+          </div>
+
+          {/* Change password */}
+          <div className="pt-4 border-t border-dark-500">
+            {!showChangePassword ? (
+              <button
+                onClick={() => setShowChangePassword(true)}
+                className="w-full py-2.5 bg-dark-600 hover:bg-dark-500 text-[var(--color-text-primary)] font-medium rounded-xl transition-colors text-sm border border-dark-400"
+              >
+                {t('settings.changePassword')}
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('settings.changePassword')}</p>
+                <input
+                  type="password"
+                  value={currentPw}
+                  onChange={(e) => setCurrentPw(e.target.value)}
+                  placeholder={t('settings.currentPassword')}
+                  className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+                />
+                <input
+                  type="password"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  placeholder={t('settings.newPassword')}
+                  className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+                />
+                <input
+                  type="password"
+                  value={confirmPw}
+                  onChange={(e) => setConfirmPw(e.target.value)}
+                  placeholder={t('settings.confirmNewPassword')}
+                  className="w-full px-4 py-2.5 bg-dark-600 border border-dark-500 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
+                />
+                {pwError && <p className="text-xs text-red-400">{pwError}</p>}
+                {pwSuccess && <p className="text-xs text-green-400">{t('settings.passwordChanged')}</p>}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setShowChangePassword(false); setCurrentPw(''); setNewPw(''); setConfirmPw(''); setPwError(''); setPwSuccess(false); }}
+                    className="flex-1 py-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    {t('settings.cancel')}
+                  </button>
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={pwSaving}
+                    className="flex-1 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl disabled:opacity-50 transition-colors"
+                  >
+                    {pwSaving ? '...' : t('settings.save')}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Logout */}

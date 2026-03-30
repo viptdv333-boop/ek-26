@@ -91,9 +91,9 @@ export function AddContactDialog({ onClose }: Props) {
             return (
               <div key={user.id} className="flex items-center gap-3 px-4 py-3 hover:bg-dark-600 rounded-xl">
                 {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                     <span className="text-accent text-sm font-medium">{user.displayName[0]?.toUpperCase()}</span>
                   </div>
                 )}

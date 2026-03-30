@@ -207,19 +207,19 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
         <div className="p-4 border-b border-dark-600 flex items-center gap-3">
           {/* Group avatar — clickable for admins */}
           <div
-            className={`relative w-12 h-12 rounded-full flex-shrink-0 ${isAdmin ? 'cursor-pointer group' : ''}`}
+            className={`relative w-12 h-12 rounded-xl flex-shrink-0 ${isAdmin ? 'cursor-pointer group' : ''}`}
             onClick={() => isAdmin && avatarInputRef.current?.click()}
             title={isAdmin ? 'Изменить аватар группы' : undefined}
           >
             {groupAvatarUrl ? (
-              <img src={groupAvatarUrl} alt="" className="w-12 h-12 rounded-full object-cover" />
+              <img src={groupAvatarUrl} alt="" className="w-12 h-12 rounded-xl object-cover" />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
                 <span className="text-accent text-lg font-bold">#</span>
               </div>
             )}
             {isAdmin && (
-              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
@@ -227,7 +227,7 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
               </div>
             )}
             {avatarUploading && (
-              <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-xl bg-black/60 flex items-center justify-center">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               </div>
             )}
@@ -326,7 +326,7 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
               onClick={() => setShowAddMember(!showAddMember)}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-dark-600 transition-colors text-left"
             >
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
@@ -364,9 +364,9 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
                   onClick={() => handleAddMember(c.userId)}
                   className="w-full flex items-center gap-3 px-2 py-2 hover:bg-dark-600 rounded-lg transition-colors text-left"
                 >
-                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
                     {c.avatarUrl ? (
-                      <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover" />
                     ) : (
                       <span className="text-accent text-xs font-medium">{c.displayName[0]?.toUpperCase()}</span>
                     )}
@@ -382,9 +382,9 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
                   onClick={() => handleAddMember(u.id)}
                   className="w-full flex items-center gap-3 px-2 py-2 hover:bg-dark-600 rounded-lg transition-colors text-left"
                 >
-                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
                     {u.avatarUrl ? (
-                      <img src={u.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      <img src={u.avatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover" />
                     ) : (
                       <span className="text-accent text-xs font-medium">{u.displayName?.[0]?.toUpperCase() || '?'}</span>
                     )}
@@ -406,14 +406,14 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
             >
               <div className="relative w-10 h-10 flex-shrink-0">
                 {p.avatarUrl ? (
-                  <img src={p.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  <img src={p.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                     <span className="text-accent text-sm font-medium">{p.displayName?.[0]?.toUpperCase() || '?'}</span>
                   </div>
                 )}
                 {onlineUsers.has(p.id) && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-700" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--color-dark-800)]" />
                 )}
               </div>
               <div className="flex-1 min-w-0">

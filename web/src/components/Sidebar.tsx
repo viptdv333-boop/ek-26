@@ -619,9 +619,9 @@ export function Sidebar() {
       <div className="px-4 py-3 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3">
           {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+            <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
               <span className="text-accent text-sm font-medium">{user?.displayName?.[0]?.toUpperCase()}</span>
             </div>
           )}
@@ -743,7 +743,7 @@ export function Sidebar() {
               {/* Avatar */}
               <div className="relative w-10 h-10 flex-shrink-0">
                 {isGroup && conv.groupMeta?.avatarUrl ? (
-                  <img src={conv.groupMeta.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  <img src={conv.groupMeta.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : !isGroup && (() => {
                   const ou = getOtherUser(conv);
                   const sc = ou ? syncedContacts.find(s => s.registeredUserId === ou.id) : null;
@@ -753,9 +753,9 @@ export function Sidebar() {
                     const ou = getOtherUser(conv);
                     const sc = ou ? syncedContacts.find(s => s.registeredUserId === ou.id) : null;
                     return sc?.avatarUrl || ou?.avatarUrl || '';
-                  })()} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  })()} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                     <span className="text-accent text-sm font-medium">
                       {isGroup ? '#' : name[0]?.toUpperCase() || '?'}
                     </span>
@@ -848,9 +848,9 @@ export function Sidebar() {
                 >
                   <div className="relative w-10 h-10 flex-shrink-0">
                     {!isGroup && getOtherUser(conv)?.avatarUrl ? (
-                      <img src={getOtherUser(conv)!.avatarUrl!} alt="" className="w-10 h-10 rounded-full object-cover" />
+                      <img src={getOtherUser(conv)!.avatarUrl!} alt="" className="w-10 h-10 rounded-xl object-cover" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                         <span className="text-accent text-sm font-medium">
                           {isGroup ? '#' : name[0]?.toUpperCase() || '?'}
                         </span>

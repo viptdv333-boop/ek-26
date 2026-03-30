@@ -138,13 +138,13 @@ export function CallOverlay() {
               <img
                 src={activeCall.peerAvatar}
                 alt=""
-                className={`w-28 h-28 rounded-full object-cover border-4 ${
+                className={`w-28 h-28 rounded-xl object-cover border-4 ${
                   isRinging ? 'border-accent animate-pulse' : 'border-dark-600'
                 }`}
               />
             ) : (
               <div
-                className={`w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold ${
+                className={`w-28 h-28 rounded-xl flex items-center justify-center text-4xl font-bold ${
                   isRinging ? 'bg-accent/30 text-accent animate-pulse' : 'bg-dark-700 text-gray-300'
                 }`}
               >

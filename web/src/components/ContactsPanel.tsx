@@ -261,9 +261,9 @@ export function ContactsPanel() {
               <div key={contact.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors group">
                 <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
                   {contact.avatarUrl ? (
-                    <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                       <span className="text-accent text-sm font-medium">{contact.displayName[0]?.toUpperCase()}</span>
                     </div>
                   )}
@@ -296,9 +296,9 @@ export function ContactsPanel() {
               <div key={contact.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors group">
                 <div className="relative cursor-pointer" onClick={() => handleOpenChat(contact)}>
                   {contact.avatarUrl ? (
-                    <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                       <span className="text-accent text-sm font-medium">{contact.displayName[0]?.toUpperCase()}</span>
                     </div>
                   )}
@@ -323,9 +323,9 @@ export function ContactsPanel() {
             {filteredRegisteredSynced.map((sc) => (
               <div key={`synced-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors">
                 {sc.avatarUrl ? (
-                  <img src={sc.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  <img src={sc.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                     <span className="text-accent text-sm font-medium">{sc.name?.[0]?.toUpperCase() || '?'}</span>
                   </div>
                 )}
@@ -344,7 +344,7 @@ export function ContactsPanel() {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 py-2 mt-1">{t('contacts.notRegistered')} ({filteredUnregisteredSynced.length})</p>
             {filteredUnregisteredSynced.map((sc) => (
               <div key={`unreg-${sc.id}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-dark-600)] rounded-xl transition-colors">
-                <div className="w-10 h-10 rounded-full bg-[var(--color-dark-500)] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[var(--color-dark-500)] flex items-center justify-center">
                   <span className="text-[var(--color-text-secondary)] text-sm">{sc.name?.[0]?.toUpperCase() || '?'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -404,9 +404,9 @@ export function ContactsPanel() {
                 return (
                   <div key={user.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--color-dark-600)] transition-colors">
                     {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                      <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                         <span className="text-accent text-sm font-medium">{user.displayName[0]?.toUpperCase()}</span>
                       </div>
                     )}

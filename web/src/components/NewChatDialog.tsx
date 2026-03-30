@@ -248,14 +248,14 @@ export function NewChatDialog({ onClose }: Props) {
               )}
               <div className="relative w-10 h-10 flex-shrink-0">
                 {contact.avatarUrl ? (
-                  <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  <img src={contact.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                     <span className="text-accent text-sm font-medium">{contact.displayName[0]?.toUpperCase()}</span>
                   </div>
                 )}
                 {onlineUsers.has(contact.userId) && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-700" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--color-dark-800)]" />
                 )}
               </div>
               <div className="min-w-0">
@@ -281,9 +281,9 @@ export function NewChatDialog({ onClose }: Props) {
                   )}
                 </div>
               )}
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
                 {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : (
                   <span className="text-accent text-sm font-medium">{user.displayName?.charAt(0)?.toUpperCase() || '?'}</span>
                 )}

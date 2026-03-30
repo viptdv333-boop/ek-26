@@ -180,10 +180,10 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
 
   const renderAvatar = () => {
     if (!showAvatar) return <div className="w-7 flex-shrink-0" />;
-    if (avatarUrl) return <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />;
+    if (avatarUrl) return <img src={avatarUrl} alt="" className="w-7 h-7 rounded-xl object-cover flex-shrink-0" />;
     if (!isMine) {
       return (
-        <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+        <div className="w-7 h-7 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
           <span className="text-accent text-[10px] font-medium">{message.senderName?.[0]?.toUpperCase() || '?'}</span>
         </div>
       );
@@ -303,7 +303,7 @@ export function MessageBubble({ message, isMine, showSender, showAvatar = true, 
         {/* Reaction bar removed — reactions now in context menu */}
 
         {isMine && myAvatarUrl && showAvatar && (
-          <img src={myAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+          <img src={myAvatarUrl} alt="" className="w-7 h-7 rounded-xl object-cover flex-shrink-0" />
         )}
       </div>
 

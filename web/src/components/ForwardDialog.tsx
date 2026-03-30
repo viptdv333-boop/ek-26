@@ -74,7 +74,7 @@ export function ForwardDialog({ message, onClose }: Props) {
               onClick={() => handleForward(conv.id)}
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-600 rounded-xl transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
                 <span className="text-accent text-sm font-medium">
                   {conv.type === 'group' ? '#' : getConvName(conv)[0]?.toUpperCase()}
                 </span>

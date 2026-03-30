@@ -521,9 +521,9 @@ export function ChatRoom({ conversationId }: Props) {
           </svg>
         </button>
         {otherAvatarUrl ? (
-          <img src={otherAvatarUrl} alt="" className="w-8 h-8 rounded-full object-cover mr-3" />
+          <img src={otherAvatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover mr-3" />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+          <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center mr-3">
             <span className="text-accent text-sm font-medium">
               {conv?.type === 'group' ? '#' : title[0]?.toUpperCase()}
             </span>

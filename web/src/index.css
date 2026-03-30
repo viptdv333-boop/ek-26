@@ -29,17 +29,17 @@
 
   /* Dark theme (default) */
   :root {
-    --color-dark-900: #0a0a0f;
-    --color-dark-800: #12121a;
-    --color-dark-700: #1a1a25;
-    --color-dark-600: #22222f;
-    --color-dark-500: #2a2a38;
+    --color-dark-900: #09090b;
+    --color-dark-800: #111113;
+    --color-dark-700: #1a1a1d;
+    --color-dark-600: #222225;
+    --color-dark-500: #2c2c30;
     --color-text-primary: #ffffff;
     --color-text-secondary: #9ca3af;
     --color-text-muted: #6b7280;
-    --color-border: #2a2a38;
-    --color-scrollbar: #2a2a38;
-    --color-scrollbar-hover: #3a3a4a;
+    --color-border: #2c2c30;
+    --color-scrollbar: #2c2c30;
+    --color-scrollbar-hover: #3a3a3f;
   }
 
   /* Light theme */

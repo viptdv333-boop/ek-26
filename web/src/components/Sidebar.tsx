@@ -594,9 +594,10 @@ export function Sidebar() {
 
   return (
     <div className="w-full md:w-80 flex-shrink-0 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-dark-800)]">
-      {/* Header — widget + settings gear */}
+      {/* Header — logo + widget + settings gear */}
       <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
-        <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <img src="/logo-f.png" alt="F" className="h-8 w-8 object-contain shrink-0 rounded-lg" />
           <HeaderWidget />
         </div>
         <button

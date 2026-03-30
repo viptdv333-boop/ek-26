@@ -872,8 +872,6 @@ export function Sidebar() {
       </div>
       </>
       )}
-      </>
-      )}
 
       {/* New chat button */}
       {(

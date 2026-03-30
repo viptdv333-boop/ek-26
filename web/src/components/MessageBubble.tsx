@@ -64,7 +64,14 @@ interface Props {
 // Global translate cache per session
 const translatedCache = new Map<string, string>();
 
-export function MessageBubble({ message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId, fontSize = 14, bubbleShape = 'cloud', bubbleColor = '#6366f1', bubbleColorOther = '#22222f', fontColor = '#ffffff', fontColorOther = '#e5e7eb' }: Props) {
+export function MessageBubble(props: Props) {
+  const { message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId } = props;
+  const fontSize = props.fontSize ?? 14;
+  const bubbleShape = props.bubbleShape ?? 'cloud';
+  const bubbleColor = props.bubbleColor ?? '#6366f1';
+  const bubbleColorOther = props.bubbleColorOther ?? '#22222f';
+  const fontColor = props.fontColor ?? '#ffffff';
+  const fontColorOther = props.fontColorOther ?? '#e5e7eb';
   const { t, lang, locale } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [lightbox, setLightbox] = useState<{ src: string; fileName: string } | null>(null);

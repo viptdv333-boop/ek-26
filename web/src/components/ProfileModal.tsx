@@ -99,7 +99,7 @@ export function ProfileModal({ onClose }: Props) {
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-dark-500">
           <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{t('settings.profile')}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
+          <button onClick={onClose} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -135,7 +135,7 @@ export function ProfileModal({ onClose }: Props) {
 
           {/* Display Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.name')}</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">{t('settings.name')}</label>
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -146,7 +146,7 @@ export function ProfileModal({ onClose }: Props) {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.email')}</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">{t('settings.email')}</label>
             <input
               type="email"
               value={email}
@@ -158,7 +158,7 @@ export function ProfileModal({ onClose }: Props) {
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.status')}</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">{t('settings.status')}</label>
             <input
               value={status}
               onChange={(e) => setStatus(e.target.value.slice(0, 140))}
@@ -172,8 +172,8 @@ export function ProfileModal({ onClose }: Props) {
           {/* Phone */}
           {user?.phone && (
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5">{t('settings.phone')}</label>
-              <div className="w-full px-4 py-2.5 bg-dark-600/50 border border-dark-500 rounded-xl text-sm text-gray-400">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">{t('settings.phone')}</label>
+              <div className="w-full px-4 py-2.5 bg-dark-600/50 border border-dark-500 rounded-xl text-sm text-[var(--color-text-secondary)]">
                 {user.phone}
               </div>
             </div>
@@ -181,7 +181,7 @@ export function ProfileModal({ onClose }: Props) {
 
           {/* Save */}
           <div className="flex justify-end gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
               {t('settings.cancel')}
             </button>
             <button
@@ -215,7 +215,7 @@ export function ProfileModal({ onClose }: Props) {
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-red-400">{t('settings.deleteAccountConfirm')}</p>
-                <p className="text-xs text-gray-400">{t('settings.deleteAccountHint')}</p>
+                <p className="text-xs text-[var(--color-text-secondary)]">{t('settings.deleteAccountHint')}</p>
                 <input
                   value={deleteInput}
                   onChange={(e) => setDeleteInput(e.target.value)}
@@ -223,7 +223,7 @@ export function ProfileModal({ onClose }: Props) {
                   className="w-full px-4 py-2.5 bg-dark-600 border border-red-500/50 rounded-xl text-sm text-[var(--color-text-primary)] placeholder-gray-500 focus:outline-none focus:border-red-500 transition-colors"
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); }} className="flex-1 py-2 text-sm text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
+                  <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); }} className="flex-1 py-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
                     {t('settings.cancel')}
                   </button>
                   <button

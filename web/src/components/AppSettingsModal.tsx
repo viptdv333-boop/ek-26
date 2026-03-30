@@ -253,14 +253,14 @@ export function AppSettingsModal({ onClose }: Props) {
   const renderLanguageSection = () => (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.language')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.language')}</label>
         <div className="flex flex-col gap-2">
           {LANGUAGES.map(item => (
             <button
               key={item.code}
               onClick={() => setLang(item.code)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                lang === item.code ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
+                lang === item.code ? 'bg-accent text-white' : 'bg-dark-600 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
               }`}
             >
               <img src={item.flag} alt={item.code} className="w-6 h-4 object-cover rounded-sm" />
@@ -272,7 +272,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Auto-translate toggle */}
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-gray-400">{t('settings.autoTranslate')}</label>
+        <label className="text-sm font-medium text-[var(--color-text-secondary)]">{t('settings.autoTranslate')}</label>
         <button
           onClick={() => {
             const current = localStorage.getItem('ek26_auto_translate') === 'true';
@@ -298,12 +298,12 @@ export function AppSettingsModal({ onClose }: Props) {
     <div className="space-y-6">
       {/* Theme toggle */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.theme')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.theme')}</label>
         <div className="flex gap-3">
           <button
             onClick={() => handleThemeChange('dark')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              theme === 'dark' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
+              theme === 'dark' ? 'bg-accent text-white' : 'bg-dark-600 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             {t('settings.dark')}
@@ -311,7 +311,7 @@ export function AppSettingsModal({ onClose }: Props) {
           <button
             onClick={() => handleThemeChange('light')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              theme === 'light' ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
+              theme === 'light' ? 'bg-accent text-white' : 'bg-dark-600 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             {t('settings.light')}
@@ -321,7 +321,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Font size */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.fontSize', { size: String(fontSize) })}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.fontSize', { size: String(fontSize) })}</label>
         <input
           type="range"
           min={1}
@@ -342,7 +342,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Bubble shape */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.bubbleShape')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.bubbleShape')}</label>
         <div className="flex gap-3">
           {([
             { id: 'rounded', label: t('settings.bubbleRounded'), borderRadius: '10px' },
@@ -369,7 +369,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Bubble color — own */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.ownBubbleColor')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.ownBubbleColor')}</label>
         <div className="flex items-center gap-2 flex-wrap">
           {['#6366f1', '#10b981', '#ef4444', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#22222f', '#1e3a5f', '#2d1b3d', '#1a3327'].map((color) => (
             <button
@@ -389,7 +389,7 @@ export function AppSettingsModal({ onClose }: Props) {
               className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
             />
             <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             </div>
@@ -399,7 +399,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Bubble color — other */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.otherBubbleColor')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.otherBubbleColor')}</label>
         <div className="flex items-center gap-2 flex-wrap">
           {['#6366f1', '#10b981', '#ef4444', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#22222f', '#1e3a5f', '#2d1b3d', '#1a3327'].map((color) => (
             <button
@@ -419,7 +419,7 @@ export function AppSettingsModal({ onClose }: Props) {
               className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
             />
             <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             </div>
@@ -429,7 +429,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Font color — own */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.ownFontColor')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.ownFontColor')}</label>
         <div className="flex items-center gap-2 flex-wrap">
           {['#ffffff', '#e5e7eb', '#d1d5db', '#fbbf24', '#a78bfa', '#67e8f9', '#f9a8d4', '#18181b'].map((color) => (
             <button
@@ -449,7 +449,7 @@ export function AppSettingsModal({ onClose }: Props) {
               className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
             />
             <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             </div>
@@ -462,7 +462,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Font color — other */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.otherFontColor')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.otherFontColor')}</label>
         <div className="flex items-center gap-2 flex-wrap">
           {['#18181b', '#374151', '#4b5563', '#ffffff', '#dc2626', '#2563eb', '#059669', '#7c3aed'].map((color) => (
             <button
@@ -482,7 +482,7 @@ export function AppSettingsModal({ onClose }: Props) {
               className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
             />
             <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             </div>
@@ -495,7 +495,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Wallpapers */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">{t('settings.chatBackground')}</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.chatBackground')}</label>
         <div className="grid grid-cols-4 gap-3">
           {WALLPAPER_PRESETS.map((preset) => (
             <button
@@ -530,7 +530,7 @@ export function AppSettingsModal({ onClose }: Props) {
             title={t('settings.uploadWallpaper')}
           >
             {wallpaperUploading ? (
-              <span className="text-xs text-gray-400">...</span>
+              <span className="text-xs text-[var(--color-text-secondary)]">...</span>
             ) : !WALLPAPER_PRESETS.some(p => p.id === wallpaper) && wallpaper !== 'default' ? (
               <div
                 className="absolute inset-0 rounded-xl bg-cover bg-center"
@@ -543,7 +543,7 @@ export function AppSettingsModal({ onClose }: Props) {
                 </div>
               </div>
             ) : (
-              <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-5 h-5 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             )}
@@ -628,7 +628,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Message sound */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-2">Звук сообщения</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Звук сообщения</label>
         <div className="grid grid-cols-3 gap-2">
           {[
             { id: 'default', label: 'Стандартный' },
@@ -680,7 +680,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
       {/* Call ringtone */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-2">Мелодия звонка</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Мелодия звонка</label>
         <div className="grid grid-cols-3 gap-2">
           {[
             { id: 'default', label: 'Стандартная' },
@@ -757,7 +757,7 @@ export function AppSettingsModal({ onClose }: Props) {
     <div className="space-y-3">
       {sessionsLoading ? (
         <div className="flex justify-center py-12">
-          <span className="text-gray-400 text-sm">{t('appSettings.loading')}</span>
+          <span className="text-[var(--color-text-secondary)] text-sm">{t('appSettings.loading')}</span>
         </div>
       ) : sessions.length === 0 ? (
         <p className="text-gray-500 text-sm text-center py-12">{t('appSettings.noSessions')}</p>
@@ -770,7 +770,7 @@ export function AppSettingsModal({ onClose }: Props) {
                 {s.deviceName}
                 {s.isCurrent && <span className="text-accent text-xs ml-1.5">({t('appSettings.currentDevice')})</span>}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[var(--color-text-secondary)]">
                 {s.ip && `${s.ip} · `}
                 {s.lastActiveAt && !isNaN(new Date(s.lastActiveAt).getTime())
                   ? `${new Date(s.lastActiveAt).toLocaleDateString()} ${new Date(s.lastActiveAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
@@ -796,7 +796,7 @@ export function AppSettingsModal({ onClose }: Props) {
 
   const renderWidgetSection = () => (
     <div className="space-y-4">
-      <label className="block text-sm font-medium text-gray-400 mb-3">{t('appSettings.widgetTitle')}</label>
+      <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('appSettings.widgetTitle')}</label>
       {[
         { id: 'weather', labelKey: 'appSettings.widgetWeather' },
         { id: 'quote', labelKey: 'appSettings.widgetQuote' },
@@ -807,7 +807,7 @@ export function AppSettingsModal({ onClose }: Props) {
           key={option.id}
           onClick={() => handleWidgetChange(option.id)}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-            headerWidget === option.id ? 'bg-accent text-white' : 'bg-dark-600 text-gray-400 hover:text-[var(--color-text-primary)]'
+            headerWidget === option.id ? 'bg-accent text-white' : 'bg-dark-600 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
           }`}
         >
           {headerWidget === option.id && (
@@ -1064,7 +1064,7 @@ export function AppSettingsModal({ onClose }: Props) {
           <div className="mt-3 p-3 bg-dark-800 rounded-xl space-y-1">
             <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('settings.importResults')}</p>
             <p className="text-xs text-green-400">{t('settings.importedRegistered', { count: vcfResults.registered })}</p>
-            <p className="text-xs text-gray-400">{t('settings.importedUnregistered', { count: vcfResults.unregistered })}</p>
+            <p className="text-xs text-[var(--color-text-secondary)]">{t('settings.importedUnregistered', { count: vcfResults.unregistered })}</p>
           </div>
         )}
       </div>
@@ -1088,7 +1088,7 @@ export function AppSettingsModal({ onClose }: Props) {
           <div className="mt-3 p-3 bg-dark-800 rounded-xl space-y-1">
             <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('settings.importResults')}</p>
             <p className="text-xs text-green-400">{t('settings.importedRegistered', { count: googleResults.registered })}</p>
-            <p className="text-xs text-gray-400">{t('settings.importedUnregistered', { count: googleResults.unregistered })}</p>
+            <p className="text-xs text-[var(--color-text-secondary)]">{t('settings.importedUnregistered', { count: googleResults.unregistered })}</p>
           </div>
         )}
       </div>
@@ -1169,7 +1169,7 @@ export function AppSettingsModal({ onClose }: Props) {
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                   activeSection === item.id
                     ? 'text-[var(--color-text-primary)] bg-accent/20 border-r-2 border-accent'
-                    : 'text-gray-400 hover:text-[var(--color-text-primary)] hover:bg-dark-600'
+                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-dark-600'
                 }`}
               >
                 {item.icon}
@@ -1185,7 +1185,7 @@ export function AppSettingsModal({ onClose }: Props) {
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
               {t(menuItems.find(m => m.id === activeSection)?.labelKey || '')}
             </h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-[var(--color-text-primary)] transition-colors">
+            <button onClick={onClose} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>

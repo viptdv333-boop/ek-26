@@ -24,7 +24,10 @@ export async function uploadRoutes(app: FastifyInstance) {
     }
 
     const fileId = crypto.randomUUID();
-    const fileName = data.filename.replace(/[^a-zA-Z0-9._\-а-яА-ЯёЁ]/g, '_');
+    // Use only ASCII in stored filename to avoid encoding issues
+    const ext = path.extname(data.filename) || '';
+    const baseName = path.basename(data.filename, ext).replace(/[^a-zA-Z0-9._\-]/g, '_').slice(0, 100);
+    const fileName = (baseName || 'file') + ext.toLowerCase();
     const dir = path.join(config.UPLOADS_DIR, fileId);
 
     await fs.promises.mkdir(dir, { recursive: true });
@@ -45,17 +48,14 @@ export async function uploadRoutes(app: FastifyInstance) {
       fileName,
       mimeType: data.mimetype,
       size: stat.size,
-      url: `/api/uploads/${fileId}/${encodeURIComponent(fileName)}`,
+      url: `/api/uploads/${fileId}/${fileName}`,
     };
   });
 
   // Download file (no auth — fileId is a random UUID, acts as a secret URL)
   app.get('/api/uploads/:fileId/:fileName', async (request, reply) => {
     const { fileId, fileName } = request.params as { fileId: string; fileName: string };
-    // Fastify already decodes params, but URL might be double-encoded
-    let decodedName = fileName;
-    try { decodedName = decodeURIComponent(fileName); } catch { /* already decoded */ }
-    const filePath = path.join(config.UPLOADS_DIR, fileId, decodedName);
+    const filePath = path.join(config.UPLOADS_DIR, fileId, fileName);
 
     if (!fs.existsSync(filePath)) {
       return reply.code(404).send({ error: 'File not found' });

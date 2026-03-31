@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { Conversation } from '../models/Conversation';
+import { Message } from '../models/Message';
 import { User } from '../models/User';
 import { sendToUser } from '../ws/handler';
 import mongoose from 'mongoose';
@@ -20,6 +21,14 @@ export async function conversationRoutes(app: FastifyInstance) {
       .limit(Number(limit))
       .populate('participants', 'displayName avatarUrl phone')
       .lean();
+
+    // Count unread messages per conversation (messages from others with status != 'read')
+    const convIds = conversations.map(c => c._id);
+    const unreadCounts = await Message.aggregate([
+      { $match: { conversationId: { $in: convIds }, senderId: { $ne: new mongoose.Types.ObjectId(request.userId) }, status: { $ne: 'read' } } },
+      { $group: { _id: '$conversationId', count: { $sum: 1 } } },
+    ]);
+    const unreadMap = new Map(unreadCounts.map((u: any) => [u._id.toString(), u.count]));
 
     return conversations.map((c) => ({
       id: c._id.toString(),
@@ -45,7 +54,7 @@ export async function conversationRoutes(app: FastifyInstance) {
           }
         : null,
       isMuted: (c.mutedBy || []).some((u: any) => u.toString() === request.userId),
-      unreadCount: 0,
+      unreadCount: unreadMap.get(c._id.toString()) || 0,
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
     }));

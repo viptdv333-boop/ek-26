@@ -103,7 +103,7 @@ export function AdminPage() {
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'dashboard' | 'users' | 'sms'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'users' | 'sms' | 'pwa'>('dashboard');
   // SMS settings state
   const [smsProvider, setSmsProvider] = useState<'numcheck' | 'ucaller' | 'dev'>('dev');
   const [smsKeys, setSmsKeys] = useState({ numcheckToken: '', ucallerServiceId: '', ucallerSecretKey: '', alibabaAccessKeyId: '', alibabaAccessKeySecret: '', alibabaSignName: '', alibabaTemplateCode: '' });
@@ -264,6 +264,10 @@ export function AdminPage() {
               onClick={() => { setTab('sms'); loadSmsSettings(); }}
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'sms' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
             >SMS</button>
+            <button
+              onClick={() => setTab('pwa')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'pwa' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
+            >PWA</button>
           </div>
           <button onClick={loadData} className="text-gray-400 hover:text-white text-sm">Refresh</button>
         </div>
@@ -650,6 +654,47 @@ export function AdminPage() {
                 Send test
               </button>
             </div>
+          </div>
+        )}
+
+        {tab === 'pwa' && (
+          <div className="bg-dark-800 rounded-xl p-6 max-w-lg">
+            <h3 className="text-white font-semibold mb-4">PWA Icon</h3>
+            <p className="text-gray-400 text-sm mb-4">Загрузите квадратное изображение (PNG/JPG). Автоматически создадутся 192×192, 512×512 и favicon.</p>
+
+            <div className="flex items-center gap-4 mb-4">
+              <img src="/icon-192.png" alt="Current icon" className="w-16 h-16 rounded-xl border border-dark-600" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <span className="text-gray-500 text-xs">Текущая иконка</span>
+            </div>
+
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                  const token = localStorage.getItem('ek26_token');
+                  const res = await fetch('/api/admin/pwa-icon', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: formData,
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    alert('Иконка обновлена! На телефоне: удалите ярлык → добавьте заново.');
+                  } else {
+                    alert(data.error || 'Ошибка');
+                  }
+                } catch { alert('Ошибка загрузки'); }
+                e.target.value = '';
+              }}
+              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-accent file:text-white hover:file:bg-accent-hover file:cursor-pointer file:transition-colors"
+            />
+
+            <p className="text-gray-500 text-xs mt-4">После обновления на телефоне нужно удалить ярлык и добавить заново (Android кэширует иконку PWA).</p>
           </div>
         )}
       </div>

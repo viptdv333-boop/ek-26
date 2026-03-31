@@ -359,4 +359,58 @@ export async function adminRoutes(app: FastifyInstance) {
       return reply.code(502).send({ error: err.message || 'Send failed' });
     }
   });
+
+  // ── PWA Icon Upload ──────────────────────────────────────────────
+  app.post('/api/admin/pwa-icon', { preHandler }, async (request, reply) => {
+    const data = await request.file();
+    if (!data) return reply.code(400).send({ error: 'No file' });
+
+    const sharp = (await import('sharp')).default;
+    const chunks: Buffer[] = [];
+    for await (const chunk of data.file) chunks.push(chunk as Buffer);
+    const buffer = Buffer.concat(chunks);
+
+    // Generate 192x192 and 512x512
+    const icon192 = await sharp(buffer).resize(192, 192, { fit: 'cover' }).png().toBuffer();
+    const icon512 = await sharp(buffer).resize(512, 512, { fit: 'cover' }).png().toBuffer();
+    const favicon = await sharp(buffer).resize(32, 32, { fit: 'cover' }).png().toBuffer();
+
+    // Write to web dist (served by nginx)
+    const fs = await import('fs');
+    const distDir = '/usr/share/nginx/html';
+    const localDir = '/app/web-icons';
+
+    // Try nginx dist first, fallback to local
+    const dir = fs.existsSync(distDir) ? distDir : localDir;
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    fs.writeFileSync(`${dir}/icon-192.png`, icon192);
+    fs.writeFileSync(`${dir}/icon-512.png`, icon512);
+    fs.writeFileSync(`${dir}/favicon.png`, favicon);
+
+    // Also write to uploads so it persists across rebuilds
+    const uploadsIconDir = '/app/uploads/pwa-icons';
+    if (!fs.existsSync(uploadsIconDir)) fs.mkdirSync(uploadsIconDir, { recursive: true });
+    fs.writeFileSync(`${uploadsIconDir}/icon-192.png`, icon192);
+    fs.writeFileSync(`${uploadsIconDir}/icon-512.png`, icon512);
+    fs.writeFileSync(`${uploadsIconDir}/favicon.png`, favicon);
+
+    return { success: true, message: 'Icons updated (192, 512, favicon)' };
+  });
+
+  // Serve persisted PWA icons from uploads (no auth — public for manifest.json)
+  app.get('/api/admin/pwa-icon/:size', async (request, reply) => {
+    const { size } = request.params as { size: string };
+    const fs = await import('fs');
+    const path = await import('path');
+    // Custom icon
+    const customPath = `/app/uploads/pwa-icons/${size}`;
+    if (fs.existsSync(customPath)) {
+      reply.header('Content-Type', 'image/png');
+      reply.header('Cache-Control', 'public, max-age=3600');
+      return reply.send(fs.readFileSync(customPath));
+    }
+    // Fallback: redirect to static default
+    return reply.redirect(`/${size}`);
+  });
 }

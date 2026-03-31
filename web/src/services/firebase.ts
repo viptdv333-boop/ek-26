@@ -27,51 +27,59 @@ async function getMessagingInstance() {
   return messagingInstance;
 }
 
-// Listen for native Android FCM token passed via JS bridge
-function listenForNativeToken() {
-  window.addEventListener('fomo-native', async (e: any) => {
-    const detail = e.detail;
-    if (detail?.type === 'fcm-token' && detail.token) {
-      console.log('[FCM] Native Android token received:', detail.token.slice(0, 20) + '...');
-      try {
-        await usersApi.registerPushToken(detail.token, 'fcm');
-        console.log('[FCM] Native token registered with server');
-        localStorage.setItem('fcm_token', detail.token);
-        localStorage.setItem('fcm_platform', 'android');
-      } catch (err) {
-        console.error('[FCM] Failed to register native token:', err);
-      }
-    }
-  });
-
-  // Also check if token was injected before this script loaded
-  const nativeToken = (window as any).__FOMO_FCM_TOKEN__;
-  if (nativeToken) {
-    window.dispatchEvent(new CustomEvent('fomo-native', {
-      detail: { type: 'fcm-token', token: nativeToken, platform: 'android' }
-    }));
-  }
+/** Check if running inside Android WebView */
+function isAndroidWebView(): boolean {
+  return !!(window as any).FomoAndroid || /FomoAndroid/.test(navigator.userAgent);
 }
 
-listenForNativeToken();
+/** Get native FCM token from Android JS bridge (with retry) */
+async function getNativeToken(): Promise<string | null> {
+  // Check injected token first
+  const injected = (window as any).__FOMO_FCM_TOKEN__;
+  if (injected) return injected;
+
+  // Try JS bridge
+  try {
+    const bridge = (window as any).FomoAndroid;
+    if (bridge?.getFcmToken) {
+      const token = bridge.getFcmToken();
+      if (token) return token;
+    }
+  } catch (e) {
+    console.warn('[FCM] Bridge call failed:', e);
+  }
+
+  // Wait for injection event
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(null), 5000);
+    window.addEventListener('fomo-native', (e: any) => {
+      if (e.detail?.type === 'fcm-token' && e.detail.token) {
+        clearTimeout(timeout);
+        resolve(e.detail.token);
+      }
+    }, { once: true });
+  });
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
   try {
-    // On Android WebView, use native FCM token instead
-    const nativeToken = (window as any).__FOMO_FCM_TOKEN__;
-    if (nativeToken) {
-      console.log('[FCM] Using native Android token');
-      try {
+    // On Android WebView — get token from native bridge
+    if (isAndroidWebView()) {
+      console.log('[FCM] Android WebView detected, getting native token...');
+      const nativeToken = await getNativeToken();
+      if (nativeToken) {
+        console.log('[FCM] Native token:', nativeToken.slice(0, 20) + '...');
         await usersApi.registerPushToken(nativeToken, 'fcm');
         console.log('[FCM] Native token registered with server');
         localStorage.setItem('fcm_token', nativeToken);
-      } catch (err) {
-        console.error('[FCM] Failed to register native token:', err);
+        localStorage.setItem('fcm_platform', 'android');
+        return true;
       }
-      return true;
+      console.warn('[FCM] No native token available');
+      return false;
     }
 
-    // Check if Notification API is available
+    // Browser flow — check Notification API
     if (!('Notification' in window)) {
       console.warn('[FCM] Notification API not available');
       return false;
@@ -79,7 +87,6 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
     console.log('[FCM] Current permission:', Notification.permission);
 
-    // If already granted, just get token
     let permission = Notification.permission;
     if (permission === 'default') {
       permission = await Notification.requestPermission();
@@ -97,7 +104,6 @@ export async function requestNotificationPermission(): Promise<boolean> {
       return false;
     }
 
-    // Register the Firebase messaging service worker
     let swRegistration: ServiceWorkerRegistration;
     try {
       swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
@@ -114,7 +120,6 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
     if (token) {
       console.log('[FCM] Token obtained:', token.slice(0, 20) + '...');
-      // Register token with server
       try {
         await usersApi.registerPushToken(token, 'fcm');
         console.log('[FCM] Token registered with server');

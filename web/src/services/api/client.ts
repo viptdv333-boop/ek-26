@@ -65,6 +65,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
 
   if (res.status === 401) {
+    // Auth endpoints (login, register, etc.) — don't try refresh, just throw the error
+    if (path.startsWith('/auth/')) {
+      const text = await res.text();
+      try { const j = JSON.parse(text); throw new Error(j.error || 'Unauthorized'); } catch (e) { if (e instanceof Error) throw e; throw new Error('Unauthorized'); }
+    }
     const refreshed = await refreshTokenIfNeeded();
     if (refreshed) {
       // Retry with new token

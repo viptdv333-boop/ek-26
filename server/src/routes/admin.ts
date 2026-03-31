@@ -38,6 +38,10 @@ function formatBytes(bytes: number): string {
 }
 
 export async function adminRoutes(app: FastifyInstance) {
+  // Register multipart for PWA icon upload
+  const multipart = await import('@fastify/multipart');
+  await app.register(multipart.default || multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
+
   const preHandler = [authMiddleware, adminMiddleware];
 
   // Dashboard stats

@@ -27,8 +27,50 @@ async function getMessagingInstance() {
   return messagingInstance;
 }
 
+// Listen for native Android FCM token passed via JS bridge
+function listenForNativeToken() {
+  window.addEventListener('fomo-native', async (e: any) => {
+    const detail = e.detail;
+    if (detail?.type === 'fcm-token' && detail.token) {
+      console.log('[FCM] Native Android token received:', detail.token.slice(0, 20) + '...');
+      try {
+        await usersApi.registerPushToken(detail.token, 'fcm');
+        console.log('[FCM] Native token registered with server');
+        localStorage.setItem('fcm_token', detail.token);
+        localStorage.setItem('fcm_platform', 'android');
+      } catch (err) {
+        console.error('[FCM] Failed to register native token:', err);
+      }
+    }
+  });
+
+  // Also check if token was injected before this script loaded
+  const nativeToken = (window as any).__FOMO_FCM_TOKEN__;
+  if (nativeToken) {
+    window.dispatchEvent(new CustomEvent('fomo-native', {
+      detail: { type: 'fcm-token', token: nativeToken, platform: 'android' }
+    }));
+  }
+}
+
+listenForNativeToken();
+
 export async function requestNotificationPermission(): Promise<boolean> {
   try {
+    // On Android WebView, use native FCM token instead
+    const nativeToken = (window as any).__FOMO_FCM_TOKEN__;
+    if (nativeToken) {
+      console.log('[FCM] Using native Android token');
+      try {
+        await usersApi.registerPushToken(nativeToken, 'fcm');
+        console.log('[FCM] Native token registered with server');
+        localStorage.setItem('fcm_token', nativeToken);
+      } catch (err) {
+        console.error('[FCM] Failed to register native token:', err);
+      }
+      return true;
+    }
+
     // Check if Notification API is available
     if (!('Notification' in window)) {
       console.warn('[FCM] Notification API not available');

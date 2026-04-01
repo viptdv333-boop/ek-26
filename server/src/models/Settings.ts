@@ -104,7 +104,7 @@ export async function getAiSettings(): Promise<IAiSettings> {
       geminiModel: 'gemini-2.5-flash',
       openaiApiKey: '',
       openaiModel: 'gpt-4o-mini',
-      openrouterApiKey: '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',
+      openrouterApiKey: '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',
       openrouterModel: 'qwen/qwen3.6-plus-preview:free',
       dailyLimitPerUser: 10,
       systemPrompt: 'Ты — AI-помощник FOMO Chat. Отвечай кратко, полезно, дружелюбно. Поддерживаешь русский, английский, китайский. Можешь искать информацию в интернете.',

@@ -583,10 +583,18 @@ export function Sidebar() {
   const activeConversations = sortedConversations.filter(c => !(c as any).isArchived);
   const archivedConversations = sortedConversations.filter(c => (c as any).isArchived);
 
+  // Filter out AI chats from list (accessible only via AI button)
+  const nonAiConversations = activeConversations.filter(c => c.type !== 'ai');
+
+  // Filter by active tab (chats vs groups)
+  const tabFiltered = activeTab === 'groups'
+    ? nonAiConversations.filter(c => c.type === 'group')
+    : nonAiConversations.filter(c => c.type !== 'group');
+
   // Local name filtering as fallback while typing (before search results arrive)
   const filtered = search && !searchResults
-    ? activeConversations.filter((c) => getConversationName(c).toLowerCase().includes(search.toLowerCase()))
-    : activeConversations;
+    ? tabFiltered.filter((c) => getConversationName(c).toLowerCase().includes(search.toLowerCase()))
+    : tabFiltered;
 
   const highlightMatch = (text: string, query: string) => {
     if (!query.trim()) return text;
@@ -652,6 +660,16 @@ export function Sidebar() {
               </span>
             </div>
           </div>
+          {/* Contacts book icon */}
+          <button
+            onClick={() => setShowContacts(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--color-dark-600)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+            title={t('sidebar.contacts')}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+            </svg>
+          </button>
           {/* Edit profile pencil */}
           <button
             onClick={() => setShowProfile(true)}
@@ -668,15 +686,16 @@ export function Sidebar() {
       {/* Tabs */}
       <div className="flex gap-1 px-3 py-2 bg-[var(--color-dark-700)] mx-3 mt-2 rounded-full">
         <button
-          className="flex-1 py-2 text-sm font-semibold rounded-full bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm"
+          onClick={() => setActiveTab('chats')}
+          className={`flex-1 py-2 text-sm font-semibold rounded-full transition-all ${activeTab === 'chats' ? 'bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
         >
           {t('sidebar.chats')}
         </button>
         <button
-          onClick={() => setShowContacts(true)}
-          className="flex-1 py-2 text-sm font-semibold rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all"
+          onClick={() => setActiveTab('groups')}
+          className={`flex-1 py-2 text-sm font-semibold rounded-full transition-all ${activeTab === 'groups' ? 'bg-[var(--color-text-primary)] text-[var(--color-dark-800)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
         >
-          {t('sidebar.contacts')}
+          {t('sidebar.groups') || 'Группы'}
         </button>
       </div>
 

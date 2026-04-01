@@ -83,6 +83,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // ── Sidebar ───────────────────────────────────────────────────
     'sidebar.subtitle': 'Мессенджер для своих',
     'sidebar.chats': 'Чаты',
+    'sidebar.groups': 'Группы',
     'sidebar.contacts': 'Контакты',
     'sidebar.search': 'Поиск по чатам и сообщениям...',
     'sidebar.searching': 'Поиск...',
@@ -537,6 +538,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // ── Sidebar ───────────────────────────────────────────────────
     'sidebar.subtitle': 'Messenger for your people',
     'sidebar.chats': 'Chats',
+    'sidebar.groups': 'Groups',
     'sidebar.contacts': 'Contacts',
     'sidebar.search': 'Search chats and messages...',
     'sidebar.searching': 'Searching...',
@@ -990,6 +992,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // ── Sidebar ───────────────────────────────────────────────────
     'sidebar.subtitle': '\u4F60\u7684\u4E13\u5C5E\u4FE1\u4F7F',
     'sidebar.chats': '\u804A\u5929',
+    'sidebar.groups': '\u7FA4\u7EC4',
     'sidebar.contacts': '\u8054\u7CFB\u4EBA',
     'sidebar.search': '\u641C\u7D22\u804A\u5929\u548C\u6D88\u606F...',
     'sidebar.searching': '\u641C\u7D22\u4E2D...',

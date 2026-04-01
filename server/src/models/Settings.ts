@@ -99,7 +99,7 @@ export async function getAiSettings(): Promise<IAiSettings> {
     const initial: IAiSettings = {
       provider: config.GEMINI_API_KEY ? 'gemini' : 'disabled',
       geminiApiKey: config.GEMINI_API_KEY || '',
-      geminiModel: 'gemini-2.0-flash',
+      geminiModel: 'gemini-2.5-flash',
       openaiApiKey: '',
       openaiModel: 'gpt-4o-mini',
       dailyLimitPerUser: 10,

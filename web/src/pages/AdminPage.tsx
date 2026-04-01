@@ -708,9 +708,9 @@ export function AdminPage() {
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Model</label>
                   <select value={aiSettings.geminiModel} onChange={e => setAiSettings({...aiSettings, geminiModel: e.target.value})} className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent">
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (fast, free)</option>
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (fast, free)</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (legacy)</option>
                   </select>
                 </div>
                 <div className="flex items-center justify-between">

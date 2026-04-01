@@ -542,12 +542,18 @@ export function ChatRoom({ conversationId }: Props) {
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center mr-3">
             <span className="text-white text-xs font-bold">AI</span>
           </div>
+        ) : conv?.type === 'group' && (conv as any).groupMeta?.avatarUrl ? (
+          <img src={(conv as any).groupMeta.avatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover mr-3" />
+        ) : conv?.type === 'group' ? (
+          <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center mr-3">
+            <span className="text-accent text-sm font-medium">#</span>
+          </div>
         ) : otherAvatarUrl ? (
           <img src={otherAvatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover mr-3" />
         ) : (
           <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center mr-3">
             <span className="text-accent text-sm font-medium">
-              {conv?.type === 'group' ? '#' : title[0]?.toUpperCase()}
+              {title[0]?.toUpperCase()}
             </span>
           </div>
         )}

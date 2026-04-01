@@ -888,7 +888,7 @@ export function Sidebar() {
           onClick={async () => {
             try {
               const token = localStorage.getItem('ek26_token') || sessionStorage.getItem('ek26_token');
-              const res = await fetch('/api/conversations/ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } });
+              const res = await fetch('/api/conversations/ai', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
               if (res.ok) {
                 const conv = await res.json();
                 // Ensure conversation is in the list

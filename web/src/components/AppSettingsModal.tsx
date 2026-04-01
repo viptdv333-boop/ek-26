@@ -823,12 +823,64 @@ export function AppSettingsModal({ onClose }: Props) {
     </div>
   );
 
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const faqItems = [
+    {
+      q: 'Что такое FOMO Chat?',
+      a: 'FOMO Chat — защищённый мессенджер для личного и группового общения. Поддерживает текстовые и голосовые сообщения, звонки, обмен файлами, а также встроенный AI-ассистент.',
+    },
+    {
+      q: 'Какие основные функции?',
+      a: '- Личные и групповые чаты\n- Голосовые сообщения\n- Аудио и видеозвонки\n- Обмен фото, видео и файлами\n- AI-ассистент (поиск в интернете, ответы на вопросы)\n- Пригласительные ссылки для групп\n- Настройка внешнего вида (темы, обои, цвет пузырей)\n- Push-уведомления',
+    },
+    {
+      q: 'Как начать чат?',
+      a: 'Нажмите "+ Новый чат" внизу экрана. Выберите контакт из списка или найдите пользователя по номеру телефона.',
+    },
+    {
+      q: 'Как создать группу?',
+      a: 'Нажмите "+ Новый чат", затем "Создать группу". Введите название и добавьте участников.',
+    },
+    {
+      q: 'Как пригласить в группу?',
+      a: 'Откройте настройки группы (нажмите на название в шапке чата). Скопируйте пригласительную ссылку и отправьте её нужному человеку.',
+    },
+    {
+      q: 'Как пользоваться AI-ассистентом?',
+      a: 'Нажмите кнопку "AI" в нижней части списка чатов. Задайте любой вопрос — AI ответит, может искать информацию в интернете.',
+    },
+    {
+      q: 'Как изменить внешний вид?',
+      a: 'Нажмите шестерёнку в верхнем левом углу → "Внешний вид". Можно сменить тему, обои, форму и цвет пузырей сообщений, размер шрифта.',
+    },
+    {
+      q: 'Как добавить контакт?',
+      a: 'Нажмите иконку записной книжки в шапке рядом с профилем. В окне контактов можно добавить новый контакт по номеру телефона.',
+    },
+    {
+      q: 'Безопасен ли FOMO Chat?',
+      a: 'Да. Соединение защищено TLS. Доступно сквозное шифрование (E2EE) для личных чатов. Пароли хранятся в хешированном виде.',
+    },
+  ];
+
   const renderFaqSection = () => (
-    <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-      <svg className="w-12 h-12 mb-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-      </svg>
-      <p className="text-sm">{t('appSettings.comingSoon')}</p>
+    <div className="space-y-1">
+      {faqItems.map((item, i) => (
+        <div key={i} className="border-b border-dark-600 last:border-0">
+          <button
+            onClick={() => setOpenFaq(openFaq === i ? null : i)}
+            className="w-full flex items-center justify-between px-1 py-3 text-left hover:bg-dark-600/30 transition-colors rounded-lg"
+          >
+            <span className="text-sm font-medium text-white pr-4">{item.q}</span>
+            <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          {openFaq === i && (
+            <div className="px-1 pb-3 text-sm text-gray-400 whitespace-pre-line">{item.a}</div>
+          )}
+        </div>
+      ))}
     </div>
   );
 

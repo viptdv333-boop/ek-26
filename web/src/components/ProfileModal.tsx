@@ -296,7 +296,7 @@ export function ProfileModal({ onClose }: Props) {
           {/* Logout */}
           <div className="pt-4 border-t border-dark-500">
             <button
-              onClick={() => { authLogout(); onClose(); }}
+              onClick={() => { if (confirm(t('settings.logoutConfirm') || 'Вы уверены, что хотите выйти из профиля?')) { authLogout(); onClose(); } }}
               className="w-full py-2.5 bg-dark-600 hover:bg-dark-500 text-[var(--color-text-primary)] font-medium rounded-xl transition-colors text-sm border border-dark-400"
             >
               {t('settings.logout')}

@@ -563,10 +563,21 @@ export function ChatRoom({ conversationId }: Props) {
           className={`flex-1 ${conv?.type === 'group' ? 'cursor-pointer' : ''}`}
           onClick={() => { if (conv?.type === 'group') setShowGroupInfo(true); }}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <h2 className="text-sm font-medium text-[var(--color-text-primary)]">{title}</h2>
             {conv?.type === 'ai' && (
               <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-gradient-to-r from-purple-600 to-blue-500 text-white leading-none">AI</span>
+            )}
+            {conv?.type === 'direct' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowContactCard(true); }}
+                className="text-gray-400 hover:text-white transition-colors"
+                title="Редактировать контакт"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                </svg>
+              </button>
             )}
           </div>
           {subtitle && (
@@ -575,18 +586,6 @@ export function ChatRoom({ conversationId }: Props) {
             </span>
           )}
         </div>
-        {/* Edit contact pencil — direct chats only */}
-        {conv?.type === 'direct' && (
-          <button
-            onClick={() => setShowContactCard(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors ml-1"
-            title="Редактировать контакт"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-            </svg>
-          </button>
-        )}
         {/* Call buttons */}
         <div className="flex items-center gap-1 ml-2">
           <button

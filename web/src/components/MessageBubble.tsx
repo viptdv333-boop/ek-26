@@ -233,14 +233,15 @@ export function MessageBubble(props: Props) {
             </svg>
           )}
           <div
-            className="relative px-2.5 py-1 overflow-hidden"
+            className="relative overflow-hidden"
             style={bubbleShape === 'cloud' && !isMediaOnly ? {
               zIndex: 1,
-              padding: '6px 14px 12px 14px',
+              padding: '4px 12px 10px 12px',
             } : isMediaOnly ? {
               borderRadius: '10px',
               overflow: 'hidden',
             } : {
+              padding: '4px 10px',
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
               borderRadius: bubbleShape === 'square' ? '2px' : '10px',
             }}

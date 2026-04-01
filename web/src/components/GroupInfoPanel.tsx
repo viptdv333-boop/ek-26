@@ -195,7 +195,23 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
     (c) => !participantIds.has(c.userId) && (!addSearch || c.displayName.toLowerCase().includes(addSearch.toLowerCase()) || c.phone?.includes(addSearch))
   );
 
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descValue, setDescValue] = useState((conversation.groupMeta as any)?.description || '');
   const groupAvatarUrl = conversation.groupMeta?.avatarUrl;
+
+  const handleSaveDescription = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      await conversationsApi.updateGroup(conversation.id, { description: descValue.trim() || null });
+      setEditingDesc(false);
+      onUpdated();
+    } catch {
+      setError('Ошибка обновления описания');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
@@ -314,6 +330,36 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
               }`}
             />
           </button>
+        </div>
+
+        {/* Description */}
+        <div className="px-4 py-3 border-b border-dark-600">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-gray-500 uppercase tracking-wider">Описание</span>
+            {isAdmin && !editingDesc && (
+              <button onClick={() => setEditingDesc(true)} className="text-gray-400 hover:text-white text-xs">
+                {(conversation.groupMeta as any)?.description ? 'Изменить' : 'Добавить'}
+              </button>
+            )}
+          </div>
+          {editingDesc ? (
+            <div>
+              <textarea
+                value={descValue}
+                onChange={(e) => setDescValue(e.target.value)}
+                placeholder="Описание группы..."
+                rows={2}
+                className="w-full px-3 py-2 bg-dark-800 border border-dark-500 rounded-lg text-white text-sm focus:outline-none focus:border-accent resize-none"
+                autoFocus
+              />
+              <div className="flex gap-2 mt-1">
+                <button onClick={handleSaveDescription} disabled={saving} className="text-accent text-xs font-medium">{saving ? '...' : 'Сохранить'}</button>
+                <button onClick={() => { setEditingDesc(false); setDescValue((conversation.groupMeta as any)?.description || ''); }} className="text-gray-400 text-xs">Отмена</button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-300">{(conversation.groupMeta as any)?.description || 'Нет описания'}</p>
+          )}
         </div>
 
         {/* Members list */}

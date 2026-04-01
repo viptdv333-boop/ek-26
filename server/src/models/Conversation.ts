@@ -5,6 +5,7 @@ export interface IConversation extends Document {
   participants: Types.ObjectId[];
   groupMeta: {
     name: string;
+    description: string | null;
     avatarUrl: string | null;
     admins: Types.ObjectId[];
     createdBy: Types.ObjectId;
@@ -32,6 +33,7 @@ const conversationSchema = new Schema<IConversation>(
     groupMeta: {
       type: {
         name: { type: String, required: true },
+        description: { type: String, default: null },
         avatarUrl: { type: String, default: null },
         admins: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         createdBy: { type: Schema.Types.ObjectId, ref: 'User' },

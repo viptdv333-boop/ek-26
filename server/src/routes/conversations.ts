@@ -273,7 +273,7 @@ export async function conversationRoutes(app: FastifyInstance) {
   // Update group (admin only)
   app.patch('/api/conversations/:id', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { name, avatarUrl } = request.body as { name?: string; avatarUrl?: string | null };
+    const { name, description, avatarUrl } = request.body as { name?: string; description?: string | null; avatarUrl?: string | null };
 
     const conversation = await Conversation.findById(id);
     if (!conversation || conversation.type !== 'group') {
@@ -288,6 +288,7 @@ export async function conversationRoutes(app: FastifyInstance) {
     }
 
     if (name) conversation.groupMeta!.name = name;
+    if (description !== undefined) (conversation.groupMeta as any).description = description;
     if (avatarUrl !== undefined) conversation.groupMeta!.avatarUrl = avatarUrl;
     await conversation.save();
 

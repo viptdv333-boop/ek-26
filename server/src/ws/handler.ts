@@ -276,7 +276,7 @@ async function handleEvent(
       if (!sender) return;
 
       // Load conversation for participants (needed for push + auto-subscribe)
-      const conv = await Conversation.findById(conversationId).select('participants');
+      const conv = await Conversation.findById(conversationId).select('participants type');
 
       // Auto-subscribe participants if not yet subscribed (new conversations)
       if (conv && !conversationSubscribers.has(conversationId)) {

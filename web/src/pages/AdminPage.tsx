@@ -748,31 +748,34 @@ export function AdminPage() {
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Model</label>
                   <select value={[
-                    'xiaomi/mimo-v2-omni',
                     'qwen/qwen3.6-plus-preview:free',
-                    'google/gemini-2.5-flash-preview-05-20:free',
-                    'deepseek/deepseek-chat-v3-0324:free',
-                    'meta-llama/llama-4-maverick:free',
-                    'mistralai/mistral-small-3.2-24b-instruct:free',
-                    'qwen/qwen3-235b-a22b:free',
+                    'meta-llama/llama-3.3-70b-instruct:free',
+                    'qwen/qwen3-next-80b-a3b-instruct:free',
+                    'qwen/qwen3-coder:free',
+                    'openai/gpt-oss-120b:free',
+                    'minimax/minimax-m2.5:free',
+                    'deepseek/deepseek-chat-v3-0324',
+                    'deepseek/deepseek-r1',
                   ].includes(aiSettings.openrouterModel) ? aiSettings.openrouterModel : '__custom__'} onChange={e => { if (e.target.value !== '__custom__') setAiSettings({...aiSettings, openrouterModel: e.target.value}); }} className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent">
-                    <option value="xiaomi/mimo-v2-omni">MiMo V2 Omni — мультимодальная</option>
-                    <option value="qwen/qwen3.6-plus-preview:free">Qwen 3.6 Plus Preview — бесплатная</option>
-                    <option value="google/gemini-2.5-flash-preview-05-20:free">Gemini 2.5 Flash — бесплатная</option>
-                    <option value="deepseek/deepseek-chat-v3-0324:free">DeepSeek V3 — бесплатная</option>
-                    <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick — бесплатная</option>
-                    <option value="mistralai/mistral-small-3.2-24b-instruct:free">Mistral Small 3.2 — бесплатная</option>
-                    <option value="qwen/qwen3-235b-a22b:free">Qwen 3 235B — бесплатная</option>
+                    <option value="qwen/qwen3.6-plus-preview:free">⭐ Qwen 3.6 Plus — бесплатная</option>
+                    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B — бесплатная</option>
+                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">Qwen 3 Next 80B — бесплатная</option>
+                    <option value="qwen/qwen3-coder:free">Qwen 3 Coder — бесплатная</option>
+                    <option value="openai/gpt-oss-120b:free">GPT OSS 120B — бесплатная</option>
+                    <option value="minimax/minimax-m2.5:free">MiniMax M2.5 — бесплатная</option>
+                    <option value="deepseek/deepseek-chat-v3-0324">DeepSeek V3 — платная</option>
+                    <option value="deepseek/deepseek-r1">DeepSeek R1 — платная</option>
                     <option value="__custom__">Другая (ввести вручную)</option>
                   </select>
                   {![
-                    'xiaomi/mimo-v2-omni',
                     'qwen/qwen3.6-plus-preview:free',
-                    'google/gemini-2.5-flash-preview-05-20:free',
-                    'deepseek/deepseek-chat-v3-0324:free',
-                    'meta-llama/llama-4-maverick:free',
-                    'mistralai/mistral-small-3.2-24b-instruct:free',
-                    'qwen/qwen3-235b-a22b:free',
+                    'meta-llama/llama-3.3-70b-instruct:free',
+                    'qwen/qwen3-next-80b-a3b-instruct:free',
+                    'qwen/qwen3-coder:free',
+                    'openai/gpt-oss-120b:free',
+                    'minimax/minimax-m2.5:free',
+                    'deepseek/deepseek-chat-v3-0324',
+                    'deepseek/deepseek-r1',
                   ].includes(aiSettings.openrouterModel) && (
                     <input value={aiSettings.openrouterModel} onChange={e => setAiSettings({...aiSettings, openrouterModel: e.target.value})} placeholder="provider/model-name" className="w-full mt-2 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
                   )}

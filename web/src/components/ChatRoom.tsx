@@ -178,6 +178,7 @@ export function ChatRoom({ conversationId }: Props) {
 
   const getSubtitle = () => {
     if (typingUsers.length > 0) return t('chat.typing');
+    if (conv?.type === 'ai') return 'AI-помощник с поиском в интернете';
     if (conv?.type === 'group') {
       return t('chat.participants', { count: conv.participants.length });
     }
@@ -534,7 +535,11 @@ export function ChatRoom({ conversationId }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        {otherAvatarUrl ? (
+        {conv?.type === 'ai' ? (
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center mr-3">
+            <span className="text-white text-xs font-bold">AI</span>
+          </div>
+        ) : otherAvatarUrl ? (
           <img src={otherAvatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover mr-3" />
         ) : (
           <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center mr-3">

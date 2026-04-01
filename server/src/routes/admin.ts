@@ -364,6 +364,41 @@ export async function adminRoutes(app: FastifyInstance) {
     }
   });
 
+  // ── AI Settings ──────────────────────────────────────────────────
+  app.get('/api/admin/ai', { preHandler }, async () => {
+    const { getAiSettings } = await import('../models/Settings.js');
+    const settings = await getAiSettings();
+    return {
+      provider: settings.provider,
+      geminiApiKey: settings.geminiApiKey ? '***' + settings.geminiApiKey.slice(-4) : '',
+      geminiModel: settings.geminiModel,
+      openaiApiKey: settings.openaiApiKey ? '***' + settings.openaiApiKey.slice(-4) : '',
+      openaiModel: settings.openaiModel,
+      dailyLimitPerUser: settings.dailyLimitPerUser,
+      systemPrompt: settings.systemPrompt,
+      searchEnabled: settings.searchEnabled,
+    };
+  });
+
+  app.patch('/api/admin/ai', { preHandler }, async (request) => {
+    const { getAiSettings, invalidateAiCache } = await import('../models/Settings.js');
+    const { Settings } = await import('../models/Settings.js');
+    const body = request.body as any;
+    const current = await getAiSettings();
+    const update: any = {};
+    if (body.provider && ['gemini', 'openai', 'disabled'].includes(body.provider)) update.provider = body.provider;
+    if (typeof body.geminiApiKey === 'string' && body.geminiApiKey && !body.geminiApiKey.startsWith('***')) update.geminiApiKey = body.geminiApiKey;
+    if (typeof body.geminiModel === 'string') update.geminiModel = body.geminiModel;
+    if (typeof body.openaiApiKey === 'string' && body.openaiApiKey && !body.openaiApiKey.startsWith('***')) update.openaiApiKey = body.openaiApiKey;
+    if (typeof body.openaiModel === 'string') update.openaiModel = body.openaiModel;
+    if (typeof body.dailyLimitPerUser === 'number') update.dailyLimitPerUser = body.dailyLimitPerUser;
+    if (typeof body.systemPrompt === 'string') update.systemPrompt = body.systemPrompt;
+    if (typeof body.searchEnabled === 'boolean') update.searchEnabled = body.searchEnabled;
+    await Settings.updateOne({ key: 'ai' }, { $set: { value: { ...current, ...update } } }, { upsert: true });
+    invalidateAiCache();
+    return { success: true };
+  });
+
   // ── PWA Icon Upload ──────────────────────────────────────────────
   app.post('/api/admin/pwa-icon', { preHandler }, async (request, reply) => {
     const data = await request.file();

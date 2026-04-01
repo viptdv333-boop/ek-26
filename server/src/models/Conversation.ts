@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IConversation extends Document {
-  type: 'direct' | 'group';
+  type: 'direct' | 'group' | 'ai';
   participants: Types.ObjectId[];
   groupMeta: {
     name: string;
@@ -27,7 +27,7 @@ export interface IConversation extends Document {
 
 const conversationSchema = new Schema<IConversation>(
   {
-    type: { type: String, enum: ['direct', 'group'], required: true },
+    type: { type: String, enum: ['direct', 'group', 'ai'], required: true },
     participants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     groupMeta: {
       type: {

@@ -397,6 +397,85 @@ async function handleEvent(
         }
       }
 
+      // ── AI Bot response ──────────────────────────────────────────
+      if (conv && (conv as any).type === 'ai') {
+        try {
+          const { getAiSettings } = await import('../models/Settings.js');
+          const { getAiResponse, checkRateLimit } = await import('../services/ai.js');
+          const aiSettings = await getAiSettings();
+
+          if (aiSettings.provider !== 'disabled') {
+            if (!checkRateLimit(client.userId, aiSettings.dailyLimitPerUser)) {
+              // Over limit — send system message
+              const limitMsg = await Message.create({
+                conversationId: new mongoose.Types.ObjectId(conversationId),
+                senderId: new mongoose.Types.ObjectId(conversationId), // bot "sends" from conv ID as placeholder
+                text: `⚠️ Дневной лимит AI-запросов (${aiSettings.dailyLimitPerUser}) исчерпан. Попробуйте завтра.`,
+                type: 'system',
+                status: 'sent',
+              });
+              sendToUser(client.userId, 'message:new', {
+                id: limitMsg._id.toString(),
+                conversationId,
+                senderId: 'ai-bot',
+                senderName: 'FOMO AI',
+                text: limitMsg.text,
+                type: 'system',
+                status: 'sent',
+                createdAt: limitMsg.createdAt.toISOString(),
+              });
+            } else {
+              // Send typing indicator
+              sendToUser(client.userId, 'typing', { conversationId, userIds: ['ai-bot'] });
+
+              // Get conversation history (last 10 messages)
+              const historyMsgs = await Message.find({ conversationId: new mongoose.Types.ObjectId(conversationId) })
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .lean();
+              const history = historyMsgs.reverse().slice(0, -1).map((m: any) => ({
+                role: m.senderId?.toString() === client.userId ? 'user' as const : 'model' as const,
+                text: m.text || '',
+              }));
+
+              const aiText = await getAiResponse(history, data.text || '');
+
+              // Save AI response
+              const aiMsg = await Message.create({
+                conversationId: new mongoose.Types.ObjectId(conversationId),
+                senderId: new mongoose.Types.ObjectId(conversationId), // placeholder
+                text: aiText,
+                type: 'text',
+                status: 'sent',
+              });
+
+              // Clear typing
+              sendToUser(client.userId, 'typing', { conversationId, userIds: [] });
+
+              // Send AI message to user
+              sendToUser(client.userId, 'message:new', {
+                id: aiMsg._id.toString(),
+                conversationId,
+                senderId: 'ai-bot',
+                senderName: 'FOMO AI',
+                text: aiText,
+                type: 'text',
+                status: 'sent',
+                createdAt: aiMsg.createdAt.toISOString(),
+              });
+
+              // Update conversation lastMessage
+              await Conversation.findByIdAndUpdate(conversationId, {
+                lastMessage: { text: aiText, senderName: 'FOMO AI', timestamp: new Date() },
+                updatedAt: new Date(),
+              });
+            }
+          }
+        } catch (err) {
+          console.error('[AI] Error processing AI message:', err);
+        }
+      }
+
       broadcastToConversation(conversationId, 'message:new', messageData, client.userId);
 
       // Send push notifications to all other participants

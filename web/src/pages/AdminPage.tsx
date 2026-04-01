@@ -103,7 +103,30 @@ export function AdminPage() {
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'dashboard' | 'users' | 'sms' | 'pwa'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'users' | 'sms' | 'pwa' | 'ai'>('dashboard');
+  // AI settings state
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'openai' | 'disabled'>('disabled');
+  const [aiSettings, setAiSettings] = useState({ geminiApiKey: '', geminiModel: 'gemini-2.0-flash', openaiApiKey: '', openaiModel: 'gpt-4o-mini', dailyLimitPerUser: 10, systemPrompt: '', searchEnabled: true });
+  const [aiSaving, setAiSaving] = useState(false);
+  const loadAiSettings = async () => {
+    try {
+      const token = localStorage.getItem('ek26_token');
+      const res = await fetch('/api/admin/ai', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const data = await res.json();
+        setAiProvider(data.provider);
+        setAiSettings({ geminiApiKey: data.geminiApiKey, geminiModel: data.geminiModel, openaiApiKey: data.openaiApiKey, openaiModel: data.openaiModel, dailyLimitPerUser: data.dailyLimitPerUser, systemPrompt: data.systemPrompt, searchEnabled: data.searchEnabled });
+      }
+    } catch {}
+  };
+  const saveAiSettings = async () => {
+    setAiSaving(true);
+    try {
+      const token = localStorage.getItem('ek26_token');
+      await fetch('/api/admin/ai', { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ provider: aiProvider, ...aiSettings }) });
+    } catch {}
+    setAiSaving(false);
+  };
   // SMS settings state
   const [smsProvider, setSmsProvider] = useState<'numcheck' | 'ucaller' | 'dev'>('dev');
   const [smsKeys, setSmsKeys] = useState({ numcheckToken: '', ucallerServiceId: '', ucallerSecretKey: '', alibabaAccessKeyId: '', alibabaAccessKeySecret: '', alibabaSignName: '', alibabaTemplateCode: '' });
@@ -268,6 +291,10 @@ export function AdminPage() {
               onClick={() => setTab('pwa')}
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'pwa' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
             >PWA</button>
+            <button
+              onClick={() => { setTab('ai'); loadAiSettings(); }}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'ai' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
+            >AI</button>
           </div>
           <button onClick={loadData} className="text-gray-400 hover:text-white text-sm">Refresh</button>
         </div>
@@ -654,6 +681,77 @@ export function AdminPage() {
                 Send test
               </button>
             </div>
+          </div>
+        )}
+
+        {tab === 'ai' && (
+          <div className="bg-dark-800 rounded-xl p-6 max-w-lg space-y-4">
+            <h3 className="text-white font-semibold">AI Assistant</h3>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Provider</label>
+              <div className="flex gap-2">
+                {(['gemini', 'openai', 'disabled'] as const).map(p => (
+                  <button key={p} onClick={() => setAiProvider(p)} className={`px-3 py-1.5 rounded-lg text-sm ${aiProvider === p ? 'bg-accent text-white' : 'bg-dark-700 text-gray-400'}`}>
+                    {p === 'gemini' ? 'Gemini' : p === 'openai' ? 'OpenAI' : 'Disabled'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {aiProvider === 'gemini' && (
+              <>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Gemini API Key</label>
+                  <input value={aiSettings.geminiApiKey} onChange={e => setAiSettings({...aiSettings, geminiApiKey: e.target.value})} placeholder="AIzaSy..." className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Model</label>
+                  <select value={aiSettings.geminiModel} onChange={e => setAiSettings({...aiSettings, geminiModel: e.target.value})} className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent">
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (fast, free)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-400">Google Search</label>
+                  <button onClick={() => setAiSettings({...aiSettings, searchEnabled: !aiSettings.searchEnabled})} className={`w-10 h-6 rounded-full transition-colors ${aiSettings.searchEnabled ? 'bg-accent' : 'bg-dark-600'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${aiSettings.searchEnabled ? 'translate-x-4' : ''}`} />
+                  </button>
+                </div>
+              </>
+            )}
+
+            {aiProvider === 'openai' && (
+              <>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">OpenAI API Key</label>
+                  <input value={aiSettings.openaiApiKey} onChange={e => setAiSettings({...aiSettings, openaiApiKey: e.target.value})} placeholder="sk-..." className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Model</label>
+                  <select value={aiSettings.openaiModel} onChange={e => setAiSettings({...aiSettings, openaiModel: e.target.value})} className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent">
+                    <option value="gpt-4o-mini">GPT-4o Mini (cheap)</option>
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Daily limit per user</label>
+              <input type="number" value={aiSettings.dailyLimitPerUser} onChange={e => setAiSettings({...aiSettings, dailyLimitPerUser: parseInt(e.target.value) || 10})} className="w-24 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">System prompt</label>
+              <textarea value={aiSettings.systemPrompt} onChange={e => setAiSettings({...aiSettings, systemPrompt: e.target.value})} rows={3} className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent resize-y" />
+            </div>
+
+            <button onClick={saveAiSettings} disabled={aiSaving} className="px-6 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors disabled:opacity-50">
+              {aiSaving ? 'Saving...' : 'Save'}
+            </button>
           </div>
         )}
 

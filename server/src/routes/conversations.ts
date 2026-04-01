@@ -110,6 +110,45 @@ export async function conversationRoutes(app: FastifyInstance) {
     return convData;
   });
 
+  // Create or get AI conversation for current user
+  app.post('/api/conversations/ai', { preHandler: [app.authenticate] }, async (request) => {
+    const userId = new mongoose.Types.ObjectId(request.userId);
+
+    // Check if AI conversation already exists
+    let conversation = await Conversation.findOne({
+      type: 'ai',
+      participants: userId,
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        type: 'ai',
+        participants: [userId],
+        groupMeta: {
+          name: 'FOMO AI',
+          avatarUrl: null,
+          admins: [],
+          createdBy: userId,
+        },
+      });
+    }
+
+    return {
+      id: conversation._id.toString(),
+      type: 'ai',
+      participants: [],
+      groupMeta: { name: 'FOMO AI', avatarUrl: null, admins: [], createdBy: userId.toString() },
+      lastMessage: conversation.lastMessage ? {
+        text: conversation.lastMessage.text,
+        senderId: '',
+        createdAt: conversation.lastMessage.timestamp?.toISOString() || conversation.updatedAt.toISOString(),
+      } : null,
+      unreadCount: 0,
+      createdAt: conversation.createdAt.toISOString(),
+      updatedAt: conversation.updatedAt.toISOString(),
+    };
+  });
+
   // Create group conversation
   app.post('/api/conversations/group', { preHandler: [app.authenticate] }, async (request) => {
     const { name, participantIds } = request.body as { name: string; participantIds: string[] };

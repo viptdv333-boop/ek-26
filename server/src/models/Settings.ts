@@ -72,3 +72,50 @@ export async function getSmsSettings(): Promise<ISmsSettings> {
 export function invalidateSmsCache() {
   smsCache = null;
 }
+
+// ── AI Settings ─────────────────────────────────────────────────
+export interface IAiSettings {
+  provider: 'gemini' | 'openai' | 'disabled';
+  geminiApiKey: string;
+  geminiModel: string;
+  openaiApiKey: string;
+  openaiModel: string;
+  dailyLimitPerUser: number;
+  systemPrompt: string;
+  searchEnabled: boolean;
+}
+
+let aiCache: { data: IAiSettings; ts: number } | null = null;
+
+export async function getAiSettings(): Promise<IAiSettings> {
+  if (aiCache && Date.now() - aiCache.ts < CACHE_TTL) {
+    return aiCache.data;
+  }
+
+  const doc = await Settings.findOne({ key: 'ai' }).lean() as any;
+
+  if (!doc) {
+    const config = await import('../config').then(m => m.config);
+    const initial: IAiSettings = {
+      provider: config.GEMINI_API_KEY ? 'gemini' : 'disabled',
+      geminiApiKey: config.GEMINI_API_KEY || '',
+      geminiModel: 'gemini-2.0-flash',
+      openaiApiKey: '',
+      openaiModel: 'gpt-4o-mini',
+      dailyLimitPerUser: 10,
+      systemPrompt: 'Ты — AI-помощник FOMO Chat. Отвечай кратко, полезно, дружелюбно. Поддерживаешь русский, английский, китайский. Можешь искать информацию в интернете.',
+      searchEnabled: true,
+    };
+    await Settings.create({ key: 'ai', value: initial });
+    aiCache = { data: initial, ts: Date.now() };
+    return initial;
+  }
+
+  const data = doc.value as IAiSettings;
+  aiCache = { data, ts: Date.now() };
+  return data;
+}
+
+export function invalidateAiCache() {
+  aiCache = null;
+}

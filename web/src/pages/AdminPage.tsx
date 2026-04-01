@@ -663,7 +663,7 @@ export function AdminPage() {
             <p className="text-gray-400 text-sm mb-4">Загрузите квадратное изображение (PNG/JPG). Автоматически создадутся 192×192, 512×512 и favicon.</p>
 
             <div className="flex items-center gap-4 mb-4">
-              <img src="/icon-192.png" alt="Current icon" className="w-16 h-16 rounded-xl border border-dark-600" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img id="pwa-icon-preview" src={`/api/admin/pwa-icon/icon-192.png?t=${Date.now()}`} alt="Current icon" className="w-16 h-16 rounded-xl border border-dark-600" onError={(e) => { (e.target as HTMLImageElement).src = '/icon-192.png'; }} />
               <span className="text-gray-500 text-xs">Текущая иконка</span>
             </div>
 
@@ -684,6 +684,9 @@ export function AdminPage() {
                   });
                   const data = await res.json();
                   if (res.ok) {
+                    // Update preview with cache-busted URL
+                    const preview = document.getElementById('pwa-icon-preview') as HTMLImageElement;
+                    if (preview) preview.src = `/api/admin/pwa-icon/icon-192.png?t=${Date.now()}`;
                     alert('Иконка обновлена! На телефоне: удалите ярлык → добавьте заново.');
                   } else {
                     alert(data.error || 'Ошибка');

@@ -22,7 +22,7 @@ self.addEventListener('push', (event) => {
     const callOptions = {
       body,
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      badge: '/favicon.png',
       data: fcmData,
       tag: 'incoming-call',
       renotify: true,
@@ -53,7 +53,7 @@ self.addEventListener('push', (event) => {
     const options = {
       body,
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      badge: '/favicon.png',
       data: fcmData,
       tag: fcmData.conversationId || 'msg-' + Date.now(),
       renotify: true,
@@ -124,7 +124,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // ── PWA caching ─────────────────────────────────────────────────
-const CACHE_NAME = 'fomo-chat-v7';
+const CACHE_NAME = 'fomo-chat-v8';
 const STATIC_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {

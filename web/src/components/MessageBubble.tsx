@@ -236,7 +236,7 @@ export function MessageBubble(props: Props) {
             className="relative px-3 py-2 overflow-hidden"
             style={bubbleShape === 'cloud' && !isMediaOnly ? {
               zIndex: 1,
-              padding: '14px 22px 24px 22px',
+              padding: '8px 16px 14px 16px',
             } : isMediaOnly ? {
               borderRadius: '10px',
               overflow: 'hidden',

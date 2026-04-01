@@ -552,7 +552,12 @@ export function ChatRoom({ conversationId }: Props) {
           className={`flex-1 ${conv?.type === 'group' ? 'cursor-pointer' : ''}`}
           onClick={() => { if (conv?.type === 'group') setShowGroupInfo(true); }}
         >
-          <h2 className="text-sm font-medium text-[var(--color-text-primary)]">{title}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-medium text-[var(--color-text-primary)]">{title}</h2>
+            {conv?.type === 'ai' && (
+              <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-gradient-to-r from-purple-600 to-blue-500 text-white leading-none">AI</span>
+            )}
+          </div>
           {subtitle && (
             <span className={`text-xs ${typingUsers.length > 0 ? 'text-accent' : subtitle === t('chat.online') ? 'text-green-400' : 'text-gray-400'}`}>
               {subtitle}

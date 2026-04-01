@@ -747,15 +747,44 @@ export function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Model</label>
-                  <input value={aiSettings.openrouterModel} onChange={e => setAiSettings({...aiSettings, openrouterModel: e.target.value})} placeholder="qwen/qwen3.6-plus-preview:free" className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
-                  <p className="text-xs text-gray-500 mt-1">Список моделей: openrouter.ai/models</p>
+                  <select value={[
+                    'xiaomi/mimo-v2-omni',
+                    'qwen/qwen3.6-plus-preview:free',
+                    'google/gemini-2.5-flash-preview-05-20:free',
+                    'deepseek/deepseek-chat-v3-0324:free',
+                    'meta-llama/llama-4-maverick:free',
+                    'mistralai/mistral-small-3.2-24b-instruct:free',
+                    'qwen/qwen3-235b-a22b:free',
+                  ].includes(aiSettings.openrouterModel) ? aiSettings.openrouterModel : '__custom__'} onChange={e => { if (e.target.value !== '__custom__') setAiSettings({...aiSettings, openrouterModel: e.target.value}); }} className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent">
+                    <option value="xiaomi/mimo-v2-omni">MiMo V2 Omni — мультимодальная</option>
+                    <option value="qwen/qwen3.6-plus-preview:free">Qwen 3.6 Plus Preview — бесплатная</option>
+                    <option value="google/gemini-2.5-flash-preview-05-20:free">Gemini 2.5 Flash — бесплатная</option>
+                    <option value="deepseek/deepseek-chat-v3-0324:free">DeepSeek V3 — бесплатная</option>
+                    <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick — бесплатная</option>
+                    <option value="mistralai/mistral-small-3.2-24b-instruct:free">Mistral Small 3.2 — бесплатная</option>
+                    <option value="qwen/qwen3-235b-a22b:free">Qwen 3 235B — бесплатная</option>
+                    <option value="__custom__">Другая (ввести вручную)</option>
+                  </select>
+                  {![
+                    'xiaomi/mimo-v2-omni',
+                    'qwen/qwen3.6-plus-preview:free',
+                    'google/gemini-2.5-flash-preview-05-20:free',
+                    'deepseek/deepseek-chat-v3-0324:free',
+                    'meta-llama/llama-4-maverick:free',
+                    'mistralai/mistral-small-3.2-24b-instruct:free',
+                    'qwen/qwen3-235b-a22b:free',
+                  ].includes(aiSettings.openrouterModel) && (
+                    <input value={aiSettings.openrouterModel} onChange={e => setAiSettings({...aiSettings, openrouterModel: e.target.value})} placeholder="provider/model-name" className="w-full mt-2 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">Все модели: openrouter.ai/models</p>
                 </div>
               </>
             )}
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Daily limit per user</label>
-              <input type="number" value={aiSettings.dailyLimitPerUser} onChange={e => setAiSettings({...aiSettings, dailyLimitPerUser: parseInt(e.target.value) || 10})} className="w-24 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+              <label className="block text-sm text-gray-400 mb-1">Лимит сообщений в день</label>
+              <input type="number" min={0} value={aiSettings.dailyLimitPerUser} onChange={e => setAiSettings({...aiSettings, dailyLimitPerUser: parseInt(e.target.value) || 0})} className="w-24 bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+              <p className="text-xs text-gray-500 mt-1">0 = безлимит</p>
             </div>
 
             <div>

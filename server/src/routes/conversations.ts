@@ -41,9 +41,11 @@ export async function conversationRoutes(app: FastifyInstance) {
       groupMeta: c.groupMeta
         ? {
             name: c.groupMeta.name,
+            description: (c.groupMeta as any).description || null,
             avatarUrl: c.groupMeta.avatarUrl,
             admins: c.groupMeta.admins.map((a: any) => a.toString()),
             createdBy: c.groupMeta.createdBy.toString(),
+            inviteCode: (c.groupMeta as any).inviteCode || null,
           }
         : null,
       lastMessage: c.lastMessage
@@ -159,6 +161,10 @@ export async function conversationRoutes(app: FastifyInstance) {
       ...participantIds.map((id) => new mongoose.Types.ObjectId(id)),
     ];
 
+    // Generate unique invite code
+    const crypto = await import('crypto');
+    const inviteCode = crypto.randomBytes(8).toString('hex');
+
     const conversation = await Conversation.create({
       type: 'group',
       participants: allParticipants,
@@ -167,6 +173,7 @@ export async function conversationRoutes(app: FastifyInstance) {
         avatarUrl: null,
         admins: [userId],
         createdBy: userId,
+        inviteCode,
       },
     });
 
@@ -192,6 +199,7 @@ export async function conversationRoutes(app: FastifyInstance) {
             avatarUrl: populated!.groupMeta.avatarUrl,
             admins: populated!.groupMeta.admins.map((a: any) => a.toString()),
             createdBy: populated!.groupMeta.createdBy.toString(),
+            inviteCode: (populated!.groupMeta as any).inviteCode || null,
           }
         : null,
       lastMessage: null,
@@ -468,5 +476,67 @@ export async function conversationRoutes(app: FastifyInstance) {
     await User.findByIdAndDelete(userId);
 
     return { success: true };
+  });
+
+  // Join group by invite code
+  app.post('/api/conversations/join/:inviteCode', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { inviteCode } = request.params as { inviteCode: string };
+    const userId = new mongoose.Types.ObjectId(request.userId);
+
+    const conversation = await Conversation.findOne({ 'groupMeta.inviteCode': inviteCode })
+      .populate('participants', 'displayName avatarUrl phone status lastSeen')
+      .lean();
+
+    if (!conversation || conversation.type !== 'group') {
+      return reply.code(404).send({ error: 'Group not found or invite link expired' });
+    }
+
+    const alreadyMember = conversation.participants.some((p: any) => p._id.toString() === request.userId);
+    if (alreadyMember) {
+      return {
+        id: conversation._id.toString(),
+        type: conversation.type,
+        participants: (conversation.participants as any[]).map((p: any) => ({
+          id: p._id.toString(), displayName: p.displayName, avatarUrl: p.avatarUrl, phone: p.phone,
+        })),
+        groupMeta: conversation.groupMeta,
+        alreadyMember: true,
+      };
+    }
+
+    await Conversation.findByIdAndUpdate(conversation._id, {
+      $addToSet: { participants: userId },
+    });
+
+    const updated = await Conversation.findById(conversation._id)
+      .populate('participants', 'displayName avatarUrl phone status lastSeen')
+      .lean();
+
+    return {
+      id: updated!._id.toString(),
+      type: updated!.type,
+      participants: (updated!.participants as any[]).map((p: any) => ({
+        id: p._id.toString(), displayName: p.displayName, avatarUrl: p.avatarUrl, phone: p.phone,
+      })),
+      groupMeta: updated!.groupMeta,
+      joined: true,
+    };
+  });
+
+  // Get group info by invite code (public, no auth required)
+  app.get('/api/conversations/invite/:inviteCode', async (request, reply) => {
+    const { inviteCode } = request.params as { inviteCode: string };
+
+    const conversation = await Conversation.findOne({ 'groupMeta.inviteCode': inviteCode }).lean();
+    if (!conversation || conversation.type !== 'group') {
+      return reply.code(404).send({ error: 'Group not found' });
+    }
+
+    return {
+      id: conversation._id.toString(),
+      name: conversation.groupMeta?.name,
+      avatarUrl: conversation.groupMeta?.avatarUrl,
+      memberCount: conversation.participants.length,
+    };
   });
 }

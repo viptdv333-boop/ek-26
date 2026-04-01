@@ -9,6 +9,7 @@ export interface IConversation extends Document {
     avatarUrl: string | null;
     admins: Types.ObjectId[];
     createdBy: Types.ObjectId;
+    inviteCode: string | null;
   } | null;
   lastMessage: {
     text: string;
@@ -37,6 +38,7 @@ const conversationSchema = new Schema<IConversation>(
         avatarUrl: { type: String, default: null },
         admins: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        inviteCode: { type: String, default: null, index: true },
       },
       default: null,
     },

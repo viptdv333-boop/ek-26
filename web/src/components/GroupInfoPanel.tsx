@@ -16,6 +16,7 @@ interface GroupMeta {
   avatarUrl?: string;
   admins: string[];
   createdBy: string;
+  inviteCode?: string;
 }
 
 interface Conversation {
@@ -361,6 +362,27 @@ export function GroupInfoPanel({ conversation, currentUserId, onClose, onUpdated
             <p className="text-sm text-gray-300">{(conversation.groupMeta as any)?.description || 'Нет описания'}</p>
           )}
         </div>
+
+        {/* Invite link */}
+        {conversation.groupMeta?.inviteCode && (
+          <div className="px-4 py-3 border-b border-dark-600">
+            <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Пригласительная ссылка</div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-sm text-accent truncate">
+                {`${window.location.origin}/join/${conversation.groupMeta.inviteCode}`}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/join/${conversation.groupMeta!.inviteCode}`);
+                  setError(''); // clear any error
+                }}
+                className="px-2 py-1 text-xs bg-dark-600 hover:bg-dark-500 text-white rounded-lg transition-colors flex-shrink-0"
+              >
+                Копировать
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Members list */}
         <div className="flex-1 overflow-y-auto">

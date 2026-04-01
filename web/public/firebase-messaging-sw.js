@@ -22,7 +22,7 @@ self.addEventListener('push', (event) => {
     const callOptions = {
       body,
       icon: '/icon-192.png',
-      badge: '/favicon.png',
+      badge: '/logo-f.png',
       data: fcmData,
       tag: 'incoming-call',
       renotify: true,
@@ -53,7 +53,7 @@ self.addEventListener('push', (event) => {
     const options = {
       body,
       icon: '/icon-192.png',
-      badge: '/favicon.png',
+      badge: '/logo-f.png',
       data: fcmData,
       tag: fcmData.conversationId || 'msg-' + Date.now(),
       renotify: true,

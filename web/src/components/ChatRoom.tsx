@@ -80,15 +80,18 @@ export function ChatRoom({ conversationId }: Props) {
       setFontColor(localStorage.getItem('ek26_font_color') || '#ffffff');
       setFontColorOther(localStorage.getItem('ek26_font_color_other') || '#e5e7eb');
     };
+    const openGroupInfoHandler = () => setShowGroupInfo(true);
     window.addEventListener('wallpaper-changed', wallpaperHandler);
     window.addEventListener('storage', wallpaperHandler);
     window.addEventListener('font-size-changed', fontHandler);
     window.addEventListener('bubble-style-changed', bubbleHandler);
+    window.addEventListener('open-group-info', openGroupInfoHandler);
     return () => {
       window.removeEventListener('wallpaper-changed', wallpaperHandler);
       window.removeEventListener('storage', wallpaperHandler);
       window.removeEventListener('font-size-changed', fontHandler);
       window.removeEventListener('bubble-style-changed', bubbleHandler);
+      window.removeEventListener('open-group-info', openGroupInfoHandler);
     };
   }, []);
 

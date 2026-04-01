@@ -1035,12 +1035,19 @@ export function Sidebar() {
                   },
                 ];
               }
-              return [{
-                label: t('menu.leaveGroup'),
-                icon: 'delete',
-                onClick: () => handleLeaveGroup(chatMenu.convId),
-                danger: true,
-              }];
+              return [
+                {
+                  label: t('menu.groupSettings') || 'Настройки группы',
+                  icon: 'settings',
+                  onClick: () => { useChatStore.getState().setActiveConversation(chatMenu.convId); setChatMenu(null); setTimeout(() => window.dispatchEvent(new Event('open-group-info')), 100); },
+                },
+                {
+                  label: t('menu.leaveGroup'),
+                  icon: 'delete',
+                  onClick: () => handleLeaveGroup(chatMenu.convId),
+                  danger: true,
+                },
+              ];
             })(),
             {
               label: t('menu.deleteChat'),

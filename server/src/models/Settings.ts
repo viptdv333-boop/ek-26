@@ -105,7 +105,7 @@ export async function getAiSettings(): Promise<IAiSettings> {
       openaiApiKey: '',
       openaiModel: 'gpt-4o-mini',
       openrouterApiKey: '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',
-      openrouterModel: 'qwen/qwen3-235b-a22b',
+      openrouterModel: 'qwen/qwen3.6-plus-preview:free',
       dailyLimitPerUser: 10,
       systemPrompt: 'Ты — AI-помощник FOMO Chat. Отвечай кратко, полезно, дружелюбно. Поддерживаешь русский, английский, китайский. Можешь искать информацию в интернете.',
       searchEnabled: true,

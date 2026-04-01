@@ -106,7 +106,7 @@ export function AdminPage() {
   const [tab, setTab] = useState<'dashboard' | 'users' | 'sms' | 'pwa' | 'ai'>('dashboard');
   // AI settings state
   const [aiProvider, setAiProvider] = useState<'gemini' | 'openai' | 'disabled'>('disabled');
-  const [aiSettings, setAiSettings] = useState({ geminiApiKey: '', geminiModel: 'gemini-2.5-flash', openaiApiKey: '', openaiModel: 'gpt-4o-mini', openrouterApiKey: '', openrouterModel: 'qwen/qwen3-235b-a22b', dailyLimitPerUser: 10, systemPrompt: '', searchEnabled: true });
+  const [aiSettings, setAiSettings] = useState({ geminiApiKey: '', geminiModel: 'gemini-2.5-flash', openaiApiKey: '', openaiModel: 'gpt-4o-mini', openrouterApiKey: '', openrouterModel: 'qwen/qwen3.6-plus-preview:free', dailyLimitPerUser: 10, systemPrompt: '', searchEnabled: true });
   const [aiSaving, setAiSaving] = useState(false);
   const loadAiSettings = async () => {
     try {
@@ -115,7 +115,7 @@ export function AdminPage() {
       if (res.ok) {
         const data = await res.json();
         setAiProvider(data.provider);
-        setAiSettings({ geminiApiKey: data.geminiApiKey, geminiModel: data.geminiModel, openaiApiKey: data.openaiApiKey, openaiModel: data.openaiModel, openrouterApiKey: data.openrouterApiKey || '', openrouterModel: data.openrouterModel || 'qwen/qwen3-235b-a22b', dailyLimitPerUser: data.dailyLimitPerUser, systemPrompt: data.systemPrompt, searchEnabled: data.searchEnabled });
+        setAiSettings({ geminiApiKey: data.geminiApiKey, geminiModel: data.geminiModel, openaiApiKey: data.openaiApiKey, openaiModel: data.openaiModel, openrouterApiKey: data.openrouterApiKey || '', openrouterModel: data.openrouterModel || 'qwen/qwen3.6-plus-preview:free', dailyLimitPerUser: data.dailyLimitPerUser, systemPrompt: data.systemPrompt, searchEnabled: data.searchEnabled });
       }
     } catch {}
   };
@@ -747,7 +747,7 @@ export function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Model</label>
-                  <input value={aiSettings.openrouterModel} onChange={e => setAiSettings({...aiSettings, openrouterModel: e.target.value})} placeholder="qwen/qwen3-235b-a22b" className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+                  <input value={aiSettings.openrouterModel} onChange={e => setAiSettings({...aiSettings, openrouterModel: e.target.value})} placeholder="qwen/qwen3.6-plus-preview:free" className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
                   <p className="text-xs text-gray-500 mt-1">Список моделей: openrouter.ai/models</p>
                 </div>
               </>

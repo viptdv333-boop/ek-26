@@ -188,6 +188,13 @@ export function MessageBubble(props: Props) {
 
   const renderAvatar = () => {
     if (!showAvatar) return <div className="w-7 flex-shrink-0" />;
+    if (message.senderId === 'ai-bot' || message.senderName === 'FOMO AI') {
+      return (
+        <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
+          <span className="text-white text-[9px] font-bold">AI</span>
+        </div>
+      );
+    }
     if (avatarUrl) return <img src={avatarUrl} alt="" className="w-7 h-7 rounded-xl object-cover flex-shrink-0" />;
     if (!isMine) {
       return (

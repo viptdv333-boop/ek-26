@@ -263,6 +263,13 @@ class WebSocketTransport {
         break;
       }
 
+      case 'typing':
+        // AI typing: server sends { conversationId, userIds: ['ai-bot'] } or { conversationId, userIds: [] }
+        if (Array.isArray(data.userIds)) {
+          store.setTyping(data.conversationId, data.userIds);
+        }
+        break;
+
       case 'typing:start':
         store.setTyping(data.conversationId, [
           ...(store.typingUsers[data.conversationId] || []).filter((id: string) => id !== data.userId),

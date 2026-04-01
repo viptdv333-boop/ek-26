@@ -754,7 +754,11 @@ export function Sidebar() {
             >
               {/* Avatar */}
               <div className="relative w-10 h-10 flex-shrink-0">
-                {isGroup && conv.groupMeta?.avatarUrl ? (
+                {conv.type === 'ai' ? (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">AI</span>
+                  </div>
+                ) : isGroup && conv.groupMeta?.avatarUrl ? (
                   <img src={conv.groupMeta.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                 ) : !isGroup && (() => {
                   const ou = getOtherUser(conv);

@@ -128,6 +128,30 @@
   /* Light theme: online indicator border */
   .light .border-dark-800 { border-color: #ffffff !important; }
 
+  /* ── Typing indicator animations ── */
+  .typing-dot {
+    animation: typing-bounce 1.2s ease-in-out infinite;
+  }
+  @keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+  @keyframes typing-pen {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(8deg); }
+    75% { transform: rotate(-8deg); }
+  }
+  .animate-typing-pen {
+    animation: typing-pen 0.8s ease-in-out infinite;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   /* ── Button Glow — Premium ── */
 
   /* Accent buttons (red) — red glow */

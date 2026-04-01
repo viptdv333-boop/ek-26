@@ -672,6 +672,27 @@ export function ChatRoom({ conversationId }: Props) {
           )}
           </div>
         ))}
+        {/* Typing indicator */}
+        {typingUsers.length > 0 && (
+          <div className="flex items-end gap-2 px-2 pb-2 animate-fade-in">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-dark-600)] flex items-center justify-center shrink-0">
+              {typingUsers.includes('ai-bot') ? (
+                <span className="text-xs font-bold text-purple-400">AI</span>
+              ) : (
+                <svg className="w-4 h-4 text-[var(--color-text-muted)] animate-typing-pen" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                </svg>
+              )}
+            </div>
+            <div className="px-4 py-3 rounded-2xl rounded-bl-sm" style={{ backgroundColor: String(bubbleColorOther) }}>
+              <div className="flex items-center gap-1">
+                <div className="typing-dot w-2 h-2 rounded-full bg-[var(--color-text-muted)]" style={{ animationDelay: '0ms' }} />
+                <div className="typing-dot w-2 h-2 rounded-full bg-[var(--color-text-muted)]" style={{ animationDelay: '150ms' }} />
+                <div className="typing-dot w-2 h-2 rounded-full bg-[var(--color-text-muted)]" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 

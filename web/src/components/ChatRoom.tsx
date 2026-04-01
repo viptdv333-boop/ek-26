@@ -11,6 +11,7 @@ import { ForwardDialog } from './ForwardDialog';
 import { EmojiPicker } from './EmojiPicker';
 import { VoiceRecorder } from './VoiceRecorder';
 import { GroupInfoPanel } from './GroupInfoPanel';
+import { ContactCard } from './ContactCard';
 import { callManager } from '../services/webrtc/CallManager';
 import { conversationsApi } from '../services/api/endpoints';
 import { useContactsStore } from '../stores/contactsStore';
@@ -33,6 +34,7 @@ export function ChatRoom({ conversationId }: Props) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [showContactCard, setShowContactCard] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const replyingTo = useChatStore((s) => s.replyingTo);
   const setReplyingTo = useChatStore((s) => s.setReplyingTo);
@@ -573,6 +575,18 @@ export function ChatRoom({ conversationId }: Props) {
             </span>
           )}
         </div>
+        {/* Edit contact pencil — direct chats only */}
+        {conv?.type === 'direct' && (
+          <button
+            onClick={() => setShowContactCard(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors ml-1"
+            title="Редактировать контакт"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+            </svg>
+          </button>
+        )}
         {/* Call buttons */}
         <div className="flex items-center gap-1 ml-2">
           <button
@@ -879,6 +893,24 @@ export function ChatRoom({ conversationId }: Props) {
       </div>
 
       {forwardMsg && <ForwardDialog message={forwardMsg} onClose={() => setForwardMsg(null)} />}
+
+      {showContactCard && conv?.type === 'direct' && (() => {
+        const other = conv.participants.find((p: any) => p.id !== userId);
+        if (!other) return null;
+        const contact = storeContacts.find(c => c.userId === other.id);
+        const contactObj = contact || {
+          id: '', userId: other.id, displayName: other.displayName,
+          originalName: other.displayName, nickname: null, avatarUrl: other.avatarUrl || null,
+          phone: other.phone || null, status: '', lastSeen: null, note: '',
+        };
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowContactCard(false)}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <ContactCard contact={contactObj as any} onClose={() => setShowContactCard(false)} />
+            </div>
+          </div>
+        );
+      })()}
 
       {showGroupInfo && conv?.type === 'group' && (
         <GroupInfoPanel

@@ -58,13 +58,18 @@ export async function messageRoutes(app: FastifyInstance) {
         }
       }
 
+      const senderPopulated = m.senderId && typeof m.senderId === 'object' && (m.senderId as any)._id;
       return {
         id: m._id.toString(),
         conversationId: m.conversationId.toString(),
-        sender: {
+        sender: senderPopulated ? {
           id: (m.senderId as any)._id.toString(),
           displayName: (m.senderId as any).displayName,
           avatarUrl: (m.senderId as any).avatarUrl,
+        } : {
+          id: m.senderId?.toString() || 'ai-bot',
+          displayName: 'FOMO AI',
+          avatarUrl: null,
         },
         type: m.type,
         text: m.text,

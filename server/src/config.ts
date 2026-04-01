@@ -22,6 +22,7 @@ const envSchema = z.object({
   SMTP_PASS: z.string().default(''),
   SMTP_FROM: z.string().default('FOMO Chat <noreply@fomo.broker>'),
   GEMINI_API_KEY: z.string().default(''),
+  OPENROUTER_API_KEY: z.string().default(''),
   CORS_ORIGIN: z.string().default('*'),
   UPLOADS_DIR: z.string().default('/app/uploads'),
   MAX_FILE_SIZE: z.coerce.number().default(15_728_640), // 15MB

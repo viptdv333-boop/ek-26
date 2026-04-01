@@ -558,6 +558,12 @@
   border-color: var(--a-accent);
   box-shadow: 0 0 0 3px var(--a-input-focus);
   background: var(--a-bg);
+  color: var(--a-fg);
+}
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--a-fg);
+  box-shadow: 0 0 0 1000px var(--a-input-bg) inset;
 }
 .auth-input::placeholder {
   color: var(--a-subtle);

@@ -75,11 +75,13 @@ export function invalidateSmsCache() {
 
 // ── AI Settings ─────────────────────────────────────────────────
 export interface IAiSettings {
-  provider: 'gemini' | 'openai' | 'disabled';
+  provider: 'gemini' | 'openai' | 'openrouter' | 'disabled';
   geminiApiKey: string;
   geminiModel: string;
   openaiApiKey: string;
   openaiModel: string;
+  openrouterApiKey: string;
+  openrouterModel: string;
   dailyLimitPerUser: number;
   systemPrompt: string;
   searchEnabled: boolean;
@@ -97,11 +99,13 @@ export async function getAiSettings(): Promise<IAiSettings> {
   if (!doc) {
     const config = await import('../config').then(m => m.config);
     const initial: IAiSettings = {
-      provider: config.GEMINI_API_KEY ? 'gemini' : 'disabled',
+      provider: 'openrouter',
       geminiApiKey: config.GEMINI_API_KEY || '',
       geminiModel: 'gemini-2.5-flash',
       openaiApiKey: '',
       openaiModel: 'gpt-4o-mini',
+      openrouterApiKey: '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',
+      openrouterModel: 'qwen/qwen3-235b-a22b',
       dailyLimitPerUser: 10,
       systemPrompt: 'Ты — AI-помощник FOMO Chat. Отвечай кратко, полезно, дружелюбно. Поддерживаешь русский, английский, китайский. Можешь искать информацию в интернете.',
       searchEnabled: true,

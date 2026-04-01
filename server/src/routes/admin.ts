@@ -374,6 +374,8 @@ export async function adminRoutes(app: FastifyInstance) {
       geminiModel: settings.geminiModel,
       openaiApiKey: settings.openaiApiKey ? '***' + settings.openaiApiKey.slice(-4) : '',
       openaiModel: settings.openaiModel,
+      openrouterApiKey: settings.openrouterApiKey ? '***' + settings.openrouterApiKey.slice(-4) : '',
+      openrouterModel: settings.openrouterModel,
       dailyLimitPerUser: settings.dailyLimitPerUser,
       systemPrompt: settings.systemPrompt,
       searchEnabled: settings.searchEnabled,
@@ -386,11 +388,13 @@ export async function adminRoutes(app: FastifyInstance) {
     const body = request.body as any;
     const current = await getAiSettings();
     const update: any = {};
-    if (body.provider && ['gemini', 'openai', 'disabled'].includes(body.provider)) update.provider = body.provider;
+    if (body.provider && ['gemini', 'openai', 'openrouter', 'disabled'].includes(body.provider)) update.provider = body.provider;
     if (typeof body.geminiApiKey === 'string' && body.geminiApiKey && !body.geminiApiKey.startsWith('***')) update.geminiApiKey = body.geminiApiKey;
     if (typeof body.geminiModel === 'string') update.geminiModel = body.geminiModel;
     if (typeof body.openaiApiKey === 'string' && body.openaiApiKey && !body.openaiApiKey.startsWith('***')) update.openaiApiKey = body.openaiApiKey;
     if (typeof body.openaiModel === 'string') update.openaiModel = body.openaiModel;
+    if (typeof body.openrouterApiKey === 'string' && body.openrouterApiKey && !body.openrouterApiKey.startsWith('***')) update.openrouterApiKey = body.openrouterApiKey;
+    if (typeof body.openrouterModel === 'string') update.openrouterModel = body.openrouterModel;
     if (typeof body.dailyLimitPerUser === 'number') update.dailyLimitPerUser = body.dailyLimitPerUser;
     if (typeof body.systemPrompt === 'string') update.systemPrompt = body.systemPrompt;
     if (typeof body.searchEnabled === 'boolean') update.searchEnabled = body.searchEnabled;

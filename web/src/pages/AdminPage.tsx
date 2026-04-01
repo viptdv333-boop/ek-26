@@ -106,7 +106,7 @@ export function AdminPage() {
   const [tab, setTab] = useState<'dashboard' | 'users' | 'sms' | 'pwa' | 'ai'>('dashboard');
   // AI settings state
   const [aiProvider, setAiProvider] = useState<'gemini' | 'openai' | 'disabled'>('disabled');
-  const [aiSettings, setAiSettings] = useState({ geminiApiKey: '', geminiModel: 'gemini-2.0-flash', openaiApiKey: '', openaiModel: 'gpt-4o-mini', dailyLimitPerUser: 10, systemPrompt: '', searchEnabled: true });
+  const [aiSettings, setAiSettings] = useState({ geminiApiKey: '', geminiModel: 'gemini-2.5-flash', openaiApiKey: '', openaiModel: 'gpt-4o-mini', openrouterApiKey: '', openrouterModel: 'qwen/qwen3-235b-a22b', dailyLimitPerUser: 10, systemPrompt: '', searchEnabled: true });
   const [aiSaving, setAiSaving] = useState(false);
   const loadAiSettings = async () => {
     try {
@@ -115,7 +115,7 @@ export function AdminPage() {
       if (res.ok) {
         const data = await res.json();
         setAiProvider(data.provider);
-        setAiSettings({ geminiApiKey: data.geminiApiKey, geminiModel: data.geminiModel, openaiApiKey: data.openaiApiKey, openaiModel: data.openaiModel, dailyLimitPerUser: data.dailyLimitPerUser, systemPrompt: data.systemPrompt, searchEnabled: data.searchEnabled });
+        setAiSettings({ geminiApiKey: data.geminiApiKey, geminiModel: data.geminiModel, openaiApiKey: data.openaiApiKey, openaiModel: data.openaiModel, openrouterApiKey: data.openrouterApiKey || '', openrouterModel: data.openrouterModel || 'qwen/qwen3-235b-a22b', dailyLimitPerUser: data.dailyLimitPerUser, systemPrompt: data.systemPrompt, searchEnabled: data.searchEnabled });
       }
     } catch {}
   };
@@ -690,10 +690,10 @@ export function AdminPage() {
 
             <div>
               <label className="block text-sm text-gray-400 mb-1">Provider</label>
-              <div className="flex gap-2">
-                {(['gemini', 'openai', 'disabled'] as const).map(p => (
+              <div className="flex gap-2 flex-wrap">
+                {(['openrouter', 'gemini', 'openai', 'disabled'] as const).map(p => (
                   <button key={p} onClick={() => setAiProvider(p)} className={`px-3 py-1.5 rounded-lg text-sm ${aiProvider === p ? 'bg-accent text-white' : 'bg-dark-700 text-gray-400'}`}>
-                    {p === 'gemini' ? 'Gemini' : p === 'openai' ? 'OpenAI' : 'Disabled'}
+                    {p === 'openrouter' ? 'OpenRouter' : p === 'gemini' ? 'Gemini' : p === 'openai' ? 'OpenAI' : 'Disabled'}
                   </button>
                 ))}
               </div>
@@ -735,6 +735,20 @@ export function AdminPage() {
                     <option value="gpt-4o">GPT-4o</option>
                     <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                   </select>
+                </div>
+              </>
+            )}
+
+            {aiProvider === 'openrouter' && (
+              <>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">OpenRouter API Key</label>
+                  <input value={aiSettings.openrouterApiKey} onChange={e => setAiSettings({...aiSettings, openrouterApiKey: e.target.value})} placeholder="sk-or-v1-..." className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Model</label>
+                  <input value={aiSettings.openrouterModel} onChange={e => setAiSettings({...aiSettings, openrouterModel: e.target.value})} placeholder="qwen/qwen3-235b-a22b" className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent" />
+                  <p className="text-xs text-gray-500 mt-1">Список моделей: openrouter.ai/models</p>
                 </div>
               </>
             )}

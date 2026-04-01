@@ -49,6 +49,10 @@ export async function getAiResponse(
     return callOpenAI(settings.openaiApiKey, settings.openaiModel, settings.systemPrompt, history, userQuery);
   }
 
+  if (settings.provider === 'openrouter') {
+    return callOpenRouter(settings.openrouterApiKey, settings.openrouterModel, settings.systemPrompt, history, userQuery);
+  }
+
   return 'AI-провайдер не настроен.';
 }
 
@@ -149,6 +153,47 @@ async function callOpenAI(
     return data?.choices?.[0]?.message?.content || 'AI не смог ответить.';
   } catch (err) {
     console.error('[AI] OpenAI fetch error:', err);
+    return 'Ошибка соединения с AI.';
+  }
+}
+
+async function callOpenRouter(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  history: ChatMessage[],
+  userQuery: string,
+): Promise<string> {
+  if (!apiKey) return 'OpenRouter API ключ не настроен. Обратитесь к администратору.';
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })),
+    { role: 'user', content: userQuery },
+  ];
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://chat.fomo.broker',
+        'X-Title': 'FOMO Chat',
+      },
+      body: JSON.stringify({ model, messages, max_tokens: 1024, temperature: 0.7 }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('[AI] OpenRouter error:', res.status, err);
+      return `Ошибка AI: ${res.status}`;
+    }
+
+    const data = await res.json() as any;
+    return data?.choices?.[0]?.message?.content || 'AI не смог ответить.';
+  } catch (err) {
+    console.error('[AI] OpenRouter fetch error:', err);
     return 'Ошибка соединения с AI.';
   }
 }

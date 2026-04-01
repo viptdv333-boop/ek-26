@@ -891,10 +891,17 @@ export function Sidebar() {
               const res = await fetch('/api/conversations/ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } });
               if (res.ok) {
                 const conv = await res.json();
-                useChatStore.getState().addConversation(conv);
+                // Ensure conversation is in the list
+                const existing = useChatStore.getState().conversations.find(c => c.id === conv.id);
+                if (!existing) {
+                  useChatStore.getState().addConversation(conv);
+                }
                 useChatStore.getState().setActiveConversation(conv.id);
+              } else {
+                const err = await res.text();
+                console.error('[AI] Failed to create AI chat:', res.status, err);
               }
-            } catch {}
+            } catch (e) { console.error('[AI] Error:', e); }
           }}
           className="w-12 py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white font-semibold rounded-xl transition-colors text-sm hover:opacity-90 flex items-center justify-center shrink-0"
           title="FOMO AI"

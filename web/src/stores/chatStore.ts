@@ -40,7 +40,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  type: 'direct' | 'group';
+  type: 'direct' | 'group' | 'ai';
   participants: Array<{ id: string; displayName: string; avatarUrl?: string | null }> | string[];
   groupMeta: { name: string; avatarUrl: string | null; admins: string[]; createdBy: string } | null;
   lastMessage: { text: string; senderId: string; createdAt: string } | null;

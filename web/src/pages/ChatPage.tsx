@@ -9,6 +9,7 @@ import { wsTransport } from '../services/transport/WebSocketTransport';
 import { keyManager } from '../services/crypto';
 import { requestNotificationPermission, onForegroundMessage } from '../services/firebase';
 import { CallOverlay } from '../components/CallOverlay';
+import { InstallPrompt } from '../components/InstallPrompt';
 import { callManager } from '../services/webrtc/CallManager';
 
 export function ChatPage() {
@@ -154,6 +155,7 @@ export function ChatPage() {
         {activeConversationId ? <ChatRoom conversationId={activeConversationId} /> : <EmptyState />}
       </div>
       <CallOverlay />
+      <InstallPrompt />
     </div>
   );
 }

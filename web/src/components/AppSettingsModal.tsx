@@ -836,6 +836,7 @@ export function AppSettingsModal({ onClose }: Props) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const gamesList = [
     { id: 'snake', name: 'Snake', emoji: '\ud83d\udc0d', desc: 'Nokia 3310 classic', url: '/games/snake.html' },
+    { id: 'snake-2p', name: 'Snake Battle', emoji: '\u2694\ufe0f', desc: '2 игрока', url: '/games/snake-2p.html' },
   ];
 
   const renderGamesSection = () => {

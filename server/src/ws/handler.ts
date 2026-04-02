@@ -607,8 +607,21 @@ async function handleEvent(
 
     case 'call:busy': {
       const { callerId, callId } = data;
-      sendToUser(callerId, 'call:busy', { callId });
-      saveCallReport(callId, 'missed').catch(console.error);
+      // Delay busy by 3s to allow answer from another device (race condition: push + WS)
+      const busyCall = activeCalls.get(callId);
+      if (busyCall?.answeredAt) {
+        console.log('[Call] Ignoring busy — call already answered:', callId);
+        break;
+      }
+      setTimeout(() => {
+        const call = activeCalls.get(callId);
+        if (call?.answeredAt) {
+          console.log('[Call] Ignoring delayed busy — call was answered:', callId);
+          return;
+        }
+        sendToUser(callerId, 'call:busy', { callId });
+        saveCallReport(callId, 'missed').catch(console.error);
+      }, 3000);
       break;
     }
   }

@@ -9,7 +9,6 @@ function formatDuration(ms: number): string {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Phone icon for hang up button
 function PhoneDownIcon() {
   return (
     <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -18,7 +17,14 @@ function PhoneDownIcon() {
   );
 }
 
-// Microphone icon
+function PhoneIcon() {
+  return (
+    <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+    </svg>
+  );
+}
+
 function MicIcon({ muted }: { muted: boolean }) {
   if (muted) {
     return (
@@ -35,7 +41,6 @@ function MicIcon({ muted }: { muted: boolean }) {
   );
 }
 
-// Camera icon
 function CameraIcon({ off }: { off: boolean }) {
   if (off) {
     return (
@@ -55,30 +60,21 @@ export function CallOverlay() {
   const activeCall = useCallStore((s) => s.activeCall);
   const isMuted = useCallStore((s) => s.isMuted);
   const isCameraOff = useCallStore((s) => s.isCameraOff);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
   const [elapsed, setElapsed] = useState('00:00');
 
-  // Register video refs with CallManager
   useEffect(() => {
-    if (activeCall) {
-      callManager.setVideoRefs(localVideoRef.current, remoteVideoRef.current);
-    }
-  }, [activeCall, localVideoRef.current, remoteVideoRef.current]);
+    callManager.setVideoRefs(localVideoRef, remoteVideoRef);
+  }, [activeCall]);
 
-  // Timer for connected calls
   useEffect(() => {
-    if (!activeCall || activeCall.status !== 'connected' || !activeCall.startedAt) return;
+    if (!activeCall?.startedAt) return;
     const interval = setInterval(() => {
       setElapsed(formatDuration(Date.now() - activeCall.startedAt!));
     }, 1000);
     return () => clearInterval(interval);
-  }, [activeCall?.status, activeCall?.startedAt]);
-
-  // Reset timer when call ends
-  useEffect(() => {
-    if (!activeCall) setElapsed('00:00');
-  }, [activeCall]);
+  }, [activeCall?.startedAt]);
 
   if (!activeCall) return null;
 
@@ -89,40 +85,28 @@ export function CallOverlay() {
   const isEnded = activeCall.status === 'ended';
   const isIncoming = activeCall.direction === 'incoming';
 
-  const statusText = isEnded
-    ? 'Звонок завершён'
-    : isRinging && isIncoming
-      ? 'Входящий звонок'
-      : isRinging
-        ? 'Вызов...'
-        : isConnecting
-          ? 'Соединение...'
-          : elapsed;
+  const statusText = isRinging && isIncoming
+    ? (isVideo ? 'Видеозвонок...' : 'Входящий звонок...')
+    : isRinging ? 'Вызов...'
+    : isConnecting ? 'Соединение...'
+    : isConnected ? elapsed
+    : 'Звонок завершён';
+
+  const initial = activeCall.peerName[0]?.toUpperCase() || '?';
 
   return (
-    <div className="fixed inset-0 z-50 bg-dark-900/95 flex flex-col">
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }}>
       {/* Remote video (full background for video calls) */}
       {isVideo && (
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
       )}
 
-      {/* Local video PiP (small corner) */}
+      {/* Local video PiP */}
       {isVideo && isConnected && (
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          muted
-          className="absolute top-4 right-4 w-32 h-44 rounded-xl object-cover border-2 border-dark-600 z-10"
-        />
+        <video ref={localVideoRef} autoPlay playsInline muted className="absolute top-4 right-4 w-28 h-40 rounded-2xl object-cover border-2 border-white/20 z-10 shadow-xl" />
       )}
 
-      {/* Audio-only local video (hidden but needed for ref) */}
+      {/* Hidden video refs for audio calls */}
       {!isVideo && (
         <>
           <video ref={localVideoRef} autoPlay playsInline muted className="hidden" />
@@ -130,125 +114,171 @@ export function CallOverlay() {
         </>
       )}
 
-      {/* Center content — avatar, name, status */}
+      {/* Top bar — call type label */}
+      <div className="relative z-10 pt-12 pb-4 flex flex-col items-center">
+        <div className="flex items-center gap-2 mb-2">
+          {isVideo ? (
+            <svg className="w-5 h-5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9.75a2.25 2.25 0 002.25-2.25V7.5a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+            </svg>
+          )}
+          <span className="text-white/60 text-xs uppercase tracking-widest font-medium">
+            {isVideo ? 'Видеозвонок' : 'Аудиозвонок'}
+          </span>
+        </div>
+      </div>
+
+      {/* Center — avatar with pulse rings + name + status */}
       <div className="flex-1 flex flex-col items-center justify-center relative z-10">
         {(!isVideo || !isConnected) && (
           <>
-            {activeCall.peerAvatar ? (
-              <img
-                src={activeCall.peerAvatar}
-                alt=""
-                className={`w-28 h-28 rounded-xl object-cover border-4 ${
-                  isRinging ? 'border-accent animate-pulse' : 'border-dark-600'
-                }`}
-              />
-            ) : (
-              <div
-                className={`w-28 h-28 rounded-xl flex items-center justify-center text-4xl font-bold ${
-                  isRinging ? 'bg-accent/30 text-accent animate-pulse' : 'bg-dark-700 text-gray-300'
-                }`}
-              >
-                {activeCall.peerName[0]?.toUpperCase() || '?'}
-              </div>
-            )}
+            {/* Pulsing rings for ringing state */}
+            <div className="relative">
+              {isRinging && (
+                <>
+                  <div className="absolute inset-0 -m-4 rounded-full border-2 border-green-400/30 animate-ping" style={{ animationDuration: '2s' }} />
+                  <div className="absolute inset-0 -m-8 rounded-full border border-green-400/20 animate-ping" style={{ animationDuration: '2.5s' }} />
+                  <div className="absolute inset-0 -m-12 rounded-full border border-green-400/10 animate-ping" style={{ animationDuration: '3s' }} />
+                </>
+              )}
 
-            <h2 className="text-2xl font-semibold text-white mt-6">{activeCall.peerName}</h2>
-            <p className="text-sm text-gray-400 mt-2">{statusText}</p>
+              {activeCall.peerAvatar ? (
+                <img
+                  src={activeCall.peerAvatar}
+                  alt=""
+                  className="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-2xl relative z-10"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white border-4 border-white/20 shadow-2xl relative z-10">
+                  {initial}
+                </div>
+              )}
+            </div>
+
+            <h2 className="text-3xl font-bold text-white mt-8 drop-shadow-lg">{activeCall.peerName}</h2>
+            <p className={`text-base mt-2 ${isConnected ? 'text-green-400' : 'text-white/60'}`}>
+              {statusText}
+            </p>
           </>
         )}
 
-        {/* Connected video: show name + timer overlay at top */}
+        {/* Connected video: name + timer overlay */}
         {isVideo && isConnected && (
-          <div className="absolute top-8 left-0 right-0 flex flex-col items-center">
+          <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2">
             <h2 className="text-lg font-semibold text-white drop-shadow-lg">{activeCall.peerName}</h2>
-            <p className="text-sm text-gray-200 drop-shadow-lg">{elapsed}</p>
+            <p className="text-sm text-green-400 drop-shadow-lg">{elapsed}</p>
           </div>
         )}
 
         {isEnded && (
-          <p className="mt-4 text-sm text-gray-500">Звонок завершён</p>
+          <p className="mt-4 text-sm text-white/40">Звонок завершён</p>
         )}
       </div>
 
-      {/* Controls — always at bottom */}
-      <div className="relative z-10 pb-10 pt-6 flex items-center justify-center gap-6">
-        {/* Incoming ringing: decline + accept */}
+      {/* Controls */}
+      <div className="relative z-10 pb-12 pt-6">
+        {/* Incoming ringing — big buttons with labels */}
         {isRinging && isIncoming && (
-          <>
-            <button
-              onClick={() => callManager.declineCall()}
-              className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors shadow-lg"
-              title="Отклонить"
-            >
-              <PhoneDownIcon />
-            </button>
-            <button
-              onClick={() => callManager.acceptCall()}
-              className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors shadow-lg"
-              title="Принять"
-            >
-              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-              </svg>
-            </button>
-          </>
+          <div className="flex items-center justify-around px-12">
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={() => callManager.declineCall()}
+                className="w-18 h-18 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-all shadow-lg shadow-red-600/30 active:scale-95"
+                style={{ width: '72px', height: '72px' }}
+              >
+                <PhoneDownIcon />
+              </button>
+              <span className="text-xs text-white/60">Отклонить</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={() => callManager.acceptCall()}
+                className="w-18 h-18 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center transition-all shadow-lg shadow-green-600/30 animate-pulse active:scale-95"
+                style={{ width: '72px', height: '72px' }}
+              >
+                <PhoneIcon />
+              </button>
+              <span className="text-xs text-white/60">Принять</span>
+            </div>
+          </div>
         )}
 
-        {/* Outgoing ringing: just hang up */}
+        {/* Outgoing ringing */}
         {isRinging && !isIncoming && (
-          <button
-            onClick={() => callManager.endCall()}
-            className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors shadow-lg"
-            title="Завершить"
-          >
-            <PhoneDownIcon />
-          </button>
+          <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={() => callManager.endCall()}
+                className="rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-all shadow-lg shadow-red-600/30 active:scale-95"
+                style={{ width: '72px', height: '72px' }}
+              >
+                <PhoneDownIcon />
+              </button>
+              <span className="text-xs text-white/60">Завершить</span>
+            </div>
+          </div>
         )}
 
-        {/* Connecting: hang up */}
+        {/* Connecting */}
         {isConnecting && (
-          <button
-            onClick={() => callManager.endCall()}
-            className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors shadow-lg"
-            title="Завершить"
-          >
-            <PhoneDownIcon />
-          </button>
+          <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={() => callManager.endCall()}
+                className="rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-all shadow-lg shadow-red-600/30 active:scale-95"
+                style={{ width: '72px', height: '72px' }}
+              >
+                <PhoneDownIcon />
+              </button>
+              <span className="text-xs text-white/60">Завершить</span>
+            </div>
+          </div>
         )}
 
-        {/* Connected: mic toggle, camera toggle (video), hang up */}
+        {/* Connected — mic, camera, hangup */}
         {isConnected && (
-          <>
-            <button
-              onClick={() => callManager.toggleMute()}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-lg ${
-                isMuted ? 'bg-red-600/80 hover:bg-red-600' : 'bg-dark-600 hover:bg-dark-500'
-              }`}
-              title={isMuted ? 'Включить микрофон' : 'Выключить микрофон'}
-            >
-              <MicIcon muted={isMuted} />
-            </button>
+          <div className="flex items-center justify-center gap-6">
+            <div className="flex flex-col items-center gap-1">
+              <button
+                onClick={() => callManager.toggleMute()}
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg active:scale-95 ${
+                  isMuted ? 'bg-red-600/80' : 'bg-white/20 backdrop-blur-sm'
+                }`}
+              >
+                <MicIcon muted={isMuted} />
+              </button>
+              <span className="text-[10px] text-white/50">{isMuted ? 'Вкл.' : 'Выкл.'}</span>
+            </div>
 
             {isVideo && (
-              <button
-                onClick={() => callManager.toggleCamera()}
-                className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-lg ${
-                  isCameraOff ? 'bg-red-600/80 hover:bg-red-600' : 'bg-dark-600 hover:bg-dark-500'
-                }`}
-                title={isCameraOff ? 'Включить камеру' : 'Выключить камеру'}
-              >
-                <CameraIcon off={isCameraOff} />
-              </button>
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  onClick={() => callManager.toggleCamera()}
+                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg active:scale-95 ${
+                    isCameraOff ? 'bg-red-600/80' : 'bg-white/20 backdrop-blur-sm'
+                  }`}
+                >
+                  <CameraIcon off={isCameraOff} />
+                </button>
+                <span className="text-[10px] text-white/50">{isCameraOff ? 'Вкл.' : 'Выкл.'}</span>
+              </div>
             )}
 
-            <button
-              onClick={() => callManager.endCall()}
-              className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors shadow-lg"
-              title="Завершить"
-            >
-              <PhoneDownIcon />
-            </button>
-          </>
+            <div className="flex flex-col items-center gap-1">
+              <button
+                onClick={() => callManager.endCall()}
+                className="rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-all shadow-lg shadow-red-600/30 active:scale-95"
+                style={{ width: '64px', height: '64px' }}
+              >
+                <PhoneDownIcon />
+              </button>
+              <span className="text-[10px] text-white/50">Завершить</span>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -195,13 +195,18 @@ class CallManager {
     try { navigator.vibrate?.([500, 200, 500, 200, 500, 200, 500]); } catch {}
   }
 
+  private dismissCallNotification() {
+    navigator.serviceWorker?.controller?.postMessage({ type: 'call:dismiss' });
+  }
+
   async acceptCall() {
     const store = useCallStore.getState();
     const call = store.activeCall;
     if (!call || !call.offer) return;
 
-    // Stop ringtone
+    // Stop ringtone & dismiss notification
     this.stopRingtone();
+    this.dismissCallNotification();
 
     store.updateCallStatus('connecting');
 
@@ -346,6 +351,7 @@ class CallManager {
     const call = useCallStore.getState().activeCall;
     if (!call) return;
     this.stopRingtone();
+    this.dismissCallNotification();
     wsTransport.send('call:decline', { callerId: call.peerId, callId: call.callId });
     this.cleanup();
   }
@@ -358,16 +364,19 @@ class CallManager {
       wsTransport.send('call:end', { targetUserId: call.peerId, callId: call.callId, reason: 'ended' });
     }
     this.stopRingtone();
+    this.dismissCallNotification();
     this.cleanup();
   }
 
   handleCallEnded() {
     this.stopRingtone();
+    this.dismissCallNotification();
     this.cleanup();
   }
 
   handleCallDeclined() {
     this.stopRingtone();
+    this.dismissCallNotification();
     useCallStore.getState().updateCallStatus('ended');
     setTimeout(() => this.cleanup(), 2000);
   }

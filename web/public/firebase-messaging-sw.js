@@ -17,7 +17,27 @@ self.addEventListener('push', (event) => {
   const body = fcmData.body || 'Новое сообщение';
   const isCall = fcmData.type === 'call';
 
-  if (isCall) {
+  const isCallEnd = fcmData.type === 'call:end' || fcmData.type === 'call:decline' || fcmData.type === 'call:busy';
+
+  if (isCallEnd) {
+    // Close call notification and optionally show "missed call"
+    self._activeCallId = null;
+    event.waitUntil(
+      self.registration.getNotifications({ tag: 'incoming-call' }).then((notifications) => {
+        notifications.forEach((n) => n.close());
+        // Show missed call notification if it was incoming
+        if (fcmData.missed) {
+          return self.registration.showNotification('Пропущенный звонок', {
+            body: fcmData.callerName || title,
+            icon: '/icon-192.png',
+            badge: '/logo-f.png',
+            tag: 'missed-call',
+            vibrate: [200],
+          });
+        }
+      })
+    );
+  } else if (isCall) {
     // Call notification with Accept/Decline actions + repeating vibration
     const callOptions = {
       body,
@@ -63,6 +83,17 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification(title, options)
     );
+  }
+});
+
+// Listen for messages from app to close call notification
+self.addEventListener('message', (event) => {
+  const { type } = event.data || {};
+  if (type === 'call:dismiss') {
+    self._activeCallId = null;
+    self.registration.getNotifications({ tag: 'incoming-call' }).then((notifications) => {
+      notifications.forEach((n) => n.close());
+    });
   }
 });
 
@@ -124,7 +155,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // ── PWA caching ─────────────────────────────────────────────────
-const CACHE_NAME = 'fomo-chat-v8';
+const CACHE_NAME = 'fomo-chat-v9';
 const STATIC_ASSETS = ['/'];
 
 self.addEventListener('install', (event) => {

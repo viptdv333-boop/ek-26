@@ -535,6 +535,25 @@ async function handleEvent(
       break;
     }
 
+    // ── Game events ──────────────────────────────────────────────
+    case 'game:move': {
+      const { targetUserId, gameData } = data;
+      sendToUser(targetUserId, 'game:move', { userId: client.userId, gameData });
+      break;
+    }
+
+    case 'game:state': {
+      const { targetUserId, state } = data;
+      sendToUser(targetUserId, 'game:state', { state });
+      break;
+    }
+
+    case 'game:end': {
+      const { targetUserId } = data;
+      sendToUser(targetUserId, 'game:end', { userId: client.userId });
+      break;
+    }
+
     case 'call:offer': {
       const { targetUserId, callId, type, offer } = data;
       console.log(`[Call] Incoming call from ${client.userId} to ${targetUserId}, type=${type}`);

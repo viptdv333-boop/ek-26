@@ -13,6 +13,7 @@ import { VoiceRecorder } from './VoiceRecorder';
 import { GroupInfoPanel } from './GroupInfoPanel';
 import { ContactCard } from './ContactCard';
 import { callManager } from '../services/webrtc/CallManager';
+import { GameOverlay } from './GameOverlay';
 import { conversationsApi } from '../services/api/endpoints';
 import { useContactsStore } from '../stores/contactsStore';
 import type { Attachment } from '../stores/chatStore';
@@ -35,6 +36,7 @@ export function ChatRoom({ conversationId }: Props) {
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [showContactCard, setShowContactCard] = useState(false);
+  const [activeGame, setActiveGame] = useState<{ isHost: boolean; opponentId: string; opponentName: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const replyingTo = useChatStore((s) => s.replyingTo);
   const setReplyingTo = useChatStore((s) => s.setReplyingTo);
@@ -83,17 +85,31 @@ export function ChatRoom({ conversationId }: Props) {
       setFontColorOther(localStorage.getItem('ek26_font_color_other') || '#e5e7eb');
     };
     const openGroupInfoHandler = () => setShowGroupInfo(true);
+    const gameEventHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail) return;
+      // If we receive a game:state with opponent-ready or waiting, and we're not in game — auto-join
+      if (detail.event === 'game:state' && detail.data?.state?.type === 'waiting' && !activeGame) {
+        const senderId = detail.data?.state?.hostId || '';
+        const other = conv?.participants?.find((p: any) => p.id !== userId);
+        if (other) {
+          setActiveGame({ isHost: false, opponentId: other.id, opponentName: other.displayName });
+        }
+      }
+    };
     window.addEventListener('wallpaper-changed', wallpaperHandler);
     window.addEventListener('storage', wallpaperHandler);
     window.addEventListener('font-size-changed', fontHandler);
     window.addEventListener('bubble-style-changed', bubbleHandler);
     window.addEventListener('open-group-info', openGroupInfoHandler);
+    window.addEventListener('game-event', gameEventHandler);
     return () => {
       window.removeEventListener('wallpaper-changed', wallpaperHandler);
       window.removeEventListener('storage', wallpaperHandler);
       window.removeEventListener('font-size-changed', fontHandler);
       window.removeEventListener('bubble-style-changed', bubbleHandler);
       window.removeEventListener('open-group-info', openGroupInfoHandler);
+      window.removeEventListener('game-event', gameEventHandler);
     };
   }, []);
 
@@ -586,8 +602,25 @@ export function ChatRoom({ conversationId }: Props) {
             </span>
           )}
         </div>
-        {/* Call buttons */}
+        {/* Game + Call buttons */}
         <div className="flex items-center gap-1 ml-2">
+          {conv?.type === 'direct' && (
+            <button
+              onClick={() => {
+                const other = getOther();
+                if (other) {
+                  // Send game invite as a message
+                  const inviteMsg = `🎮 Приглашение в Snake Battle! Нажмите чтобы играть.`;
+                  messagesApi.send(conversationId, { text: inviteMsg, type: 'game_invite' } as any);
+                  setActiveGame({ isHost: true, opponentId: other.id, opponentName: other.displayName });
+                }
+              }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+              title="Snake Battle"
+            >
+              <span className="text-sm">🎮</span>
+            </button>
+          )}
           <button
             onClick={() => {
               const other = getOther();
@@ -892,6 +925,15 @@ export function ChatRoom({ conversationId }: Props) {
       </div>
 
       {forwardMsg && <ForwardDialog message={forwardMsg} onClose={() => setForwardMsg(null)} />}
+
+      {activeGame && (
+        <GameOverlay
+          isHost={activeGame.isHost}
+          opponentId={activeGame.opponentId}
+          opponentName={activeGame.opponentName}
+          onClose={() => setActiveGame(null)}
+        />
+      )}
 
       {showContactCard && conv?.type === 'direct' && (() => {
         const other = conv.participants.find((p: any) => p.id !== userId);

@@ -348,6 +348,13 @@ class WebSocketTransport {
         store.updateReactions(data.messageId, data.reactions);
         break;
 
+      // Game events — relay to window for iframe games
+      case 'game:move':
+      case 'game:state':
+      case 'game:end':
+        window.dispatchEvent(new CustomEvent('game-event', { detail: { event, data } }));
+        break;
+
       case 'keys:low':
         keyManager.replenishIfNeeded().catch(console.error);
         break;

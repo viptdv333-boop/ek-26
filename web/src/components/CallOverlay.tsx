@@ -76,6 +76,15 @@ export function CallOverlay() {
     return () => clearInterval(interval);
   }, [activeCall?.startedAt]);
 
+  // Auto-end ringing after 30s
+  useEffect(() => {
+    if (!activeCall || activeCall.status !== 'ringing') return;
+    const timeout = setTimeout(() => {
+      callManager.endCall();
+    }, 30000);
+    return () => clearTimeout(timeout);
+  }, [activeCall?.status, activeCall?.callId]);
+
   if (!activeCall) return null;
 
   const isVideo = activeCall.type === 'video';

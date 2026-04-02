@@ -84,6 +84,14 @@ class WebSocketTransport {
       this._connected = false;
       this.ws = null;
       this.emit('connection', { status: 'disconnected' });
+      // Auto-end call on WS disconnect
+      try {
+        const { callManager } = require('../webrtc/CallManager');
+        const { useCallStore } = require('../../stores/callStore');
+        if (useCallStore.getState().activeCall) {
+          callManager.handleCallEnded();
+        }
+      } catch {}
       this.scheduleReconnect();
     };
 

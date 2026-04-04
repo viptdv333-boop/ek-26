@@ -18,6 +18,13 @@
     padding: 0;
   }
 
+  /* Increase UI size by 20% on mobile for accessibility */
+  @media (max-width: 768px) {
+    html {
+      font-size: 120%;
+    }
+  }
+
   /* Lock viewport only inside chat app */
   .app-fixed-viewport,
   .app-fixed-viewport body,

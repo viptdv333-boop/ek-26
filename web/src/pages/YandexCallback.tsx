@@ -19,7 +19,7 @@ export function YandexCallback() {
     authApi.yandexLogin(code)
       .then((res) => {
         login(res.accessToken, res.refreshToken, res.user);
-        navigate('/', { replace: true });
+        navigate('/chat', { replace: true });
       })
       .catch((err) => {
         console.error('Yandex auth error:', err);

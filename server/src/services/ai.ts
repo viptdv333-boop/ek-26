@@ -178,7 +178,7 @@ async function callOpenRouter(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://chat.fomo.broker',
+        'HTTP-Referer': 'https://fomo.talk',
         'X-Title': 'FOMO Chat',
       },
       body: JSON.stringify({ model, messages, max_tokens: 1024, temperature: 0.7 }),

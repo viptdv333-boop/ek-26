@@ -18,8 +18,8 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
-        buildConfigField("String", "API_BASE_URL", "\"https://chat.fomo.broker/api\"")
-        buildConfigField("String", "WS_URL", "\"wss://chat.fomo.broker/ws\"")
+        buildConfigField("String", "API_BASE_URL", "\"https://fomo.talk/api\"")
+        buildConfigField("String", "WS_URL", "\"wss://fomo.talk/ws\"")
     }
 
     buildTypes {

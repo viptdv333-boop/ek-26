@@ -15,7 +15,7 @@ export function TermsPage() {
       <section className="space-y-4 text-sm leading-relaxed">
         <h2 className="text-lg font-semibold text-white mt-6">1. Acceptance of Terms</h2>
         <p>
-          By accessing or using FOMO Chat at chat.fomo.broker, you agree to be bound by these
+          By accessing or using FOMO Chat at fomo.talk, you agree to be bound by these
           Terms of Service. If you do not agree, do not use the service.
         </p>
 

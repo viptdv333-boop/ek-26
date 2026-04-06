@@ -3,7 +3,7 @@ set -euo pipefail
 
 VPS="root@85.198.82.136"
 REMOTE_DIR="/opt/ek26"
-DOMAIN="chat.fomo.broker"
+DOMAIN="fomo.talk"
 
 echo "=== ЭК-26 Deploy ==="
 
@@ -22,7 +22,7 @@ rsync -avz --delete \
 echo "🔧 Checking nginx config..."
 ssh "$VPS" "
   if [ ! -f /etc/nginx/sites-available/$DOMAIN ]; then
-    cp $REMOTE_DIR/deploy/chat.fomo.broker.conf /etc/nginx/sites-available/$DOMAIN
+    cp $REMOTE_DIR/deploy/fomo.talk.conf /etc/nginx/sites-available/$DOMAIN
     ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/$DOMAIN
     echo '✅ Nginx config installed'
     echo '⚠️  Run: certbot certonly --nginx -d $DOMAIN'

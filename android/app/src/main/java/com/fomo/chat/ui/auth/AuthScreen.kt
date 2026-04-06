@@ -205,7 +205,7 @@ fun AuthScreen(
                 onClick = {
                     val intent = Intent(
                         Intent.ACTION_VIEW,
-                        Uri.parse("https://chat.fomo.broker/auth/telegram-mobile")
+                        Uri.parse("https://fomo.talk/auth/telegram-mobile")
                     )
                     context.startActivity(intent)
                 },

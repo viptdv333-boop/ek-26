@@ -15,7 +15,7 @@ export function PrivacyPage() {
       <section className="space-y-4 text-sm leading-relaxed">
         <h2 className="text-lg font-semibold text-white mt-6">1. Introduction</h2>
         <p>
-          FOMO Chat ("we", "our", "us") operates the messaging platform at chat.fomo.broker.
+          FOMO Chat ("we", "our", "us") operates the messaging platform at fomo.talk.
           This Privacy Policy explains how we collect, use, and protect your personal information
           when you use our service.
         </p>

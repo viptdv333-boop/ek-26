@@ -137,7 +137,7 @@ export async function contactRoutes(app: FastifyInstance) {
     }
 
     try {
-      const message = 'Join FOMO Chat! Download: https://chat.fomo.broker';
+      const message = 'Join FOMO Chat! Download: https://fomo.talk';
       await sendInviteSms(phone, message);
       return { success: true };
     } catch (err: any) {

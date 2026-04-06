@@ -620,7 +620,7 @@ export function Sidebar() {
       {/* Header — logo + widget + settings gear */}
       <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <img src="/logo-f.png" alt="F" className="h-8 w-8 object-contain shrink-0 rounded-lg" />
+          <a href="/"><img src="/logo-f.png" alt="F" className="h-8 w-8 object-contain shrink-0 rounded-lg cursor-pointer hover:opacity-80 transition-opacity" /></a>
           <HeaderWidget />
         </div>
         <button

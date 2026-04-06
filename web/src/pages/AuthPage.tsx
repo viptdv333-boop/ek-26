@@ -545,13 +545,13 @@ export function AuthPage() {
 
       <div className="auth-card relative z-10 mx-4">
         {/* Logo */}
-        <div className="flex items-center justify-center mb-5" style={{ gap: '0.6rem' }}>
+        <a href="/" className="flex items-center justify-center mb-5 no-underline" style={{ gap: '0.6rem' }}>
           <img src="/logo-f.png" alt="F" className="shrink-0" style={{ height: '3.2rem', width: '3.2rem', objectFit: 'contain' }} />
           <div className="flex flex-col items-center">
             <h1 className="font-extrabold" style={{ fontSize: '1.6rem', lineHeight: 1, color: 'var(--a-accent)' }}>CHAT</h1>
             <p className="uppercase tracking-widest font-semibold" style={{ color: 'var(--a-muted)', fontSize: '0.5rem', lineHeight: 1, marginTop: '0.25rem' }}>{t('auth.subtitle')}</p>
           </div>
-        </div>
+        </a>
 
         {/* ── PHONE step (Login / Register tabs) ────────────────── */}
         {step === 'phone' && (

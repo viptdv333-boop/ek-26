@@ -483,10 +483,12 @@
 .auth-page {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
+  position: fixed;
+  inset: 0;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }

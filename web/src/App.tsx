@@ -15,14 +15,15 @@ export function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<HomePage />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
-      <Route path="/auth" element={isAuthenticated ? <Navigate to="/" /> : <AuthPage />} />
+      <Route path="/auth" element={isAuthenticated ? <Navigate to="/chat" /> : <AuthPage />} />
       <Route path="/auth/yandex/callback" element={<YandexCallback />} />
-      <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPage /> : <Navigate to="/" />} />
+      <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPage /> : <Navigate to="/chat" />} />
       <Route path="/join/:inviteCode" element={isAuthenticated ? <JoinGroupPage /> : <Navigate to="/auth" />} />
-      <Route path="/" element={isAuthenticated ? <ChatPage /> : <Navigate to="/auth" />} />
+      <Route path="/chat" element={isAuthenticated ? <ChatPage /> : <Navigate to="/auth" />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

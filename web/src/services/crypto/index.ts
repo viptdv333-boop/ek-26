@@ -5,6 +5,7 @@ export { SessionManager } from './SessionManager';
 export { DecryptedMessageCache } from './DecryptedMessageCache';
 export { SenderKeyStore, senderKeyStore } from './SenderKeyStore';
 export { SenderKeyManager, senderKeyManager } from './SenderKeyManager';
+export { GroupSessionManager, groupSessionManager } from './GroupSessionManager';
 
 // Lazy-initialized singletons
 import { KeyStore } from './KeyStore';

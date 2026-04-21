@@ -267,10 +267,11 @@ async function handleEvent(
       const { conversationId, text, type = 'text', replyToId, attachments, forwardedFrom } = data;
 
       const isEncrypted = !!(data.encrypted && data.envelope);
+      const isGroupEncrypted = !!(data.groupEncrypted && data.envelope);
 
       // For plaintext messages, text or attachments required; for encrypted, envelope required
       const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
-      if (!conversationId || (!isEncrypted && !text?.trim() && !hasAttachments)) return;
+      if (!conversationId || (!isEncrypted && !isGroupEncrypted && !text?.trim() && !hasAttachments)) return;
 
       const sender = await User.findById(client.userId).select('displayName avatarUrl');
       if (!sender) return;
@@ -305,6 +306,7 @@ async function handleEvent(
           type,
           text: plaintext,
           encryptedPayload: Buffer.from(data.envelope, 'utf8'),
+          encryptionType: 'e2ee',
           deliveredVia: 'ws',
         });
 
@@ -320,6 +322,35 @@ async function handleEvent(
           type: message.type,
           text: plaintext,
           encrypted: true,
+          envelope: data.envelope,
+          status: 'sent',
+          createdAt: message.createdAt.toISOString(),
+        };
+      } else if (isGroupEncrypted) {
+        // Group E2EE via Sender Keys — store envelope; server cannot decrypt
+        const plaintext = data.text?.trim() || null;
+        const message = await Message.create({
+          conversationId: new mongoose.Types.ObjectId(conversationId),
+          senderId: new mongoose.Types.ObjectId(client.userId),
+          type,
+          text: plaintext, // fallback for sender's own device only
+          encryptedPayload: Buffer.from(data.envelope, 'utf8'),
+          encryptionType: 'group_senderkey',
+          deliveredVia: 'ws',
+        });
+
+        await Conversation.findByIdAndUpdate(conversationId, {
+          lastMessage: { text: '🔒 Зашифровано', senderName: sender.displayName, timestamp: message.createdAt },
+          updatedAt: new Date(),
+        });
+
+        messageData = {
+          id: message._id.toString(),
+          conversationId,
+          sender: { id: client.userId, displayName: sender.displayName, avatarUrl: sender.avatarUrl },
+          type: message.type,
+          text: null, // strip plaintext from broadcast — recipients decrypt from envelope
+          groupEncrypted: true,
           envelope: data.envelope,
           status: 'sent',
           createdAt: message.createdAt.toISOString(),

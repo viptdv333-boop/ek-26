@@ -12,6 +12,7 @@ export interface IMessage extends Document {
     callerId: Types.ObjectId;
   } | null;
   encryptedPayload: Buffer | null;
+  encryptionType: 'e2ee' | 'group_senderkey' | null;
   iv: Buffer | null;
   senderRatchetKey: Buffer | null;
   messageIndex: number | null;
@@ -52,6 +53,7 @@ const messageSchema = new Schema<IMessage>(
       default: null,
     },
     encryptedPayload: { type: Buffer, default: null },
+    encryptionType: { type: String, enum: ['e2ee', 'group_senderkey', null], default: null },
     iv: { type: Buffer, default: null },
     senderRatchetKey: { type: Buffer, default: null },
     messageIndex: { type: Number, default: null },

@@ -5,7 +5,7 @@ import { messagesApi, messageActionsApi } from '../services/api/endpoints';
 import { useTranslation } from '../i18n';
 import { wsTransport } from '../services/transport/WebSocketTransport';
 import { MessageBubble } from './MessageBubble';
-import { sessionManager, messageCache } from '../services/crypto';
+import { sessionManager, messageCache, groupSessionManager } from '../services/crypto';
 import { uploadFile, isImageFile, isVideoFile } from '../services/api/upload';
 import { ForwardDialog } from './ForwardDialog';
 import { EmojiPicker } from './EmojiPicker';
@@ -212,6 +212,7 @@ export function ChatRoom({ conversationId }: Props) {
       const normalized = await Promise.all(list.map(async (m: any) => {
         let text = m.text;
         const encrypted = m.encrypted || false;
+        const groupEncrypted = m.groupEncrypted || false;
         if (!text && encrypted && m.envelope) {
           try {
             const cached = await messageCache.get(m.id);
@@ -224,6 +225,19 @@ export function ChatRoom({ conversationId }: Props) {
             }
           } catch {
             text = t('chat.oldVersionMessage');
+          }
+        } else if (!text && groupEncrypted && m.envelope) {
+          try {
+            const cached = await messageCache.get(m.id);
+            if (cached) {
+              text = cached;
+            } else {
+              const senderId = m.senderId || m.sender?.id || '';
+              text = await groupSessionManager.decryptGroupMessage(m.conversationId, senderId, m.envelope);
+              await messageCache.put(m.id, text);
+            }
+          } catch {
+            text = '\ud83d\udd12 \u0417\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043e'; // "🔒 Зашифровано"
           }
         }
         return {
@@ -254,6 +268,15 @@ export function ChatRoom({ conversationId }: Props) {
 
   useEffect(() => {
     loadMessages();
+
+    // Fetch pending sender keys for groups (E2EE setup)
+    if (conv?.type === 'group') {
+      import('../services/crypto').then(({ senderKeyManager }) => {
+        senderKeyManager.fetchPendingSenderKeys(conversationId).catch((err: any) => {
+          console.warn('Failed to fetch group sender keys:', err);
+        });
+      });
+    }
 
     // Reload messages when app returns from background (mobile)
     const handleVisibility = () => {
@@ -436,6 +459,28 @@ export function ChatRoom({ conversationId }: Props) {
           sent = true;
         } catch (err) {
           console.warn('E2EE failed, sending plaintext:', err);
+        }
+      }
+    }
+
+    // Group E2EE (Sender Keys) for text-only messages
+    if (!sent && conv?.type === 'group' && trimmed && !hasAttachments) {
+      const otherMemberIds = conv.participants
+        .map((p) => (typeof p === 'string' ? p : p.id))
+        .filter((id) => id !== userId);
+
+      if (otherMemberIds.length > 0) {
+        try {
+          const envelope = await groupSessionManager.encryptGroupMessage(conversationId, trimmed, otherMemberIds);
+          wsTransport.setPendingText(conversationId, trimmed);
+          if (wsTransport.connected) {
+            wsTransport.send('message:send', { conversationId, type: 'text', groupEncrypted: true, envelope, text: trimmed });
+          } else {
+            await messagesApi.send(conversationId, { type: 'text', groupEncrypted: true, envelope, text: trimmed } as any);
+          }
+          sent = true;
+        } catch (err) {
+          console.warn('Group E2EE failed, falling back to plaintext:', err);
         }
       }
     }

@@ -1,6 +1,6 @@
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
-import { sessionManager, messageCache, keyManager, senderKeyManager } from '../crypto';
+import { sessionManager, messageCache, keyManager, senderKeyManager, groupSessionManager } from '../crypto';
 import { callManager } from '../webrtc/CallManager';
 
 type EventHandler = (data: any) => void;
@@ -156,6 +156,7 @@ class WebSocketTransport {
         // From other users — data has sender object
         let text = data.text;
         const encrypted = !!data.encrypted;
+        const groupEncrypted = !!data.groupEncrypted;
         // If server provides text, use it; only decrypt if text is missing (old flow)
         if (!text && encrypted && data.envelope) {
           try {
@@ -164,6 +165,15 @@ class WebSocketTransport {
           } catch (err) {
             console.error('Decrypt error (message:new):', err);
             text = 'Сообщение';
+          }
+        } else if (!text && groupEncrypted && data.envelope) {
+          try {
+            const senderId = data.sender?.id || data.senderId;
+            text = await groupSessionManager.decryptGroupMessage(data.conversationId, senderId, data.envelope);
+            await messageCache.put(data.id, text);
+          } catch (err) {
+            console.error('Group decrypt error (message:new):', err);
+            text = '🔒 Зашифровано';
           }
         }
         const hasAttachments = Array.isArray(data.attachments) && data.attachments.length > 0;

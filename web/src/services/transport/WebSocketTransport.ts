@@ -1,6 +1,6 @@
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
-import { sessionManager, messageCache, keyManager } from '../crypto';
+import { sessionManager, messageCache, keyManager, senderKeyManager } from '../crypto';
 import { callManager } from '../webrtc/CallManager';
 
 type EventHandler = (data: any) => void;
@@ -357,6 +357,13 @@ class WebSocketTransport {
 
       case 'keys:low':
         keyManager.replenishIfNeeded().catch(console.error);
+        break;
+
+      case 'group:senderkey':
+        // New sender key bundle arrived for a group — fetch and decrypt
+        if (data?.conversationId && data?.fromUserId) {
+          senderKeyManager.handleSenderKeyNotification(data.conversationId, data.fromUserId).catch(console.error);
+        }
         break;
     }
   }

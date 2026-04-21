@@ -179,7 +179,7 @@ test('serialization round-trip: receiver state with skipped keys', () => {
   const bob = processSenderKeyDistribution(getSenderKeyDistribution(alice));
 
   const m1 = encryptSenderMessage(alice, enc('one'));
-  const m2 = encryptSenderMessage(alice, enc('two'));
+  encryptSenderMessage(alice, enc('two')); // m2 not needed for this test
   const m3 = encryptSenderMessage(alice, enc('three'));
 
   // Receive #3 first — stores skipped keys for 1,2

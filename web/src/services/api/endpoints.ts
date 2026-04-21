@@ -53,6 +53,14 @@ export const conversationsApi = {
   removeMember: (id: string, userId: string) => api.delete<any>(`/conversations/${id}/members/${userId}`),
   updateAdmin: (id: string, userId: string, action: 'add' | 'remove') =>
     api.patch<{ success: boolean }>(`/conversations/${id}/admins`, { userId, action }),
+
+  // Group E2EE sender key distribution
+  uploadSenderKeys: (id: string, bundles: Array<{ toUserId: string; encryptedKey: string }>) =>
+    api.post<{ success: boolean; saved: number }>(`/conversations/${id}/senderkey`, { bundles }),
+  fetchSenderKeys: (id: string) =>
+    api.get<Array<{ fromUserId: string; encryptedKey: string; createdAt: string }>>(`/conversations/${id}/senderkeys`),
+  deleteSenderKeyBundle: (id: string, fromUserId: string) =>
+    api.delete<{ success: boolean }>(`/conversations/${id}/senderkeys/${fromUserId}`),
 };
 
 // Messages

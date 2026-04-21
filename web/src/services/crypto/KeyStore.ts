@@ -9,7 +9,7 @@
  */
 
 const DB_NAME = 'ek26-keys';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export interface IdentityRecord {
   userId: string;
@@ -48,6 +48,15 @@ export class KeyStore {
         }
         if (!db.objectStoreNames.contains('sessions')) {
           db.createObjectStore('sessions', { keyPath: 'recipientUserId' });
+        }
+        // v2: group E2EE
+        if (!db.objectStoreNames.contains('ownSenderKeys')) {
+          // One own sender key per conversation. keyPath: conversationId
+          db.createObjectStore('ownSenderKeys', { keyPath: 'conversationId' });
+        }
+        if (!db.objectStoreNames.contains('receiverSenderKeys')) {
+          // Composite key: `${conversationId}::${senderUserId}`
+          db.createObjectStore('receiverSenderKeys', { keyPath: 'id' });
         }
       };
       req.onsuccess = () => {
@@ -153,6 +162,67 @@ export class KeyStore {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
+  }
+
+  // ── Group E2EE: own sender keys ────────────────────────────────
+  async saveOwnSenderKey(conversationId: string, serialized: object): Promise<void> {
+    await this.init();
+    const store = this.tx('ownSenderKeys', 'readwrite');
+    await this.request(store.put({ conversationId, data: serialized, updatedAt: Date.now() }));
+  }
+
+  async getOwnSenderKey(conversationId: string): Promise<object | null> {
+    await this.init();
+    const store = this.tx('ownSenderKeys', 'readonly');
+    const rec = await this.request(store.get(conversationId));
+    return rec?.data ?? null;
+  }
+
+  async deleteOwnSenderKey(conversationId: string): Promise<void> {
+    await this.init();
+    const store = this.tx('ownSenderKeys', 'readwrite');
+    await this.request(store.delete(conversationId));
+  }
+
+  // ── Group E2EE: receiver sender keys (per conversation × sender) ──
+  async saveReceiverSenderKey(conversationId: string, senderUserId: string, serialized: object): Promise<void> {
+    await this.init();
+    const store = this.tx('receiverSenderKeys', 'readwrite');
+    const id = `${conversationId}::${senderUserId}`;
+    await this.request(store.put({ id, conversationId, senderUserId, data: serialized, updatedAt: Date.now() }));
+  }
+
+  async getReceiverSenderKey(conversationId: string, senderUserId: string): Promise<object | null> {
+    await this.init();
+    const store = this.tx('receiverSenderKeys', 'readonly');
+    const rec = await this.request(store.get(`${conversationId}::${senderUserId}`));
+    return rec?.data ?? null;
+  }
+
+  async getAllReceiverSenderKeys(conversationId: string): Promise<Array<{ senderUserId: string; data: object }>> {
+    await this.init();
+    const store = this.tx('receiverSenderKeys', 'readonly');
+    const all = await this.request(store.getAll() as IDBRequest<any[]>);
+    return all
+      .filter((r) => r.conversationId === conversationId)
+      .map((r) => ({ senderUserId: r.senderUserId, data: r.data }));
+  }
+
+  async deleteReceiverSenderKey(conversationId: string, senderUserId: string): Promise<void> {
+    await this.init();
+    const store = this.tx('receiverSenderKeys', 'readwrite');
+    await this.request(store.delete(`${conversationId}::${senderUserId}`));
+  }
+
+  async deleteAllSenderKeys(conversationId: string): Promise<void> {
+    await this.init();
+    // Delete own key
+    await this.deleteOwnSenderKey(conversationId);
+    // Delete all receiver keys for this conversation
+    const all = await this.getAllReceiverSenderKeys(conversationId);
+    for (const { senderUserId } of all) {
+      await this.deleteReceiverSenderKey(conversationId, senderUserId);
+    }
   }
 }
 

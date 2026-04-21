@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { Conversation } from '../models/Conversation';
 import { Message } from '../models/Message';
 import { User } from '../models/User';
+import { SenderKeyBundle } from '../models/SenderKeyBundle';
 import { sendToUser } from '../ws/handler';
 import mongoose from 'mongoose';
 
@@ -538,5 +539,111 @@ export async function conversationRoutes(app: FastifyInstance) {
       avatarUrl: conversation.groupMeta?.avatarUrl,
       memberCount: conversation.participants.length,
     };
+  });
+
+  // ── Group E2EE: upload sender key bundles (one per recipient) ───
+  // Body: { bundles: [{ toUserId: string; encryptedKey: string }] }
+  // Server never sees plaintext sender key — only relays encrypted bundles.
+  app.post('/api/conversations/:id/senderkey', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { bundles } = request.body as { bundles: Array<{ toUserId: string; encryptedKey: string }> };
+    const fromUserId = new mongoose.Types.ObjectId(request.userId);
+
+    if (!Array.isArray(bundles) || bundles.length === 0) {
+      return reply.code(400).send({ error: 'No bundles provided' });
+    }
+
+    const conversation = await Conversation.findById(id).lean();
+    if (!conversation || conversation.type !== 'group') {
+      return reply.code(404).send({ error: 'Group not found' });
+    }
+
+    // Verify sender is a participant
+    const isMember = conversation.participants.some((p: any) => p.toString() === request.userId);
+    if (!isMember) {
+      return reply.code(403).send({ error: 'Not a member of this group' });
+    }
+
+    const participantSet = new Set(conversation.participants.map((p: any) => p.toString()));
+    const convObjId = new mongoose.Types.ObjectId(id);
+
+    // Upsert each bundle
+    const ops = bundles
+      .filter((b) => b && typeof b.toUserId === 'string' && typeof b.encryptedKey === 'string')
+      .filter((b) => participantSet.has(b.toUserId) && b.toUserId !== request.userId)
+      .map((b) => ({
+        updateOne: {
+          filter: {
+            conversationId: convObjId,
+            fromUserId,
+            toUserId: new mongoose.Types.ObjectId(b.toUserId),
+          },
+          update: {
+            $set: {
+              conversationId: convObjId,
+              fromUserId,
+              toUserId: new mongoose.Types.ObjectId(b.toUserId),
+              encryptedKey: b.encryptedKey,
+              createdAt: new Date(),
+            },
+          },
+          upsert: true,
+        },
+      }));
+
+    if (ops.length > 0) {
+      await SenderKeyBundle.bulkWrite(ops);
+    }
+
+    // Notify recipients via WS so they can fetch the new key
+    for (const bundle of bundles) {
+      if (participantSet.has(bundle.toUserId) && bundle.toUserId !== request.userId) {
+        sendToUser(bundle.toUserId, 'group:senderkey', {
+          conversationId: id,
+          fromUserId: request.userId,
+        });
+      }
+    }
+
+    return { success: true, saved: ops.length };
+  });
+
+  // Fetch sender key bundles intended for the current user in a group
+  // Returns one bundle per sender (other members)
+  app.get('/api/conversations/:id/senderkeys', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const toUserId = new mongoose.Types.ObjectId(request.userId);
+
+    const conversation = await Conversation.findById(id).lean();
+    if (!conversation || conversation.type !== 'group') {
+      return reply.code(404).send({ error: 'Group not found' });
+    }
+
+    const isMember = conversation.participants.some((p: any) => p.toString() === request.userId);
+    if (!isMember) {
+      return reply.code(403).send({ error: 'Not a member of this group' });
+    }
+
+    const bundles = await SenderKeyBundle.find({
+      conversationId: new mongoose.Types.ObjectId(id),
+      toUserId,
+    }).lean();
+
+    return bundles.map((b: any) => ({
+      fromUserId: b.fromUserId.toString(),
+      encryptedKey: b.encryptedKey,
+      createdAt: b.createdAt.toISOString(),
+    }));
+  });
+
+  // Delete a specific bundle after successful processing (cleanup)
+  app.delete('/api/conversations/:id/senderkeys/:fromUserId', { preHandler: [app.authenticate] }, async (request) => {
+    const { id, fromUserId } = request.params as { id: string; fromUserId: string };
+    await SenderKeyBundle.deleteOne({
+      conversationId: new mongoose.Types.ObjectId(id),
+      fromUserId: new mongoose.Types.ObjectId(fromUserId),
+      toUserId: new mongoose.Types.ObjectId(request.userId),
+    });
+    return { success: true };
   });
 }

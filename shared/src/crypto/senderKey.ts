@@ -25,7 +25,7 @@ import { ed25519 } from '@noble/curves/ed25519';
 import { hkdfExpand } from './hkdf';
 import { aesEncrypt, aesDecrypt } from './aes';
 import { randomBytes } from './random';
-import { toBase64, fromBase64, concatBytes } from './encoding';
+import { toBase64, fromBase64 } from './encoding';
 
 const CHAIN_KEY_LENGTH = 32;
 const MESSAGE_KEY_LENGTH = 32;

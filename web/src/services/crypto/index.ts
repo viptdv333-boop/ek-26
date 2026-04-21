@@ -3,6 +3,8 @@ export type { IdentityRecord, SessionRecord } from './KeyStore';
 export { KeyManager } from './KeyManager';
 export { SessionManager } from './SessionManager';
 export { DecryptedMessageCache } from './DecryptedMessageCache';
+export { SenderKeyStore, senderKeyStore } from './SenderKeyStore';
+export { SenderKeyManager, senderKeyManager } from './SenderKeyManager';
 
 // Lazy-initialized singletons
 import { KeyStore } from './KeyStore';

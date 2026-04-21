@@ -375,6 +375,41 @@ class WebSocketTransport {
           senderKeyManager.handleSenderKeyNotification(data.conversationId, data.fromUserId).catch(console.error);
         }
         break;
+
+      case 'group:membership_changed': {
+        // Member added or removed — forget old keys and rotate our own
+        if (!data?.conversationId) break;
+        const convId = data.conversationId;
+        const action = data.action as 'added' | 'removed';
+        const affected = (data.affectedUserIds as string[]) || [];
+
+        (async () => {
+          try {
+            const { senderKeyStore, senderKeyManager: skm } = await import('../crypto');
+            // Find the conversation to get current member list
+            const conv = store.conversations.find((c) => c.id === convId);
+            if (!conv) return;
+            const myId = currentUserId;
+            const otherMemberIds = (conv.participants as any[])
+              .map((p: any) => (typeof p === 'string' ? p : p.id))
+              .filter((id: string) => id !== myId);
+
+            if (action === 'removed') {
+              // Forget removed user's sender key (forward secrecy — they must re-key to read new msgs)
+              for (const uid of affected) {
+                await senderKeyStore.deleteReceiver(convId, uid);
+              }
+            }
+
+            // Rotate own sender key so newly-added members get a fresh key
+            // and removed members can't decrypt new messages
+            await skm.rotateOwnSenderKey(convId, otherMemberIds);
+          } catch (err) {
+            console.warn('Group membership change — rotation failed:', err);
+          }
+        })();
+        break;
+      }
     }
   }
 }

@@ -326,6 +326,18 @@ export async function conversationRoutes(app: FastifyInstance) {
       $addToSet: { participants: { $each: newIds } },
     });
 
+    // Notify all existing members to rotate their sender keys (E2EE)
+    const updated = await Conversation.findById(id).lean();
+    if (updated) {
+      for (const pid of updated.participants) {
+        sendToUser(pid.toString(), 'group:membership_changed', {
+          conversationId: id,
+          action: 'added',
+          affectedUserIds: userIds,
+        });
+      }
+    }
+
     return { success: true };
   });
 
@@ -350,6 +362,27 @@ export async function conversationRoutes(app: FastifyInstance) {
     await Conversation.findByIdAndUpdate(id, {
       $pull: { participants: new mongoose.Types.ObjectId(targetUserId) },
     });
+
+    // Cleanup: delete sender key bundles involving the removed user
+    await SenderKeyBundle.deleteMany({
+      conversationId: new mongoose.Types.ObjectId(id),
+      $or: [
+        { fromUserId: new mongoose.Types.ObjectId(targetUserId) },
+        { toUserId: new mongoose.Types.ObjectId(targetUserId) },
+      ],
+    });
+
+    // Notify remaining members to rotate sender keys
+    const updated = await Conversation.findById(id).lean();
+    if (updated) {
+      for (const pid of updated.participants) {
+        sendToUser(pid.toString(), 'group:membership_changed', {
+          conversationId: id,
+          action: 'removed',
+          affectedUserIds: [targetUserId],
+        });
+      }
+    }
 
     return { success: true };
   });

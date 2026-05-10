@@ -103,7 +103,39 @@ export function AdminPage() {
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'dashboard' | 'users' | 'sms' | 'pwa' | 'ai'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'users' | 'sms' | 'pwa' | 'ai' | 'meta'>('dashboard');
+  const [metaHtml, setMetaHtml] = useState('');
+  const [metaSaving, setMetaSaving] = useState(false);
+  const [metaSavedAt, setMetaSavedAt] = useState<number | null>(null);
+
+  const loadMetaTags = async () => {
+    try {
+      const r = await fetch('/api/admin/meta-tags', { headers: { Authorization: `Bearer ${useAuthStore.getState().token}` } });
+      const j = await r.json();
+      setMetaHtml(j.html || '');
+    } catch (e) {
+      console.error('Failed to load meta tags:', e);
+    }
+  };
+
+  const saveMetaTags = async () => {
+    setMetaSaving(true);
+    try {
+      await fetch('/api/admin/meta-tags', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${useAuthStore.getState().token}`,
+        },
+        body: JSON.stringify({ html: metaHtml }),
+      });
+      setMetaSavedAt(Date.now());
+    } catch (e) {
+      alert('Ошибка сохранения');
+    } finally {
+      setMetaSaving(false);
+    }
+  };
   // AI settings state
   const [aiProvider, setAiProvider] = useState<'gemini' | 'openai' | 'disabled'>('disabled');
   const [aiSettings, setAiSettings] = useState({ geminiApiKey: '', geminiModel: 'gemini-2.5-flash', openaiApiKey: '', openaiModel: 'gpt-4o-mini', openrouterApiKey: '', openrouterModel: 'qwen/qwen3.6-plus-preview:free', dailyLimitPerUser: 10, systemPrompt: '', searchEnabled: true });
@@ -295,6 +327,10 @@ export function AdminPage() {
               onClick={() => { setTab('ai'); loadAiSettings(); }}
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'ai' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
             >AI</button>
+            <button
+              onClick={() => { setTab('meta'); loadMetaTags(); }}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${tab === 'meta' ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'}`}
+            >Meta</button>
           </div>
           <button onClick={loadData} className="text-gray-400 hover:text-white text-sm">Refresh</button>
         </div>
@@ -842,6 +878,56 @@ export function AdminPage() {
             />
 
             <p className="text-gray-500 text-xs mt-4">После обновления на телефоне нужно удалить ярлык и добавить заново (Android кэширует иконку PWA).</p>
+          </div>
+        )}
+
+        {tab === 'meta' && (
+          <div className="bg-dark-800 rounded-xl p-6 max-w-3xl">
+            <h3 className="text-white font-semibold mb-2">Meta-теги для всех страниц</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              HTML-код, который будет вставлен в <code className="text-accent">&lt;head&gt;</code> всех страниц.
+              Используется для Google Analytics, Yandex Metrica, верификации сайта и др.
+            </p>
+
+            <div className="bg-dark-700 rounded-lg p-3 mb-4 text-xs text-gray-400">
+              <p className="mb-1">⚠️ Важно для Google Search Console:</p>
+              <p>
+                Мета-тег вставляется через JavaScript, поэтому <strong>верификация Google Search Console через мета-тег может не сработать</strong>.
+                Рекомендуем использовать <a className="text-accent underline" href="https://search.google.com/search-console" target="_blank" rel="noopener">альтернативные методы</a>:
+                загрузка HTML-файла, DNS TXT-запись или Google Analytics.
+              </p>
+            </div>
+
+            <textarea
+              value={metaHtml}
+              onChange={(e) => setMetaHtml(e.target.value)}
+              rows={12}
+              className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-accent font-mono"
+              placeholder={`<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXX');
+</script>
+
+<!-- Yandex Metrica -->
+<meta name="yandex-verification" content="..." />`}
+            />
+
+            <div className="flex items-center gap-3 mt-3">
+              <button
+                onClick={saveMetaTags}
+                disabled={metaSaving}
+                className="px-6 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors disabled:opacity-50"
+              >
+                {metaSaving ? 'Saving...' : 'Save'}
+              </button>
+              {metaSavedAt && Date.now() - metaSavedAt < 3000 && (
+                <span className="text-green-400 text-sm">Saved!</span>
+              )}
+            </div>
           </div>
         )}
       </div>

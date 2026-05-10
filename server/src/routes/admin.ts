@@ -5,7 +5,7 @@ import { User } from '../models/User';
 import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
 import { config } from '../config';
-import { Settings, getSmsSettings, invalidateSmsCache, ISmsSettings } from '../models/Settings';
+import { Settings, getSmsSettings, invalidateSmsCache, ISmsSettings, getMetaTags, setMetaTags } from '../models/Settings';
 import { sendCode, generateOtp } from '../services/sms';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -455,5 +455,25 @@ export async function adminRoutes(app: FastifyInstance) {
     }
     // Fallback: redirect to static default
     return reply.redirect(`/${size}`);
+  });
+
+  // ── Meta tags for HTML <head> (SEO, analytics, verification) ──
+  // Admin only — read current meta tags
+  app.get('/api/admin/meta-tags', { preHandler }, async () => {
+    const html = await getMetaTags();
+    return { html };
+  });
+
+  // Admin only — update meta tags (raw HTML inserted before </head>)
+  app.patch('/api/admin/meta-tags', { preHandler }, async (request) => {
+    const { html } = (request.body || {}) as { html?: string };
+    await setMetaTags(typeof html === 'string' ? html : '');
+    return { success: true };
+  });
+
+  // Public — return meta tags so SPA can inject on load
+  app.get('/api/public/meta-tags', async () => {
+    const html = await getMetaTags();
+    return { html };
   });
 }

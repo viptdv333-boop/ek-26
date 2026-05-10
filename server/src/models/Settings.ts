@@ -123,3 +123,29 @@ export async function getAiSettings(): Promise<IAiSettings> {
 export function invalidateAiCache() {
   aiCache = null;
 }
+
+// ── Meta tags (SEO, analytics, verification) ───────────────────
+let metaCache: { data: string; ts: number } | null = null;
+
+export async function getMetaTags(): Promise<string> {
+  if (metaCache && Date.now() - metaCache.ts < CACHE_TTL) {
+    return metaCache.data;
+  }
+  const doc = await Settings.findOne({ key: 'meta_tags' }).lean() as any;
+  const data = (doc?.value as string) || '';
+  metaCache = { data, ts: Date.now() };
+  return data;
+}
+
+export async function setMetaTags(html: string): Promise<void> {
+  await Settings.updateOne(
+    { key: 'meta_tags' },
+    { $set: { value: html } },
+    { upsert: true },
+  );
+  metaCache = { data: html, ts: Date.now() };
+}
+
+export function invalidateMetaCache() {
+  metaCache = null;
+}

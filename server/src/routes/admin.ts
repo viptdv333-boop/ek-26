@@ -476,4 +476,42 @@ export async function adminRoutes(app: FastifyInstance) {
     const html = await getMetaTags();
     return { html };
   });
+
+  // Public — server-rendered SPA index.html with meta tags injected into <head>
+  // nginx routes SPA paths (/, /home, /privacy, etc.) here so search engine
+  // bots see meta tags in initial HTML.
+  let cachedIndex: { html: string; ts: number } | null = null;
+  const INDEX_CACHE_TTL = 30_000; // 30s
+
+  app.get('/__index', async (_request, reply) => {
+    let baseHtml: string;
+
+    if (cachedIndex && Date.now() - cachedIndex.ts < INDEX_CACHE_TTL) {
+      baseHtml = cachedIndex.html;
+    } else {
+      try {
+        // Fetch latest index.html from web container (docker compose service name)
+        const res = await fetch('http://web/');
+        baseHtml = await res.text();
+        cachedIndex = { html: baseHtml, ts: Date.now() };
+      } catch (e) {
+        return reply.code(503).send('Service unavailable');
+      }
+    }
+
+    const meta = await getMetaTags();
+    let html = baseHtml;
+    if (meta && meta.trim()) {
+      // Inject before </head>; if not present, fall back to start of <body>
+      if (html.includes('</head>')) {
+        html = html.replace('</head>', `${meta}\n</head>`);
+      } else {
+        html = `${meta}\n${html}`;
+      }
+    }
+
+    reply.type('text/html; charset=utf-8');
+    reply.header('Cache-Control', 'no-cache, must-revalidate');
+    return reply.send(html);
+  });
 }

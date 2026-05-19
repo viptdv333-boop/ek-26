@@ -6,6 +6,7 @@ import { previewMessageSound, previewCallSound, uploadCustomSound, hasCustomSoun
 
 interface Props {
   onClose: () => void;
+  defaultSection?: string;
 }
 
 const WALLPAPER_PRESETS = [
@@ -51,9 +52,9 @@ const LANGUAGES = [
   { code: 'zh' as const, label: '中文', flag: 'https://flagcdn.com/w40/cn.png' },
 ];
 
-export function AppSettingsModal({ onClose }: Props) {
+export function AppSettingsModal({ onClose, defaultSection }: Props) {
   const { t, lang, setLang } = useTranslation();
-  const [activeSection, setActiveSection] = useState<Section>('language');
+  const [activeSection, setActiveSection] = useState<Section>((defaultSection as Section) || 'language');
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-translate

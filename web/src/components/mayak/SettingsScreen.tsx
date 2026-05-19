@@ -4,6 +4,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { MkAvatar } from './MkAvatar';
 import { Stars } from './Stars';
 import { useNavigate } from 'react-router-dom';
+import { AppSettingsModal } from '../AppSettingsModal';
 
 export function SettingsScreen() {
   const { th, themeKey, setTheme } = useMayakTheme();
@@ -12,6 +13,7 @@ export function SettingsScreen() {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [sub, setSub] = useState<null | 'theme' | 'lang'>(null);
+  const [appSettingsSection, setAppSettingsSection] = useState<string | null>(null);
 
   const themeOptions: { k: MayakThemeKey; c1: string; c2: string }[] = [
     { k: 'lavender', c1: '#EDE8FF', c2: '#6366f1' },
@@ -43,6 +45,24 @@ export function SettingsScreen() {
       label: 'Конфиденциальность',
       desc: 'E2EE',
       action: () => {},
+    },
+    {
+      icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
+      label: 'Обои и стиль',
+      desc: 'Фон, пузыри, шрифт',
+      action: () => setAppSettingsSection('appearance'),
+    },
+    {
+      icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+      label: 'Импорт контактов',
+      desc: 'Google, VCF',
+      action: () => setAppSettingsSection('contacts'),
+    },
+    {
+      icon: 'M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3',
+      label: 'Виджет',
+      desc: 'Погода, цитата, напоминания',
+      action: () => setAppSettingsSection('widget'),
     },
     {
       icon: 'M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01',
@@ -317,6 +337,12 @@ export function SettingsScreen() {
           <div style={{ fontSize: 12, color: th.sec, opacity: 0.6, marginTop: 4 }}>E2EE Messenger</div>
         </div>
       </div>
+
+      {appSettingsSection && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: th.bg }}>
+          <AppSettingsModal onClose={() => setAppSettingsSection(null)} defaultSection={appSettingsSection} />
+        </div>
+      )}
     </div>
   );
 }

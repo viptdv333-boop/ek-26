@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useCallback } from 'react';
 import { useMayakTheme } from '../../hooks/useMayakTheme';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -205,31 +205,56 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
 
 function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
   const { th } = useMayakTheme();
-  const cx = 50,
-    cy = 46;
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+
+  const cx = 50, cy = 46;
   const rad = (c.angle * Math.PI) / 180;
   const x = cx + c.dist * 38 * Math.cos(rad);
   const y = cy + c.dist * 38 * Math.sin(rad);
 
+  const onDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: offset.x, oy: offset.y };
+  }, [offset]);
+
+  const onMove = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    setOffset({
+      x: dragRef.current.ox + e.clientX - dragRef.current.sx,
+      y: dragRef.current.oy + e.clientY - dragRef.current.sy,
+    });
+  }, []);
+
+  const onUp = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    const moved = Math.abs(e.clientX - dragRef.current.sx) + Math.abs(e.clientY - dragRef.current.sy) > 6;
+    dragRef.current = null;
+    if (!moved) onClick();
+  }, [onClick]);
+
   return (
     <div
-      onClick={onClick}
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
       style={{
         position: 'absolute',
         left: `${x}%`,
         top: `${y}%`,
-        transform: 'translate(-50%,-50%)',
+        transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: 5,
-        cursor: 'pointer',
+        cursor: 'grab',
         zIndex: c.unread > 0 ? 3 : 1,
-        transition: 'transform .15s',
+        touchAction: 'none',
+        userSelect: 'none',
       }}
     >
       <div style={{ position: 'relative' }}>
-        {/* Glow + ring for unread */}
         {c.unread > 0 && (
           <>
             <div
@@ -253,7 +278,6 @@ function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
           </>
         )}
 
-        {/* Avatar */}
         <div
           style={{
             width: c.sz,
@@ -294,7 +318,6 @@ function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
           )}
         </div>
 
-        {/* Unread badge */}
         {c.unread > 0 && (
           <div
             style={{
@@ -326,9 +349,6 @@ function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
           color: th.text,
           textShadow: th.dark ? '0 1px 4px rgba(0,0,0,.6)' : '0 1px 3px rgba(255,255,255,.9)',
           whiteSpace: 'nowrap',
-          maxWidth: 70,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
         }}
       >
         {c.name}

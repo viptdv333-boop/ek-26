@@ -117,8 +117,24 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
           Чат
         </span>
       </div>
-      <div style={{ padding: '0 20px 4px', position: 'relative', zIndex: 2, flexShrink: 0 }}>
-        <HeaderWidget />
+      <div style={{
+        padding: '6px 20px 10px',
+        position: 'relative',
+        zIndex: 2,
+        flexShrink: 0,
+        display: 'flex',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          padding: '8px 18px',
+          borderRadius: 16,
+          background: th.surface,
+          backdropFilter: 'blur(10px)',
+          display: 'inline-flex',
+          alignItems: 'center',
+        }}>
+          <HeaderWidget />
+        </div>
       </div>
 
       {/* Radial field */}

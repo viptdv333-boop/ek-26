@@ -66,7 +66,7 @@ const translatedCache = new Map<string, string>();
 
 export function MessageBubble(props: Props) {
   const { message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId } = props;
-  const fontSize = props.fontSize ?? 14;
+  const fontSize = props.fontSize ?? 15;
   const bubbleShape = props.bubbleShape ?? 'rounded';
   const bubbleColor = props.bubbleColor ?? '#6366f1';
   const bubbleColorOther = props.bubbleColorOther ?? '#22222f';
@@ -187,23 +187,23 @@ export function MessageBubble(props: Props) {
   };
 
   const renderAvatar = () => {
-    if (!showAvatar) return <div className="w-7 flex-shrink-0" />;
+    if (!showAvatar) return <div className="w-9 flex-shrink-0" />;
     if (message.senderId === 'ai-bot' || message.senderName === 'FOMO AI') {
       return (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
           <span className="text-white text-[9px] font-bold">AI</span>
         </div>
       );
     }
-    if (avatarUrl) return <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />;
+    if (avatarUrl) return <img src={avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />;
     if (!isMine) {
       return (
-        <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
           <span className="text-accent text-[10px] font-medium">{message.senderName?.[0]?.toUpperCase() || '?'}</span>
         </div>
       );
     }
-    return <div className="w-7 flex-shrink-0" />;
+    return <div className="w-9 flex-shrink-0" />;
   };
 
   return (
@@ -319,13 +319,13 @@ export function MessageBubble(props: Props) {
         {/* Reaction bar removed — reactions now in context menu */}
 
         {isMine && myAvatarUrl && showAvatar && (
-          <img src={myAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+          <img src={myAvatarUrl} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
         )}
       </div>
 
       {/* Reaction badges */}
       {message.reactions && message.reactions.length > 0 && (
-        <div className={`flex gap-1 mt-0.5 ${isMine ? 'justify-end pr-9' : 'justify-start pl-9'}`}>
+        <div className={`flex gap-1 mt-0.5 ${isMine ? 'justify-end pr-11' : 'justify-start pl-11'}`}>
           {Object.entries(
             message.reactions.reduce((acc, r) => {
               acc[r.emoji] = (acc[r.emoji] || 0) + 1;

@@ -34,13 +34,14 @@ function WeatherWidget() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!weather) return <span style={{ fontSize: 13, color: th.sec }}>...</span>;
+  if (!weather) return <span style={{ fontSize: 14, color: th.sec }}>...</span>;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} title={`${weather.city}: ${weather.desc}`}>
-      <span style={{ fontSize: 18 }}>{weather.icon}</span>
-      <span style={{ fontSize: 14, fontWeight: 700, color: th.text }}>{weather.temp}</span>
-      <span style={{ fontSize: 12, color: th.sec }}>{weather.city}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} title={`${weather.city}: ${weather.desc}`}>
+      <span style={{ fontSize: 24 }}>{weather.icon}</span>
+      <span style={{ fontSize: 18, fontWeight: 800, color: th.text }}>{weather.temp}</span>
+      <span style={{ fontSize: 14, color: th.sec, fontWeight: 600 }}>{weather.city}</span>
+      <span style={{ fontSize: 13, color: th.sec }}>{weather.desc}</span>
     </div>
   );
 }

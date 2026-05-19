@@ -577,7 +577,7 @@ export function ChatRoom({ conversationId }: Props) {
   return (
     <div className="flex-1 flex flex-col" style={{ background: th.bgFlat }}>
       {/* Header */}
-      <div className="px-4 md:px-6 flex items-center" style={{ height: 60, background: th.navBg, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: `1px solid ${th.divider}` }}>
+      <div className="px-4 md:px-6 flex items-center" style={{ height: 64, background: th.navBg, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: `1px solid ${th.divider}` }}>
         <button
           onClick={() => { setActiveConversation(null); window.dispatchEvent(new Event('sidebar-shown')); }}
           className="md:hidden mr-2 p-1"
@@ -589,20 +589,20 @@ export function ChatRoom({ conversationId }: Props) {
         </button>
         <div className="relative mr-3 flex-shrink-0">
           {conv?.type === 'ai' ? (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
               <span className="text-white text-sm font-bold">AI</span>
             </div>
           ) : conv?.type === 'group' && conv.groupMeta?.avatarUrl ? (
-            <img src={conv.groupMeta.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+            <img src={conv.groupMeta.avatarUrl} alt="" className="w-11 h-11 rounded-full object-cover" />
           ) : conv?.type === 'group' ? (
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: th.primary + '22' }}>
-              <span style={{ color: th.primary, fontSize: 16, fontWeight: 700 }}>#</span>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: th.primary + '22' }}>
+              <span style={{ color: th.primary, fontSize: 18, fontWeight: 700 }}>#</span>
             </div>
           ) : otherAvatarUrl ? (
-            <img src={otherAvatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+            <img src={otherAvatarUrl} alt="" className="w-11 h-11 rounded-full object-cover" />
           ) : (
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: th.primary + '22' }}>
-              <span style={{ color: th.primary, fontSize: 16, fontWeight: 600 }}>{title[0]?.toUpperCase()}</span>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: th.primary + '22' }}>
+              <span style={{ color: th.primary, fontSize: 18, fontWeight: 600 }}>{title[0]?.toUpperCase()}</span>
             </div>
           )}
           {(() => {
@@ -846,10 +846,20 @@ export function ChatRoom({ conversationId }: Props) {
         ) : (
         <>
         {/* Quick emoji bar */}
-        <div className="flex justify-center gap-2 py-2 px-3 flex-wrap">
-          {['❤️','👍','😊','🙏','🔥','😂','😮','😢','🎉','👎','💯','✨'].map((em) => (
-            <button key={em} onClick={() => setText(text + em)} className="text-2xl transition-transform hover:scale-125 active:scale-95">{em}</button>
+        <div className="flex items-center justify-center gap-1 py-1.5 px-3">
+          {['😊','❤️','👍','🔥','😂','😮','🙏','🎉'].map((em) => (
+            <button key={em} onClick={() => setText(text + em)} className="text-xl w-9 h-9 flex items-center justify-center rounded-full transition-transform hover:scale-125 active:scale-90 hover:bg-white/10">{em}</button>
           ))}
+          <button
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+            style={{ color: th.sec, background: showEmojiPicker ? th.primary + '20' : 'transparent' }}
+          >
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />
+            </svg>
+          </button>
         </div>
         <div className="px-3 pb-2 flex items-end gap-2">
           <input

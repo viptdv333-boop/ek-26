@@ -716,7 +716,7 @@ export function ChatRoom({ conversationId }: Props) {
             message={msg}
             isMine={msg.senderId === userId}
             showSender={conv?.type === 'group'}
-            showAvatar={true}
+            showAvatar={conv?.type === 'group'}
             myAvatarUrl={myAvatarUrl}
             onReply={handleReply}
             onForward={handleForward}
@@ -846,22 +846,12 @@ export function ChatRoom({ conversationId }: Props) {
         ) : (
         <>
         {/* Quick emoji bar */}
-        <div className="flex items-center justify-center gap-1 py-1.5 px-3">
-          {['😊','❤️','👍','🔥','😂','😮','🙏','🎉'].map((em) => (
-            <button key={em} onClick={() => setText(text + em)} className="text-xl w-9 h-9 flex items-center justify-center rounded-full transition-transform hover:scale-125 active:scale-90 hover:bg-white/10">{em}</button>
+        <div className="flex items-center justify-center gap-3 py-2 px-4">
+          {['❤️','👍','😊','🙏'].map((em) => (
+            <button key={em} onClick={() => setText(text + em)} className="text-2xl w-11 h-11 flex items-center justify-center rounded-full transition-transform hover:scale-125 active:scale-90">{em}</button>
           ))}
-          <button
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-            style={{ color: th.sec, background: showEmojiPicker ? th.primary + '20' : 'transparent' }}
-          >
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />
-            </svg>
-          </button>
         </div>
-        <div className="px-3 pb-2 flex items-end gap-2">
+        <div className="px-4 pb-3 flex items-end gap-3">
           <input
             ref={fileInputRef}
             type="file"
@@ -869,16 +859,6 @@ export function ChatRoom({ conversationId }: Props) {
             onChange={handleFileSelect}
             className="hidden"
           />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 transition-opacity hover:opacity-70 disabled:opacity-30"
-            style={{ color: th.primary }}
-          >
-            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-            </svg>
-          </button>
           <div className="relative flex-1">
             <textarea
               ref={textareaRef}
@@ -887,8 +867,9 @@ export function ChatRoom({ conversationId }: Props) {
               onKeyDown={handleKeyDown}
               placeholder={t('chat.messagePlaceholder')}
               rows={1}
-              className="w-full px-4 py-2.5 rounded-full text-sm resize-none focus:outline-none transition-colors"
+              className="w-full px-5 py-3 rounded-full text-[15px] resize-none focus:outline-none transition-colors"
               style={{ background: th.inputBg, color: th.text, maxHeight: 120, border: 'none' }}
+              onContextMenu={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}
             />
             {showEmojiPicker && (
               <EmojiPicker
@@ -908,21 +889,21 @@ export function ChatRoom({ conversationId }: Props) {
             <button
               onClick={handleSend}
               disabled={uploading}
-              className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 transition-opacity hover:opacity-70 disabled:opacity-30"
-              style={{ color: th.primary }}
+              className="w-11 h-11 flex items-center justify-center rounded-full flex-shrink-0 transition-opacity hover:opacity-80 disabled:opacity-30"
+              style={{ background: th.primary, color: '#fff' }}
             >
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
               </svg>
             </button>
           ) : (
             <button
               onClick={() => setIsRecordingVoice(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 transition-opacity hover:opacity-70"
-              style={{ color: th.primary }}
+              className="w-11 h-11 flex items-center justify-center rounded-full flex-shrink-0 transition-opacity hover:opacity-80"
+              style={{ background: th.primary, color: '#fff' }}
               title={t('chat.voiceMessage')}
             >
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="2" width="6" height="12" rx="3" />
                 <path d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8" />
               </svg>

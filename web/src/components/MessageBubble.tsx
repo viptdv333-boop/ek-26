@@ -66,7 +66,7 @@ const translatedCache = new Map<string, string>();
 
 export function MessageBubble(props: Props) {
   const { message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId } = props;
-  const fontSize = props.fontSize ?? 15;
+  const fontSize = props.fontSize ?? 16;
   const bubbleShape = props.bubbleShape ?? 'rounded';
   const bubbleColor = props.bubbleColor ?? '#6366f1';
   const bubbleColorOther = props.bubbleColorOther ?? '#22222f';
@@ -238,29 +238,14 @@ export function MessageBubble(props: Props) {
               zIndex: 1,
               padding: '2px 8px 4px 8px',
             } : isMediaOnly ? {
-              borderRadius: '18px',
+              borderRadius: '20px',
               overflow: 'hidden',
             } : {
-              padding: '8px 14px',
+              padding: '10px 16px',
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-              borderRadius: bubbleShape === 'square' ? '4px' : '22px',
+              borderRadius: bubbleShape === 'square' ? '4px' : '20px',
             }}
           >
-            {/* Tail for non-cloud (skip for media-only) */}
-            {bubbleShape !== 'cloud' && !isMediaOnly && (
-              <div
-                className="absolute bottom-0"
-                style={{
-                  [isMine ? 'right' : 'left']: '-6px',
-                  width: 0, height: 0,
-                  borderStyle: 'solid',
-                  borderWidth: isMine ? '0 0 12px 12px' : '0 12px 12px 0',
-                  borderColor: isMine
-                    ? `transparent transparent ${bubbleColor} transparent`
-                    : `transparent transparent ${bubbleColorOther} transparent`,
-                }}
-              />
-            )}
           {showSender && !isMine && message.senderName && (
             <p className="text-xs font-medium text-accent mb-0.5">{message.senderName}</p>
           )}
@@ -309,7 +294,7 @@ export function MessageBubble(props: Props) {
           )}
 
           <div className={`flex items-center justify-end gap-1 mt-0.5 ${hasAttachments && !message.text ? 'px-3.5 pb-2' : ''}`}
-               style={{ color: (isMine ? myColor : otherColor) + '80', fontSize: `${Math.max(Math.round(fontSize / 2), 8)}px` }}>
+               style={{ color: (isMine ? myColor : otherColor) + '80', fontSize: '12px' }}>
             {message.editedAt && <span className="italic">{t('message.edited')}</span>}
             <span>{time}</span>
             {statusIcon()}

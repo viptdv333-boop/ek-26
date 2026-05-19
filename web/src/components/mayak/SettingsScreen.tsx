@@ -6,6 +6,16 @@ import { Stars } from './Stars';
 import { useNavigate } from 'react-router-dom';
 import { AppSettingsModal } from '../AppSettingsModal';
 
+const SECTION_TITLES: Record<string, string> = {
+  appearance: 'Обои и стиль',
+  notifications: 'Уведомления',
+  contacts: 'Импорт контактов',
+  devices: 'Устройства',
+  widget: 'Виджет',
+  faq: 'FAQ',
+  about: 'О приложении',
+};
+
 export function SettingsScreen() {
   const { th, themeKey, setTheme } = useMayakTheme();
   const user = useAuthStore((s) => s.user);
@@ -35,28 +45,28 @@ export function SettingsScreen() {
       action: () => setSub('lang'),
     },
     {
-      icon: 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0',
-      label: 'Уведомления',
-      desc: 'Включены',
-      action: () => {},
-    },
-    {
-      icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-      label: 'Конфиденциальность',
-      desc: 'E2EE',
-      action: () => {},
-    },
-    {
       icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
       label: 'Обои и стиль',
-      desc: 'Фон, пузыри, шрифт',
+      desc: 'Фон, шрифт',
       action: () => setAppSettingsSection('appearance'),
+    },
+    {
+      icon: 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0',
+      label: 'Уведомления',
+      desc: 'Звуки, вибрация',
+      action: () => setAppSettingsSection('notifications'),
     },
     {
       icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
       label: 'Импорт контактов',
       desc: 'Google, VCF',
       action: () => setAppSettingsSection('contacts'),
+    },
+    {
+      icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+      label: 'Устройства',
+      desc: 'E2EE',
+      action: () => setAppSettingsSection('devices'),
     },
     {
       icon: 'M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3',
@@ -68,9 +78,31 @@ export function SettingsScreen() {
       icon: 'M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01',
       label: 'FAQ',
       desc: '',
-      action: () => {},
+      action: () => setAppSettingsSection('faq'),
+    },
+    {
+      icon: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 8v4M12 16h.01',
+      label: 'О приложении',
+      desc: 'FOMO Chat v2.0',
+      action: () => setAppSettingsSection('about'),
     },
   ];
+
+  // Embedded AppSettings sub-screen
+  if (appSettingsSection) {
+    return (
+      <div style={{ background: th.bg, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {th.stars && <Stars />}
+        <div style={{ padding: '16px 14px', display: 'flex', alignItems: 'center', gap: 12, position: 'relative', zIndex: 2, flexShrink: 0 }}>
+          <BackBtn onClick={() => setAppSettingsSection(null)} />
+          <span style={{ fontSize: 22, fontWeight: 800, color: th.text }}>{SECTION_TITLES[appSettingsSection] || ''}</span>
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', position: 'relative', zIndex: 1, padding: '0 18px' }}>
+          <AppSettingsModal onClose={() => setAppSettingsSection(null)} defaultSection={appSettingsSection} embedded />
+        </div>
+      </div>
+    );
+  }
 
   // Theme sub-screen
   if (sub === 'theme') {
@@ -337,12 +369,6 @@ export function SettingsScreen() {
           <div style={{ fontSize: 12, color: th.sec, opacity: 0.6, marginTop: 4 }}>E2EE Messenger</div>
         </div>
       </div>
-
-      {appSettingsSection && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: th.bg }}>
-          <AppSettingsModal onClose={() => setAppSettingsSection(null)} defaultSection={appSettingsSection} />
-        </div>
-      )}
     </div>
   );
 }

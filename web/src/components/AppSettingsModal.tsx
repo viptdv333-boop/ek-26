@@ -7,6 +7,7 @@ import { previewMessageSound, previewCallSound, uploadCustomSound, hasCustomSoun
 interface Props {
   onClose: () => void;
   defaultSection?: string;
+  embedded?: boolean;
 }
 
 const WALLPAPER_PRESETS = [
@@ -52,7 +53,7 @@ const LANGUAGES = [
   { code: 'zh' as const, label: '中文', flag: 'https://flagcdn.com/w40/cn.png' },
 ];
 
-export function AppSettingsModal({ onClose, defaultSection }: Props) {
+export function AppSettingsModal({ onClose, defaultSection, embedded }: Props) {
   const { t, lang, setLang } = useTranslation();
   const [activeSection, setActiveSection] = useState<Section>((defaultSection as Section) || 'language');
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
@@ -341,159 +342,6 @@ export function AppSettingsModal({ onClose, defaultSection }: Props) {
         <p className="text-sm mt-2 text-gray-300" style={{ fontSize: `${[12,13,14,15,16,17,18,19,20,22][fontSize - 1]}px` }}>
           {t('settings.sampleText')}
         </p>
-      </div>
-
-      {/* Bubble shape */}
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.bubbleShape')}</label>
-        <div className="flex gap-3">
-          {([
-            { id: 'rounded', label: t('settings.bubbleRounded'), borderRadius: '10px' },
-            { id: 'square', label: t('settings.bubbleSquare'), borderRadius: '2px' },
-            { id: 'cloud', label: t('settings.bubbleCloud'), borderRadius: '30% 50% 40% 55% / 55% 40% 50% 35%' },
-          ] as const).map((shape) => (
-            <button
-              key={shape.id}
-              onClick={() => handleBubbleShapeChange(shape.id)}
-              className={`flex-1 flex flex-col items-center gap-2 py-3 rounded-xl border-2 transition-colors ${
-                bubbleShape === shape.id ? 'border-accent bg-accent/10' : 'border-dark-500 hover:border-gray-400'
-              }`}
-            >
-              <div
-                className="px-3 py-1.5 text-xs"
-                style={{ backgroundColor: bubbleColor, borderRadius: shape.borderRadius, color: fontColor }}
-              >
-                {t('settings.bubbleHello')}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Bubble color — own */}
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.ownBubbleColor')}</label>
-        <div className="flex items-center gap-2 flex-wrap">
-          {['#6366f1', '#10b981', '#ef4444', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#22222f', '#1e3a5f', '#2d1b3d', '#1a3327'].map((color) => (
-            <button
-              key={color}
-              onClick={() => handleBubbleColorChange(color)}
-              className={`w-8 h-8 rounded-full border-2 transition-all ${
-                bubbleColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-              }`}
-              style={{ backgroundColor: color }}
-            />
-          ))}
-          <label className="relative">
-            <input
-              type="color"
-              value={bubbleColor}
-              onChange={(e) => handleBubbleColorChange(e.target.value)}
-              className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
-            />
-            <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      {/* Bubble color — other */}
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.otherBubbleColor')}</label>
-        <div className="flex items-center gap-2 flex-wrap">
-          {['#6366f1', '#10b981', '#ef4444', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#22222f', '#1e3a5f', '#2d1b3d', '#1a3327'].map((color) => (
-            <button
-              key={color}
-              onClick={() => handleBubbleColorOtherChange(color)}
-              className={`w-8 h-8 rounded-full border-2 transition-all ${
-                bubbleColorOther === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-              }`}
-              style={{ backgroundColor: color }}
-            />
-          ))}
-          <label className="relative">
-            <input
-              type="color"
-              value={bubbleColorOther}
-              onChange={(e) => handleBubbleColorOtherChange(e.target.value)}
-              className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
-            />
-            <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      {/* Font color — own */}
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.ownFontColor')}</label>
-        <div className="flex items-center gap-2 flex-wrap">
-          {['#ffffff', '#e5e7eb', '#d1d5db', '#fbbf24', '#a78bfa', '#67e8f9', '#f9a8d4', '#18181b'].map((color) => (
-            <button
-              key={color}
-              onClick={() => handleFontColorChange(color)}
-              className={`w-8 h-8 rounded-full border-2 transition-all ${
-                fontColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-              }`}
-              style={{ backgroundColor: color }}
-            />
-          ))}
-          <label className="relative">
-            <input
-              type="color"
-              value={fontColor}
-              onChange={(e) => handleFontColorChange(e.target.value)}
-              className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
-            />
-            <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </div>
-          </label>
-        </div>
-        <div className="mt-2 px-3 py-1.5 rounded-lg inline-block" style={{ backgroundColor: bubbleColor }}>
-          <span className="text-sm" style={{ color: fontColor }}>{t('settings.sampleText')}</span>
-        </div>
-      </div>
-
-      {/* Font color — other */}
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">{t('settings.otherFontColor')}</label>
-        <div className="flex items-center gap-2 flex-wrap">
-          {['#e5e7eb', '#ffffff', '#d1d5db', '#18181b', '#fbbf24', '#67e8f9', '#f9a8d4', '#a78bfa'].map((color) => (
-            <button
-              key={color}
-              onClick={() => handleFontColorOtherChange(color)}
-              className={`w-8 h-8 rounded-full border-2 transition-all ${
-                fontColorOther === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-              }`}
-              style={{ backgroundColor: color }}
-            />
-          ))}
-          <label className="relative">
-            <input
-              type="color"
-              value={fontColorOther}
-              onChange={(e) => handleFontColorOtherChange(e.target.value)}
-              className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
-            />
-            <div className="w-8 h-8 rounded-full border-2 border-dark-500 flex items-center justify-center bg-dark-600 cursor-pointer">
-              <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </div>
-          </label>
-        </div>
-        <div className="mt-2 px-3 py-1.5 rounded-lg inline-block" style={{ backgroundColor: bubbleColorOther }}>
-          <span className="text-sm" style={{ color: fontColorOther }}>{t('settings.sampleText')}</span>
-        </div>
       </div>
 
       {/* Wallpapers */}
@@ -1204,6 +1052,10 @@ export function AppSettingsModal({ onClose, defaultSection }: Props) {
       case 'about': return renderAboutSection();
     }
   };
+
+  if (embedded) {
+    return <div style={{ flex: 1, overflow: 'auto' }}>{renderContent()}</div>;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>

@@ -65,13 +65,6 @@ export function AppSettingsModal({ onClose, defaultSection, embedded }: Props) {
   const [theme, setTheme] = useState(() => localStorage.getItem('ek26_theme') || 'dark');
   // Font size
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('ek26_font_size') || '3'));
-  // Bubble style
-  const [bubbleShape, setBubbleShape] = useState(() => localStorage.getItem('ek26_bubble_shape') || 'rounded');
-  const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '#6366f1');
-  const [bubbleColorOther, setBubbleColorOther] = useState(() => localStorage.getItem('ek26_bubble_color_other') || '#22222f');
-  // Font color
-  const [fontColor, setFontColor] = useState(() => localStorage.getItem('ek26_font_color') || '#ffffff');
-  const [fontColorOther, setFontColorOther] = useState(() => localStorage.getItem('ek26_font_color_other') || '#e5e7eb');
   // Wallpaper
   const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('ek26_wallpaper') || 'default');
   const [wallpaperUploading, setWallpaperUploading] = useState(false);
@@ -110,36 +103,6 @@ export function AppSettingsModal({ onClose, defaultSection, embedded }: Props) {
     setFontSize(val);
     localStorage.setItem('ek26_font_size', String(val));
     window.dispatchEvent(new Event('font-size-changed'));
-  };
-
-  const handleBubbleShapeChange = (shape: string) => {
-    setBubbleShape(shape);
-    localStorage.setItem('ek26_bubble_shape', shape);
-    window.dispatchEvent(new Event('bubble-style-changed'));
-  };
-
-  const handleBubbleColorChange = (color: string) => {
-    setBubbleColor(color);
-    localStorage.setItem('ek26_bubble_color', color);
-    window.dispatchEvent(new Event('bubble-style-changed'));
-  };
-
-  const handleBubbleColorOtherChange = (color: string) => {
-    setBubbleColorOther(color);
-    localStorage.setItem('ek26_bubble_color_other', color);
-    window.dispatchEvent(new Event('bubble-style-changed'));
-  };
-
-  const handleFontColorChange = (color: string) => {
-    setFontColor(color);
-    localStorage.setItem('ek26_font_color', color);
-    window.dispatchEvent(new Event('bubble-style-changed'));
-  };
-
-  const handleFontColorOtherChange = (color: string) => {
-    setFontColorOther(color);
-    localStorage.setItem('ek26_font_color_other', color);
-    window.dispatchEvent(new Event('bubble-style-changed'));
   };
 
   const handleWallpaperChange = (id: string) => {

@@ -217,7 +217,7 @@ export function MessageBubble(props: Props) {
       >
         {!isMine && renderAvatar()}
 
-        <div className="max-w-[70%] relative" style={{ color: isMine ? myColor : otherColor }}>
+        <div className="max-w-[85%] relative" style={{ color: isMine ? myColor : otherColor }}>
           {/* SVG cloud background (skip for media-only messages) */}
           {bubbleShape === 'cloud' && !isMediaOnly && (
             <svg
@@ -241,9 +241,9 @@ export function MessageBubble(props: Props) {
               borderRadius: '18px',
               overflow: 'hidden',
             } : {
-              padding: '2px 8px',
+              padding: '8px 14px',
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-              borderRadius: bubbleShape === 'square' ? '2px' : '22px',
+              borderRadius: bubbleShape === 'square' ? '4px' : '22px',
             }}
           >
             {/* Tail for non-cloud (skip for media-only) */}

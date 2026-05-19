@@ -629,25 +629,25 @@ export function ChatRoom({ conversationId }: Props) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 ml-2">
+        <div className="flex items-center gap-1.5 ml-2">
           <button
             onClick={() => { const o = getOther(); if (o) callManager.startCall(o.id, o.displayName, o.avatarUrl || null, 'audio'); }}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-            style={{ color: th.primary }}
+            className="w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+            style={{ background: th.primary + '15', color: th.primary }}
             title={t('chat.audioCall')}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z" />
             </svg>
           </button>
           <button
             onClick={() => { const o = getOther(); if (o) callManager.startCall(o.id, o.displayName, o.avatarUrl || null, 'video'); }}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-            style={{ color: th.primary }}
+            className="w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+            style={{ background: th.primary + '15', color: th.primary }}
             title={t('chat.videoCall')}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9.75a2.25 2.25 0 002.25-2.25V7.5a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9.75a2.25 2.25 0 002.25-2.25V7.5a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
             </svg>
           </button>
         </div>
@@ -846,8 +846,8 @@ export function ChatRoom({ conversationId }: Props) {
         ) : (
         <>
         {/* Quick emoji bar */}
-        <div className="flex justify-center gap-3 py-2">
-          {['❤️','👍','😊','🙏'].map((em) => (
+        <div className="flex justify-center gap-2 py-2 px-3 flex-wrap">
+          {['❤️','👍','😊','🙏','🔥','😂','😮','😢','🎉','👎','💯','✨'].map((em) => (
             <button key={em} onClick={() => setText(text + em)} className="text-2xl transition-transform hover:scale-125 active:scale-95">{em}</button>
           ))}
         </div>
@@ -862,11 +862,11 @@ export function ChatRoom({ conversationId }: Props) {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 transition-colors disabled:opacity-30"
-            style={{ color: th.sec }}
+            className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 transition-colors disabled:opacity-30"
+            style={{ background: th.inputBg, color: th.primary }}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
             </svg>
           </button>
           <div className="relative flex-1">

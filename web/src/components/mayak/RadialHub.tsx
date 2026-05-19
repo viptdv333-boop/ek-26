@@ -4,6 +4,7 @@ import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import { Stars } from './Stars';
 import { hashColor } from './MkAvatar';
+import { HeaderWidget } from './HeaderWidget';
 
 interface RadialContact {
   id: string;
@@ -115,6 +116,9 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
         <span style={{ fontSize: 24, fontWeight: 800, color: th.text, letterSpacing: -0.3 }}>
           Чат
         </span>
+      </div>
+      <div style={{ padding: '0 20px 4px', position: 'relative', zIndex: 2, flexShrink: 0 }}>
+        <HeaderWidget />
       </div>
 
       {/* Radial field */}

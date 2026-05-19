@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppSettingsModal } from '../AppSettingsModal';
 
 const SECTION_TITLES: Record<string, string> = {
+  language: 'Язык и Переводчик',
   appearance: 'Обои и стиль',
   notifications: 'Уведомления',
   contacts: 'Импорт контактов',
@@ -22,7 +23,7 @@ export function SettingsScreen() {
   const isAdmin = useAuthStore((s) => s.user?.isAdmin);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const [sub, setSub] = useState<null | 'theme' | 'lang'>(null);
+  const [sub, setSub] = useState<null | 'theme'>(null);
   const [appSettingsSection, setAppSettingsSection] = useState<string | null>(null);
 
   const themeOptions: { k: MayakThemeKey; c1: string; c2: string }[] = [
@@ -40,9 +41,9 @@ export function SettingsScreen() {
     },
     {
       icon: 'M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10zM2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z',
-      label: 'Язык',
-      desc: 'Русский',
-      action: () => setSub('lang'),
+      label: 'Язык и Переводчик',
+      desc: 'Русский, автоперевод',
+      action: () => setAppSettingsSection('language'),
     },
     {
       icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
@@ -162,49 +163,6 @@ export function SettingsScreen() {
               );
             })}
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Language sub-screen
-  if (sub === 'lang') {
-    const langs = [
-      { flag: '\u{1F1F7}\u{1F1FA}', name: 'Русский', active: true },
-      { flag: '\u{1F1EC}\u{1F1E7}', name: 'English', active: false },
-      { flag: '\u{1F1E8}\u{1F1F3}', name: '中文', active: false },
-    ];
-    return (
-      <div style={{ background: th.bg, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-        {th.stars && <Stars />}
-        <div style={{ padding: '16px 14px', display: 'flex', alignItems: 'center', gap: 12, position: 'relative', zIndex: 2, flexShrink: 0 }}>
-          <BackBtn onClick={() => setSub(null)} />
-          <span style={{ fontSize: 22, fontWeight: 800, color: th.text }}>Язык</span>
-        </div>
-        <div style={{ padding: '0 18px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {langs.map((l, i) => (
-            <div
-              key={i}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                padding: '14px 16px',
-                borderRadius: 20,
-                background: l.active ? th.primary + '18' : th.surface,
-                border: `2px solid ${l.active ? th.primary : 'transparent'}`,
-                cursor: 'pointer',
-              }}
-            >
-              <span style={{ fontSize: 24 }}>{l.flag}</span>
-              <span style={{ fontSize: 17, fontWeight: 700, color: th.text }}>{l.name}</span>
-              {l.active && (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ marginLeft: 'auto' }} stroke={th.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              )}
-            </div>
-          ))}
         </div>
       </div>
     );

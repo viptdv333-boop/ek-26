@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -180,9 +182,150 @@
 }
 
 /* ═══════════════════════════════════════════
+   MAYAK THEME SYSTEM — 3 themes
+   ═══════════════════════════════════════════ */
+
+/* Theme: Лаванда (Lavender) — light, soft purple */
+:root.theme-lavender {
+  --mk-bg: linear-gradient(180deg,#EDE8FF 0%,#F5F3FF 40%,#FFF 100%);
+  --mk-bg-flat: #F3F0FF;
+  --mk-surface: #fff;
+  --mk-surface-hover: #F8F7FF;
+  --mk-primary: #6366f1;
+  --mk-glow: rgba(99,102,241,.22);
+  --mk-text: #1a1a2e;
+  --mk-sec: #908E9B;
+  --mk-online: #22c55e;
+  --mk-sent-bg: #6366f1;
+  --mk-sent-fg: #fff;
+  --mk-recv-bg: #F0EDE8;
+  --mk-recv-fg: #1a1a2e;
+  --mk-input-bg: #EFECF5;
+  --mk-divider: rgba(0,0,0,.05);
+  --mk-nav-bg: rgba(255,255,255,.88);
+  --mk-ring: rgba(99,102,241,.09);
+  --mk-is-dark: 0;
+  --color-dark-900: #F3F0FF;
+  --color-dark-800: #ffffff;
+  --color-dark-700: #F8F7FF;
+  --color-dark-600: #EFECF5;
+  --color-dark-500: #E8E5F0;
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #908E9B;
+  --color-text-muted: #71717a;
+  --color-border: rgba(99,102,241,0.08);
+  --color-accent: #6366f1;
+  --color-accent-hover: #4f46e5;
+  --color-accent-ring: rgba(99,102,241,0.15);
+  --color-input-bg: #EFECF5;
+  --color-scrollbar: #d1d5db;
+  --color-scrollbar-hover: #9ca3af;
+}
+
+/* Theme: Космос (Cosmos) — dark, space with stars */
+:root.theme-cosmos {
+  --mk-bg: linear-gradient(180deg,#110D30 0%,#1A1545 50%,#0E0B22 100%);
+  --mk-bg-flat: #110D30;
+  --mk-surface: rgba(255,255,255,.07);
+  --mk-surface-hover: rgba(255,255,255,.11);
+  --mk-primary: #A5B4FC;
+  --mk-glow: rgba(165,180,252,.30);
+  --mk-text: #EEEDF5;
+  --mk-sec: #7A7890;
+  --mk-online: #34D399;
+  --mk-sent-bg: #6366f1;
+  --mk-sent-fg: #fff;
+  --mk-recv-bg: rgba(255,255,255,.08);
+  --mk-recv-fg: #EEEDF5;
+  --mk-input-bg: rgba(255,255,255,.07);
+  --mk-divider: rgba(255,255,255,.06);
+  --mk-nav-bg: rgba(14,11,34,.92);
+  --mk-ring: rgba(165,180,252,.07);
+  --mk-is-dark: 1;
+  --color-dark-900: #0E0B22;
+  --color-dark-800: #110D30;
+  --color-dark-700: #1A1545;
+  --color-dark-600: rgba(255,255,255,.07);
+  --color-dark-500: rgba(255,255,255,.11);
+  --color-text-primary: #EEEDF5;
+  --color-text-secondary: #7A7890;
+  --color-text-muted: #5A586A;
+  --color-border: rgba(255,255,255,.06);
+  --color-accent: #A5B4FC;
+  --color-accent-hover: #818CF8;
+  --color-accent-ring: rgba(165,180,252,.2);
+  --color-input-bg: rgba(255,255,255,.07);
+  --color-scrollbar: rgba(255,255,255,.1);
+  --color-scrollbar-hover: rgba(255,255,255,.18);
+}
+
+/* Theme: Закат (Sunset) — warm peach/coral */
+:root.theme-warm {
+  --mk-bg: linear-gradient(180deg,#FFF0E6 0%,#FFF7F0 40%,#FFFCFA 100%);
+  --mk-bg-flat: #FFF5EE;
+  --mk-surface: #fff;
+  --mk-surface-hover: #FFF8F4;
+  --mk-primary: #D97757;
+  --mk-glow: rgba(217,119,87,.22);
+  --mk-text: #2E1A0E;
+  --mk-sec: #9B8E85;
+  --mk-online: #22c55e;
+  --mk-sent-bg: #D97757;
+  --mk-sent-fg: #fff;
+  --mk-recv-bg: #F5ECE6;
+  --mk-recv-fg: #2E1A0E;
+  --mk-input-bg: #F0E8E2;
+  --mk-divider: rgba(0,0,0,.05);
+  --mk-nav-bg: rgba(255,252,250,.88);
+  --mk-ring: rgba(217,119,87,.09);
+  --mk-is-dark: 0;
+  --color-dark-900: #FFF5EE;
+  --color-dark-800: #ffffff;
+  --color-dark-700: #FFF8F4;
+  --color-dark-600: #F0E8E2;
+  --color-dark-500: #E8DDD6;
+  --color-text-primary: #2E1A0E;
+  --color-text-secondary: #9B8E85;
+  --color-text-muted: #71717a;
+  --color-border: rgba(217,119,87,0.08);
+  --color-accent: #D97757;
+  --color-accent-hover: #C06545;
+  --color-accent-ring: rgba(217,119,87,0.15);
+  --color-input-bg: #F0E8E2;
+  --color-scrollbar: #d1d5db;
+  --color-scrollbar-hover: #9ca3af;
+}
+
+/* Mayak body font when inside chat app */
+.mayak-app {
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.mayak-app *:not([class*="auth-"]):not([class*="home-"]):not(.admin-page *) {
+  font-family: inherit;
+}
+
+/* Mayak animations */
+@keyframes mkPulse {
+  0%,100% { transform: scale(1); opacity: .6; }
+  50%     { transform: scale(1.45); opacity: .1; }
+}
+@keyframes mkRing {
+  0%,100% { transform: scale(1); opacity: .7; }
+  50%     { transform: scale(1.15); opacity: .2; }
+}
+@keyframes mkTwinkle {
+  0%,100% { opacity: .15; }
+  50%     { opacity: .5; }
+}
+@keyframes mkFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.mk-fade-in { animation: mkFadeIn .3s ease-out; }
+
+/* ═══════════════════════════════════════════
    HOME / LANDING PAGE — Premium Kimi style
    ═══════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* Light theme (default for landing) */
 .home-page.home-light {

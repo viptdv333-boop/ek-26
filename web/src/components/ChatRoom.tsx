@@ -15,6 +15,7 @@ import { ContactCard } from './ContactCard';
 import { callManager } from '../services/webrtc/CallManager';
 import { conversationsApi } from '../services/api/endpoints';
 import { useContactsStore } from '../stores/contactsStore';
+import { useMayakTheme } from '../hooks/useMayakTheme';
 import type { Attachment } from '../stores/chatStore';
 
 const EMPTY_ARRAY: string[] = [];
@@ -25,6 +26,7 @@ interface Props {
 
 export function ChatRoom({ conversationId }: Props) {
   const { t, locale } = useTranslation();
+  const { th } = useMayakTheme();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -67,20 +69,20 @@ export function ChatRoom({ conversationId }: Props) {
   const fontSizeMap = [12, 13, 14, 15, 16, 17, 18, 19, 20, 22];
   const [chatFontSize, setChatFontSize] = useState(() => fontSizeMap[(parseInt(localStorage.getItem('ek26_font_size') || '3') - 1)] || 14);
   const [bubbleShape, setBubbleShape] = useState(() => localStorage.getItem('ek26_bubble_shape') || 'rounded');
-  const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '#6366f1');
-  const [bubbleColorOther, setBubbleColorOther] = useState(() => localStorage.getItem('ek26_bubble_color_other') || '#22222f');
-  const [fontColor, setFontColor] = useState(() => localStorage.getItem('ek26_font_color') || '#ffffff');
-  const [fontColorOther, setFontColorOther] = useState(() => localStorage.getItem('ek26_font_color_other') || '#e5e7eb');
+  const [bubbleColor, setBubbleColor] = useState(() => localStorage.getItem('ek26_bubble_color') || '');
+  const [bubbleColorOther, setBubbleColorOther] = useState(() => localStorage.getItem('ek26_bubble_color_other') || '');
+  const [fontColor, setFontColor] = useState(() => localStorage.getItem('ek26_font_color') || '');
+  const [fontColorOther, setFontColorOther] = useState(() => localStorage.getItem('ek26_font_color_other') || '');
 
   useEffect(() => {
     const wallpaperHandler = () => setCurrentWallpaper(localStorage.getItem('ek26_wallpaper') || 'default');
     const fontHandler = () => setChatFontSize(fontSizeMap[(parseInt(localStorage.getItem('ek26_font_size') || '3') - 1)] || 14);
     const bubbleHandler = () => {
       setBubbleShape(localStorage.getItem('ek26_bubble_shape') || 'rounded');
-      setBubbleColor(localStorage.getItem('ek26_bubble_color') || '#6366f1');
-      setBubbleColorOther(localStorage.getItem('ek26_bubble_color_other') || '#22222f');
-      setFontColor(localStorage.getItem('ek26_font_color') || '#ffffff');
-      setFontColorOther(localStorage.getItem('ek26_font_color_other') || '#e5e7eb');
+      setBubbleColor(localStorage.getItem('ek26_bubble_color') || '');
+      setBubbleColorOther(localStorage.getItem('ek26_bubble_color_other') || '');
+      setFontColor(localStorage.getItem('ek26_font_color') || '');
+      setFontColorOther(localStorage.getItem('ek26_font_color_other') || '');
     };
     const openGroupInfoHandler = () => setShowGroupInfo(true);
     window.addEventListener('wallpaper-changed', wallpaperHandler);
@@ -736,10 +738,10 @@ export function ChatRoom({ conversationId }: Props) {
             userId={userId}
             fontSize={chatFontSize}
             bubbleShape={bubbleShape}
-            bubbleColor={bubbleColor}
-            bubbleColorOther={bubbleColorOther}
-            fontColor={fontColor}
-            fontColorOther={fontColorOther}
+            bubbleColor={bubbleColor || th.sentBg}
+            bubbleColorOther={bubbleColorOther || th.recvBg}
+            fontColor={fontColor || th.sentFg}
+            fontColorOther={fontColorOther || th.recvFg}
           />
           )}
           </div>

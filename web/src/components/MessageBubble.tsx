@@ -238,12 +238,12 @@ export function MessageBubble(props: Props) {
               zIndex: 1,
               padding: '2px 8px 4px 8px',
             } : isMediaOnly ? {
-              borderRadius: '10px',
+              borderRadius: '18px',
               overflow: 'hidden',
             } : {
               padding: '2px 8px',
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-              borderRadius: bubbleShape === 'square' ? '2px' : '10px',
+              borderRadius: bubbleShape === 'square' ? '2px' : '22px',
             }}
           >
             {/* Tail for non-cloud (skip for media-only) */}

@@ -187,29 +187,29 @@ export function MessageBubble(props: Props) {
   };
 
   const renderAvatar = () => {
-    if (!showAvatar) return <div className="w-9 flex-shrink-0" />;
+    if (!showAvatar) return <div className="w-14 flex-shrink-0" />;
     if (message.senderId === 'ai-bot' || message.senderName === 'FOMO AI') {
       return (
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
-          <span className="text-white text-[9px] font-bold">AI</span>
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
+          <span className="text-white text-xs font-bold">AI</span>
         </div>
       );
     }
-    if (avatarUrl) return <img src={avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />;
+    if (avatarUrl) return <img src={avatarUrl} alt="" className="w-14 h-14 rounded-full object-cover flex-shrink-0" />;
     if (!isMine) {
       return (
-        <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-          <span className="text-accent text-[10px] font-medium">{message.senderName?.[0]?.toUpperCase() || '?'}</span>
+        <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+          <span className="text-accent text-sm font-medium">{message.senderName?.[0]?.toUpperCase() || '?'}</span>
         </div>
       );
     }
-    return <div className="w-9 flex-shrink-0" />;
+    return <div className="w-14 flex-shrink-0" />;
   };
 
   return (
     <>
       <div
-        className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-1.5 relative`}
+        className={`flex ${isMine ? 'justify-end' : 'justify-start'} group items-end gap-4 relative`}
         onContextMenu={handleContextMenu}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -310,7 +310,7 @@ export function MessageBubble(props: Props) {
 
       {/* Reaction badges */}
       {message.reactions && message.reactions.length > 0 && (
-        <div className={`flex gap-1 mt-0.5 ${isMine ? 'justify-end pr-11' : 'justify-start pl-11'}`}>
+        <div className={`flex gap-1 mt-0.5 ${isMine ? 'justify-end pr-[72px]' : 'justify-start pl-[72px]'}`}>
           {Object.entries(
             message.reactions.reduce((acc, r) => {
               acc[r.emoji] = (acc[r.emoji] || 0) + 1;

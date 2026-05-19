@@ -66,7 +66,7 @@ const translatedCache = new Map<string, string>();
 
 export function MessageBubble(props: Props) {
   const { message, isMine, showSender, showAvatar = true, myAvatarUrl, onReply, onForward, onEdit, onDelete, onPin, onReact, userId } = props;
-  const fontSize = props.fontSize ?? 17;
+  const fontSize = props.fontSize ?? 18;
   const bubbleShape = props.bubbleShape ?? 'rounded';
   const bubbleColor = props.bubbleColor ?? '#6366f1';
   const bubbleColorOther = props.bubbleColorOther ?? '#22222f';
@@ -241,9 +241,9 @@ export function MessageBubble(props: Props) {
               borderRadius: '20px',
               overflow: 'hidden',
             } : {
-              padding: '12px 18px',
+              padding: '14px 22px',
               backgroundColor: isMine ? bubbleColor : bubbleColorOther,
-              borderRadius: bubbleShape === 'square' ? '4px' : '20px',
+              borderRadius: bubbleShape === 'square' ? '4px' : '24px',
             }}
           >
           {showSender && !isMine && message.senderName && (

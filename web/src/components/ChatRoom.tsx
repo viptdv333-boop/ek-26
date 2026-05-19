@@ -577,70 +577,63 @@ export function ChatRoom({ conversationId }: Props) {
   return (
     <div className="flex-1 flex flex-col" style={{ background: th.bgFlat }}>
       {/* Header */}
-      <div className="h-14 px-4 md:px-6 flex items-center" style={{ background: th.navBg, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: `1px solid ${th.divider}` }}>
-        {/* Back button — mobile only */}
+      <div className="px-4 md:px-6 flex items-center" style={{ height: 60, background: th.navBg, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: `1px solid ${th.divider}` }}>
         <button
           onClick={() => { setActiveConversation(null); window.dispatchEvent(new Event('sidebar-shown')); }}
-          className="md:hidden mr-2 p-1 text-gray-400 hover:text-white"
+          className="md:hidden mr-2 p-1"
+          style={{ color: th.sec }}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        {conv?.type === 'ai' ? (
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center mr-3">
-            <span className="text-white text-xs font-bold">AI</span>
-          </div>
-        ) : conv?.type === 'group' && (conv as any).groupMeta?.avatarUrl ? (
-          <img src={(conv as any).groupMeta.avatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover mr-3" />
-        ) : conv?.type === 'group' ? (
-          <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center mr-3">
-            <span className="text-accent text-sm font-medium">#</span>
-          </div>
-        ) : otherAvatarUrl ? (
-          <img src={otherAvatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover mr-3" />
-        ) : (
-          <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center mr-3">
-            <span className="text-accent text-sm font-medium">
-              {title[0]?.toUpperCase()}
-            </span>
-          </div>
-        )}
+        <div className="relative mr-3 flex-shrink-0">
+          {conv?.type === 'ai' ? (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+              <span className="text-white text-sm font-bold">AI</span>
+            </div>
+          ) : conv?.type === 'group' && conv.groupMeta?.avatarUrl ? (
+            <img src={conv.groupMeta.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+          ) : conv?.type === 'group' ? (
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: th.primary + '22' }}>
+              <span style={{ color: th.primary, fontSize: 16, fontWeight: 700 }}>#</span>
+            </div>
+          ) : otherAvatarUrl ? (
+            <img src={otherAvatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+          ) : (
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: th.primary + '22' }}>
+              <span style={{ color: th.primary, fontSize: 16, fontWeight: 600 }}>{title[0]?.toUpperCase()}</span>
+            </div>
+          )}
+          {(() => {
+            const otherId = otherUser?.id;
+            const online = otherId ? isUserOnline(otherId) : false;
+            return online ? (
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: '50%', background: '#22c55e', border: `2.5px solid ${th.dark ? th.bgFlat : '#fff'}` }} />
+            ) : null;
+          })()}
+        </div>
         <div
-          className={`flex-1 ${conv?.type === 'group' ? 'cursor-pointer' : ''}`}
-          onClick={() => { if (conv?.type === 'group') setShowGroupInfo(true); }}
+          className={`flex-1 min-w-0 ${conv?.type === 'group' ? 'cursor-pointer' : ''}`}
+          onClick={() => { if (conv?.type === 'group') setShowGroupInfo(true); else if (conv?.type === 'direct') setShowContactCard(true); }}
         >
           <div className="flex items-center gap-1.5">
-            <h2 className="text-sm font-medium text-[var(--color-text-primary)]">{title}</h2>
+            <h2 className="text-base font-bold truncate" style={{ color: th.text }}>{title}</h2>
             {conv?.type === 'ai' && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-gradient-to-r from-purple-600 to-blue-500 text-white leading-none">AI</span>
-            )}
-            {conv?.type === 'direct' && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowContactCard(true); }}
-                className="text-gray-400 hover:text-white transition-colors"
-                title="Редактировать контакт"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                </svg>
-              </button>
+              <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white leading-none">AI</span>
             )}
           </div>
           {subtitle && (
-            <span className={`text-xs ${typingUsers.length > 0 ? 'text-accent' : subtitle === t('chat.online') ? 'text-green-400' : 'text-gray-400'}`}>
+            <span className="text-xs font-medium" style={{ color: typingUsers.length > 0 ? th.primary : subtitle === t('chat.online') ? '#22c55e' : th.sec }}>
               {subtitle}
             </span>
           )}
         </div>
-        {/* Call buttons */}
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex items-center gap-2 ml-2">
           <button
-            onClick={() => {
-              const other = getOther();
-              if (other) callManager.startCall(other.id, other.displayName, other.avatarUrl || null, 'audio');
-            }}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+            onClick={() => { const o = getOther(); if (o) callManager.startCall(o.id, o.displayName, o.avatarUrl || null, 'audio'); }}
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+            style={{ color: th.primary }}
             title={t('chat.audioCall')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -648,11 +641,9 @@ export function ChatRoom({ conversationId }: Props) {
             </svg>
           </button>
           <button
-            onClick={() => {
-              const other = getOther();
-              if (other) callManager.startCall(other.id, other.displayName, other.avatarUrl || null, 'video');
-            }}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+            onClick={() => { const o = getOther(); if (o) callManager.startCall(o.id, o.displayName, o.avatarUrl || null, 'video'); }}
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+            style={{ color: th.primary }}
             title={t('chat.videoCall')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -853,17 +844,14 @@ export function ChatRoom({ conversationId }: Props) {
             onCancel={() => setIsRecordingVoice(false)}
           />
         ) : (
-        <div className="px-3 py-1.5 flex items-end gap-1.5">
-          {/* Attach button */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 disabled:opacity-30 transition-colors flex-shrink-0"
-          >
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
-            </svg>
-          </button>
+        <>
+        {/* Quick emoji bar */}
+        <div className="flex justify-center gap-3 py-2">
+          {['❤️','👍','😊','🙏'].map((em) => (
+            <button key={em} onClick={() => setText(text + em)} className="text-2xl transition-transform hover:scale-125 active:scale-95">{em}</button>
+          ))}
+        </div>
+        <div className="px-3 pb-2 flex items-end gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -871,70 +859,66 @@ export function ChatRoom({ conversationId }: Props) {
             onChange={handleFileSelect}
             className="hidden"
           />
-
-          {/* Emoji button */}
-          <div className="relative flex-shrink-0">
-            <button
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
-            >
-              <span className="text-xl">😊</span>
-            </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 transition-colors disabled:opacity-30"
+            style={{ color: th.sec }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+            </svg>
+          </button>
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={(e) => { setText(e.target.value); handleTyping(); }}
+              onKeyDown={handleKeyDown}
+              placeholder={t('chat.messagePlaceholder')}
+              rows={1}
+              className="w-full px-4 py-2.5 rounded-full text-sm resize-none focus:outline-none transition-colors"
+              style={{ background: th.inputBg, color: th.text, maxHeight: 120, border: 'none' }}
+            />
             {showEmojiPicker && (
               <EmojiPicker
                 onSelect={(emoji) => {
                   const ta = textareaRef.current;
                   if (ta) {
                     const start = ta.selectionStart || text.length;
-                    const before = text.slice(0, start);
-                    const after = text.slice(start);
-                    setText(before + emoji + after);
-                    setTimeout(() => {
-                      ta.focus();
-                      ta.selectionStart = ta.selectionEnd = start + emoji.length;
-                    }, 0);
-                  } else {
-                    setText(text + emoji);
-                  }
+                    setText(text.slice(0, start) + emoji + text.slice(start));
+                    setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = start + emoji.length; }, 0);
+                  } else setText(text + emoji);
                 }}
                 onClose={() => setShowEmojiPicker(false)}
               />
             )}
           </div>
-
-          <textarea
-            ref={textareaRef}
-            value={text}
-            onChange={(e) => { setText(e.target.value); handleTyping(); }}
-            onKeyDown={handleKeyDown}
-            placeholder={t('chat.messagePlaceholder')}
-            rows={1}
-            className="flex-1 px-3 py-2 bg-[var(--color-dark-700)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] resize-none focus:outline-none focus:border-accent transition-colors"
-            style={{ maxHeight: '120px' }}
-          />
-
-          {/* Mic button */}
-          <button
-            onClick={() => setIsRecordingVoice(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-dark-600 transition-colors flex-shrink-0"
-            title={t('chat.voiceMessage')}
-          >
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-            </svg>
-          </button>
-
-          {/* Send button — always visible */}
-          <button
-            onClick={handleSend}
-            disabled={uploading || (!text.trim() && !pendingAttachment)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent hover:bg-accent-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
+          {text.trim() || pendingAttachment ? (
+            <button
+              onClick={handleSend}
+              disabled={uploading}
+              className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 transition-colors disabled:opacity-30"
+              style={{ background: th.primary, color: '#fff' }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsRecordingVoice(true)}
+              className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 transition-colors"
+              style={{ background: th.primary, color: '#fff' }}
+              title={t('chat.voiceMessage')}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+          )}
         </div>
+        </>
         )}
       </div>
 

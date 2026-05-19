@@ -3,11 +3,14 @@ import { useMayakTheme, type MayakThemeKey, mayakThemes } from '../../hooks/useM
 import { useAuthStore } from '../../stores/authStore';
 import { MkAvatar } from './MkAvatar';
 import { Stars } from './Stars';
+import { useNavigate } from 'react-router-dom';
 
 export function SettingsScreen() {
   const { th, themeKey, setTheme } = useMayakTheme();
   const user = useAuthStore((s) => s.user);
+  const isAdmin = useAuthStore((s) => s.user?.isAdmin);
   const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
   const [sub, setSub] = useState<null | 'theme' | 'lang'>(null);
 
   const themeOptions: { k: MayakThemeKey; c1: string; c2: string }[] = [
@@ -235,6 +238,47 @@ export function SettingsScreen() {
             </svg>
           </div>
         ))}
+
+        {/* Admin panel */}
+        {isAdmin && (
+          <div
+            onClick={() => navigate('/admin')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              padding: '14px 20px',
+              cursor: 'pointer',
+              borderBottom: `1px solid ${th.divider}`,
+              marginTop: 8,
+            }}
+          >
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                background: th.primary + '15',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={th.primary} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: th.text }}>Админ-панель</div>
+              <div style={{ fontSize: 13, color: th.sec }}>Управление приложением</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={th.sec} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </div>
+        )}
 
         {/* Logout */}
         <div

@@ -716,7 +716,7 @@ export function ChatRoom({ conversationId }: Props) {
             message={msg}
             isMine={msg.senderId === userId}
             showSender={conv?.type === 'group'}
-            showAvatar={conv?.type === 'group'}
+            showAvatar={true}
             myAvatarUrl={myAvatarUrl}
             onReply={handleReply}
             onForward={handleForward}

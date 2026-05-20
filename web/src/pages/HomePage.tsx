@@ -196,37 +196,32 @@ function OrbitalDemo() {
 /* ─── PWA Install Hook ─── */
 function useInstallPrompt() {
   const deferredPrompt = useRef<any>(null);
-  const [canInstall, setCanInstall] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       deferredPrompt.current = e;
-      setCanInstall(true);
     };
     window.addEventListener('beforeinstallprompt', handler as any);
-
-    // iOS detection — no beforeinstallprompt, show manual instructions
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (isIOS && !isStandalone) setCanInstall(true);
-
     return () => window.removeEventListener('beforeinstallprompt', handler as any);
   }, []);
 
   const install = async () => {
     if (deferredPrompt.current) {
       deferredPrompt.current.prompt();
-      const result = await deferredPrompt.current.userChoice;
-      if (result.outcome === 'accepted') setCanInstall(false);
+      await deferredPrompt.current.userChoice;
       deferredPrompt.current = null;
     } else {
-      // iOS fallback
-      alert('Нажмите "Поделиться" → "На экран Домой" для установки');
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        alert('Нажмите кнопку «Поделиться» ⎋ → «На экран Домой»');
+      } else {
+        alert('Откройте сайт в Chrome на телефоне → меню ⋮ → «Установить приложение»');
+      }
     }
   };
 
-  return { canInstall, install };
+  return { install };
 }
 
 /* ═══════════════════════════════════════════
@@ -239,7 +234,7 @@ export function HomePage() {
     if (saved === 'en' || saved === 'zh') return saved;
     return 'ru';
   });
-  const { canInstall, install } = useInstallPrompt();
+  const { install } = useInstallPrompt();
 
   const s = t(lang);
 
@@ -293,15 +288,13 @@ export function HomePage() {
                   {s.heroBtn}
                   <IconArrowRight />
                 </Link>
-                {canInstall && (
-                  <button
-                    onClick={install}
-                    className="text-base px-8 py-3.5 flex items-center justify-center gap-2 rounded-full border-2 border-[var(--h-accent)] text-[var(--h-accent)] font-semibold hover:bg-[var(--h-accent)]/10 transition-colors"
-                  >
-                    <IconDownload />
-                    {s.installBtn}
-                  </button>
-                )}
+                <button
+                  onClick={install}
+                  className="text-base px-8 py-3.5 flex items-center justify-center gap-2 rounded-full border-2 border-[var(--h-accent)] text-[var(--h-accent)] font-semibold hover:bg-[var(--h-accent)]/10 transition-colors"
+                >
+                  <IconDownload />
+                  {s.installBtn}
+                </button>
               </div>
             </div>
 

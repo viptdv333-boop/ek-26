@@ -98,12 +98,12 @@ function ThemeToggle({ dark, toggle, labelLight, labelDark }: { dark: boolean; t
 /* ─── Orbital Demo (static RadialHub visualization) ─── */
 function OrbitalDemo() {
   const contacts = [
-    { name: 'Аня', color: '#6366f1', angle: -60, dist: 0.76, sz: 56, unread: 3 },
-    { name: 'Макс', color: '#f59e0b', angle: 30, dist: 0.72, sz: 52, unread: 0 },
-    { name: 'Ира', color: '#ec4899', angle: 140, dist: 0.80, sz: 50, unread: 1 },
-    { name: 'Дима', color: '#10b981', angle: -140, dist: 0.74, sz: 48, unread: 0 },
-    { name: 'Лена', color: '#8b5cf6', angle: 80, dist: 0.68, sz: 46, unread: 0 },
-    { name: 'Работа', color: '#ef4444', angle: 170, dist: 0.82, sz: 44, unread: 5 },
+    { name: 'Аня', color: '#6366f1', angle: -55, sz: 48, unread: 3 },
+    { name: 'Макс', color: '#f59e0b', angle: 15, sz: 44, unread: 0 },
+    { name: 'Ира', color: '#ec4899', angle: 85, sz: 42, unread: 1 },
+    { name: 'Дима', color: '#10b981', angle: 155, sz: 40, unread: 0 },
+    { name: 'Лена', color: '#8b5cf6', angle: -155, sz: 40, unread: 0 },
+    { name: 'Работа', color: '#ef4444', angle: -95, sz: 38, unread: 5 },
   ];
 
   return (
@@ -128,10 +128,10 @@ function OrbitalDemo() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, zIndex: 5,
       }}>
         <div style={{
-          width: 64, height: 64, borderRadius: '50%',
+          width: 52, height: 52, borderRadius: '50%',
           background: 'linear-gradient(135deg,#EF4444,#DC2626)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24, fontWeight: 800, color: '#fff',
+          fontSize: 20, fontWeight: 800, color: '#fff',
           boxShadow: '0 0 30px rgba(239,68,68,0.3), 0 6px 20px rgba(0,0,0,.08)',
         }}>
           F
@@ -142,8 +142,8 @@ function OrbitalDemo() {
       {/* Contact bubbles */}
       {contacts.map((c, i) => {
         const rad = (c.angle * Math.PI) / 180;
-        const x = 50 + c.dist * 40 * Math.cos(rad);
-        const y = 50 + c.dist * 40 * Math.sin(rad);
+        const x = 50 + 36 * Math.cos(rad);
+        const y = 50 + 36 * Math.sin(rad);
         return (
           <div
             key={i}

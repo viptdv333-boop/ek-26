@@ -256,14 +256,18 @@ export function HomePage() {
         </div>
 
         <div className="flex-1 flex items-center justify-end gap-2 md:gap-6">
-          <div className="hidden md:flex"><LangSwitcher lang={lang} setLang={saveLang} /></div>
-          <div className="hidden md:flex"><ThemeToggle dark={isDark} toggle={toggleTheme} labelLight={s.themeLight} labelDark={s.themeDark} /></div>
+          <LangSwitcher lang={lang} setLang={saveLang} />
+          <div className="hidden sm:flex"><ThemeToggle dark={isDark} toggle={toggleTheme} labelLight={s.themeLight} labelDark={s.themeDark} /></div>
           <div className="flex items-center gap-2 md:gap-5">
-            <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors">{s.login}</Link>
-            <Link to="/auth?tab=register" className="home-btn-accent text-sm px-4 md:px-6 py-2">{s.register}</Link>
+            <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.login}</Link>
+            <Link to="/auth?tab=register" className="home-btn-accent text-xs sm:text-sm px-3 sm:px-6 py-2">{s.register}</Link>
           </div>
         </div>
       </nav>
+      {/* Mobile theme toggle */}
+      <div className="flex sm:hidden justify-center pb-2 relative z-10">
+        <ThemeToggle dark={isDark} toggle={toggleTheme} labelLight={s.themeLight} labelDark={s.themeDark} />
+      </div>
 
       {/* ── HERO ── */}
       <section className="home-hero flex-1 flex flex-col">

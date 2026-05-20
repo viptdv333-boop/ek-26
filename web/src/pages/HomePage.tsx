@@ -298,7 +298,7 @@ export function HomePage() {
               </div>
             </div>
 
-            <div className="hidden lg:flex justify-center home-slide-up" style={{ animationDelay: '200ms' }}>
+            <div className="flex justify-center home-slide-up" style={{ animationDelay: '200ms' }}>
               <OrbitalDemo />
             </div>
           </div>

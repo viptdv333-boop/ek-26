@@ -107,7 +107,7 @@ function OrbitalDemo() {
   ];
 
   return (
-    <div className="relative w-[340px] h-[340px]">
+    <div className="relative w-[260px] h-[260px] lg:w-[340px] lg:h-[340px]">
       {/* Orbit rings */}
       {[160, 240].map((d, i) => (
         <div
@@ -244,23 +244,23 @@ export function HomePage() {
   return (
     <div className={`home-page ${isDark ? 'home-dark' : 'home-light'}`}>
       {/* ── NAV ── */}
-      <nav className="flex items-center h-16 px-8 relative z-10">
-        <div className="flex items-center gap-3">
+      <nav className="flex items-center h-14 px-4 md:px-8 relative z-10">
+        <div className="flex items-center gap-2">
           <div style={{
-            width: 36, height: 36, borderRadius: 10,
+            width: 32, height: 32, borderRadius: 8,
             background: 'linear-gradient(135deg,#EF4444,#DC2626)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, fontWeight: 800, color: '#fff',
+            fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0,
           }}>F</div>
-          <span className="text-xl font-bold tracking-tight text-[var(--h-fg)]">FOMO <span className="text-[var(--h-accent)]">Chat</span></span>
+          <span className="text-lg font-bold tracking-tight text-[var(--h-fg)]">FOMO <span className="text-[var(--h-accent)]">Chat</span></span>
         </div>
 
-        <div className="flex-1 flex items-center justify-end gap-10">
-          <LangSwitcher lang={lang} setLang={saveLang} />
-          <ThemeToggle dark={isDark} toggle={toggleTheme} labelLight={s.themeLight} labelDark={s.themeDark} />
-          <div className="flex items-center gap-5">
-            <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors hidden sm:inline">{s.login}</Link>
-            <Link to="/auth?tab=register" className="home-btn-accent text-sm px-6 py-2.5">{s.register}</Link>
+        <div className="flex-1 flex items-center justify-end gap-2 md:gap-6">
+          <div className="hidden md:flex"><LangSwitcher lang={lang} setLang={saveLang} /></div>
+          <div className="hidden md:flex"><ThemeToggle dark={isDark} toggle={toggleTheme} labelLight={s.themeLight} labelDark={s.themeDark} /></div>
+          <div className="flex items-center gap-2 md:gap-5">
+            <Link to="/auth?tab=login" className="text-sm font-medium text-[var(--h-muted)] hover:text-[var(--h-fg)] transition-colors">{s.login}</Link>
+            <Link to="/auth?tab=register" className="home-btn-accent text-sm px-4 md:px-6 py-2">{s.register}</Link>
           </div>
         </div>
       </nav>
@@ -268,9 +268,9 @@ export function HomePage() {
       {/* ── HERO ── */}
       <section className="home-hero flex-1 flex flex-col">
         <div className="home-hero-bg" />
-        <div className="home-container relative z-10 flex-1 flex items-center">
-          <div className="grid lg:grid-cols-2 gap-12 items-center w-full">
-            <div className="home-slide-up">
+        <div className="home-container relative z-10 flex-1 flex items-center overflow-y-auto">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center w-full py-6 lg:py-0">
+            <div className="home-slide-up text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--h-accent)]/10 border border-[var(--h-accent)]/20 mb-6">
                 <div className="w-2 h-2 rounded-full bg-[var(--h-accent)] animate-pulse" />
                 <span className="text-sm font-medium text-[var(--h-accent)]">{s.badge}</span>
@@ -283,14 +283,14 @@ export function HomePage() {
 
               <p className="text-base md:text-lg text-[var(--h-muted)] mb-8 max-w-lg leading-relaxed">{s.heroDesc}</p>
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link to="/auth?tab=register" className="home-btn-accent text-base px-8 py-3.5 flex items-center justify-center gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+                <Link to="/auth?tab=register" className="home-btn-accent text-base px-8 py-3 flex items-center justify-center gap-2">
                   {s.heroBtn}
                   <IconArrowRight />
                 </Link>
                 <button
                   onClick={install}
-                  className="text-base px-8 py-3.5 flex items-center justify-center gap-2 rounded-full border-2 border-[var(--h-accent)] text-[var(--h-accent)] font-semibold hover:bg-[var(--h-accent)]/10 transition-colors"
+                  className="text-base px-8 py-3 flex items-center justify-center gap-2 rounded-full border-2 border-[var(--h-accent)] text-[var(--h-accent)] font-semibold hover:bg-[var(--h-accent)]/10 transition-colors"
                 >
                   <IconDownload />
                   {s.installBtn}

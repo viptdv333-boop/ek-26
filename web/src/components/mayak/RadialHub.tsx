@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { Stars } from './Stars';
 import { hashColor } from './MkAvatar';
 import { HeaderWidget } from './HeaderWidget';
+import { NewChatDialog } from '../NewChatDialog';
 
 interface RadialContact {
   id: string;
@@ -31,6 +32,7 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
   const conversations = useChatStore((s) => s.conversations);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const user = useAuthStore((s) => s.user);
+  const [showNewChat, setShowNewChat] = useState(false);
 
   const hubContacts = useMemo<RadialContact[]>(() => {
     const sorted = [...conversations]
@@ -90,7 +92,6 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
           padding: '16px 20px 0',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
           gap: 10,
           position: 'relative',
           zIndex: 2,
@@ -116,6 +117,21 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
         <span style={{ fontSize: 24, fontWeight: 800, color: th.text, letterSpacing: -0.3 }}>
           Чат
         </span>
+        <div style={{ flex: 1 }} />
+        <button
+          onClick={() => setShowNewChat(true)}
+          style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: th.primary, color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: 'none', cursor: 'pointer', flexShrink: 0,
+            boxShadow: '0 2px 8px rgba(0,0,0,.15)',
+          }}
+        >
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
       </div>
       <div style={{
         padding: '6px 20px 10px',
@@ -219,6 +235,10 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
           </div>
         )}
       </div>
+
+      {showNewChat && (
+        <NewChatDialog onClose={() => setShowNewChat(false)} />
+      )}
     </div>
   );
 }

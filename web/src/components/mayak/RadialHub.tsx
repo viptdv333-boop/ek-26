@@ -117,21 +117,6 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
         <span style={{ fontSize: 24, fontWeight: 800, color: th.text, letterSpacing: -0.3 }}>
           Чат
         </span>
-        <div style={{ flex: 1 }} />
-        <button
-          onClick={() => setShowNewChat(true)}
-          style={{
-            width: 40, height: 40, borderRadius: '50%',
-            background: th.primary, color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: 'none', cursor: 'pointer', flexShrink: 0,
-            boxShadow: '0 2px 8px rgba(0,0,0,.15)',
-          }}
-        >
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-        </button>
       </div>
       <div style={{
         padding: '6px 20px 10px',
@@ -216,6 +201,9 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
         {hubContacts.map((c) => (
           <HubBubble key={c.id} c={c} onClick={() => onOpenChat(c.id)} />
         ))}
+
+        {/* New chat bubble */}
+        <NewChatBubble onClick={() => setShowNewChat(true)} />
 
         {/* Empty state */}
         {hubContacts.length === 0 && (
@@ -392,6 +380,84 @@ function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
         }}
       >
         {c.name}
+      </span>
+    </div>
+  );
+}
+
+function NewChatBubble({ onClick }: { onClick: () => void }) {
+  const { th } = useMayakTheme();
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+
+  const onDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: offset.x, oy: offset.y };
+  }, [offset]);
+
+  const onMove = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    setOffset({
+      x: dragRef.current.ox + e.clientX - dragRef.current.sx,
+      y: dragRef.current.oy + e.clientY - dragRef.current.sy,
+    });
+  }, []);
+
+  const onUp = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    const moved = Math.abs(e.clientX - dragRef.current.sx) + Math.abs(e.clientY - dragRef.current.sy) > 6;
+    dragRef.current = null;
+    if (!moved) onClick();
+  }, [onClick]);
+
+  return (
+    <div
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
+      style={{
+        position: 'absolute',
+        left: '50%',
+        bottom: '8%',
+        transform: `translate(calc(-50% + ${offset.x}px), ${offset.y}px)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 5,
+        cursor: 'grab',
+        zIndex: 4,
+        touchAction: 'none',
+        userSelect: 'none',
+      }}
+    >
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: th.primary,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          boxShadow: `0 0 24px ${th.primary}44, 0 4px 14px rgba(0,0,0,.12)`,
+        }}
+      >
+        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </div>
+      <span
+        style={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: th.primary,
+          textShadow: th.dark ? '0 1px 4px rgba(0,0,0,.6)' : '0 1px 3px rgba(255,255,255,.9)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Новый чат
       </span>
     </div>
   );

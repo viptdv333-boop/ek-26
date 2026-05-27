@@ -231,9 +231,21 @@ export function RadialHub({ onOpenChat }: RadialHubProps) {
   );
 }
 
+function loadBubblePos(key: string): { x: number; y: number } {
+  try {
+    const raw = localStorage.getItem(`ek26_bp_${key}`);
+    if (raw) { const p = JSON.parse(raw); return { x: p.x || 0, y: p.y || 0 }; }
+  } catch {}
+  return { x: 0, y: 0 };
+}
+
+function saveBubblePos(key: string, pos: { x: number; y: number }) {
+  localStorage.setItem(`ek26_bp_${key}`, JSON.stringify(pos));
+}
+
 function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
   const { th } = useMayakTheme();
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [offset, setOffset] = useState(() => loadBubblePos(c.id));
   const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
 
   const cx = 50, cy = 46;
@@ -249,18 +261,24 @@ function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
 
   const onMove = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current) return;
-    setOffset({
+    const next = {
       x: dragRef.current.ox + e.clientX - dragRef.current.sx,
       y: dragRef.current.oy + e.clientY - dragRef.current.sy,
-    });
+    };
+    setOffset(next);
   }, []);
 
   const onUp = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current) return;
     const moved = Math.abs(e.clientX - dragRef.current.sx) + Math.abs(e.clientY - dragRef.current.sy) > 6;
+    const final = {
+      x: dragRef.current.ox + e.clientX - dragRef.current.sx,
+      y: dragRef.current.oy + e.clientY - dragRef.current.sy,
+    };
     dragRef.current = null;
-    if (!moved) onClick();
-  }, [onClick]);
+    if (moved) saveBubblePos(c.id, final);
+    else onClick();
+  }, [onClick, c.id]);
 
   return (
     <div
@@ -387,7 +405,7 @@ function HubBubble({ c, onClick }: { c: RadialContact; onClick: () => void }) {
 
 function NewChatBubble({ onClick }: { onClick: () => void }) {
   const { th } = useMayakTheme();
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [offset, setOffset] = useState(() => loadBubblePos('new-chat'));
   const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
 
   const onDown = useCallback((e: React.PointerEvent) => {
@@ -407,8 +425,13 @@ function NewChatBubble({ onClick }: { onClick: () => void }) {
   const onUp = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current) return;
     const moved = Math.abs(e.clientX - dragRef.current.sx) + Math.abs(e.clientY - dragRef.current.sy) > 6;
+    const final = {
+      x: dragRef.current.ox + e.clientX - dragRef.current.sx,
+      y: dragRef.current.oy + e.clientY - dragRef.current.sy,
+    };
     dragRef.current = null;
-    if (!moved) onClick();
+    if (moved) saveBubblePos('new-chat', final);
+    else onClick();
   }, [onClick]);
 
   return (
